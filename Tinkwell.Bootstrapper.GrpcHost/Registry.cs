@@ -13,7 +13,7 @@ sealed class Registry : IRegistry
     public Registry(IConfiguration configuration)
     {
         _configuration = configuration;
-        _masterAddress = _configuration.GetValue<string>("Discovery::Master");
+        _masterAddress = _configuration.GetValue<string>("Discovery:Master");
     }
 
     IEnumerable<ServiceDefinition> IRegistry.Services
@@ -28,10 +28,10 @@ sealed class Registry : IRegistry
             throw new ArgumentException("Service URL cannot be empty.");
 
         if (Exists(definition.Name))
-            throw new ArgumentException($"Another service with the same name '{definition.Name} exists.");
+            throw new ArgumentException($"Another service with the same name '{definition.Name}' exists.");
 
         if (Exists(definition.FamilyName))
-            throw new ArgumentException($"Another service with the same family name '{definition.FamilyName} exists.");
+            throw new ArgumentException($"Another service with the same family name '{definition.FamilyName}' exists.");
 
         if (definition.Aliases is not null && definition.Aliases.Any(x => Exists(x)))
             throw new ArgumentException($"Another service with the same alias exists.");
@@ -39,6 +39,8 @@ sealed class Registry : IRegistry
 
     public void AddGrpcEndpoint(ServiceDefinition definition)
     {
+        // TODO: add locking here, someone else might add a service after Validate() but before
+        // we add the object to the collection.
         Validate(definition);
         _services.Add(definition);
     }
@@ -189,7 +191,7 @@ sealed class Registry : IRegistry
         {
             // The service is already registered, we throw the same exception thrown
             // by Validate() for a local duplicate.
-            throw new ArgumentException($"Another service with the same name '{definition.Name} exists.");
+            throw new ArgumentException($"Another service with the same name '{definition.Name}' exists.");
         }
     }
 }
