@@ -1,0 +1,27 @@
+{
+  "name": "ensamble-syntax",
+  "displayName": "Tinkwell Ensamble Syntax Highlighting",
+  "description": "Syntax highlighting for Tinkwell Ensamble configuration files",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "tinkwell_ensamble",
+        "aliases": ["TinkWell_Ensamble"],
+        "extensions": [".ensamble"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "tinkwell_ensamble",
+        "scopeName": "source.ensamble",
+        "path": "./syntaxes/ensamble.tmLanguage.json"
+      }
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+	<PropertyGroup>
+		<OutputPath>$(SolutionDir)build\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Grpc.AspNetCore" Version="2.64.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Protos\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Protobuf Include="..\Protos\tinkwell.discovery.proto">
+	    <Link>Protos\tinkwell.discovery.proto</Link>
+	  </Protobuf>
+	</ItemGroup>
+
+</Project>

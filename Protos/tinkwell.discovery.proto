@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+option csharp_namespace = "Tinkwell.Services";
+
+package Tinkwell;
+
+// This service provides the basic methods needed to find the other registered services in the system.
+service Discovery {
+  // Lists all the registered services matching the specified search query.
+  rpc List (DiscoveryListRequest) returns (DiscoveryListReply);
+
+  // Finds the service with the specified name.
+  rpc Find (DiscoveryFindRequest) returns (DiscoveryFindReply);
+
+  // Registers a new service, started by a separate GRPC host.
+  // Clients do not usually need to call this method unless they started their services
+  // using a separate runner.
+  // If you try to register a service with a name which is not unique you get error 8 (already exists).
+  rpc Register (DiscoveryRegisterRequest) returns (DiscoveryRegisterReply);
+}
+
+// Describes a Service.
+message ServiceDescription {
+	// Represents the unique name associated with the service.
+	// It is made of the package name and the service name, for example "Tinkwell.Discovery".
+	// In each system there can be only one service with a specified name and it is the preferred method
+	// to find as service.
+	string name = 1;
+
+	// A list of "aliases" for this service. They are alternative names (without any spefic convention) that
+	// can be used to search for the service. Each alias must be unique in the system, you should use them
+	// only if they are truly unique or if the include a namespaced package name.
+	repeated string aliases = 2;
+
+	// An optional alternative "friendly name" for the service. It is used only for display purposes and it does not
+	// partecipate in the search for a service. It does not need to be unique but it should be informative.
+	optional string friendly_name = 3;
+
+	// An optional family name. When multiple services implements the same contract - and each one has its own
+	// unique name - you cannot easily find which service to use. The family name does not need to be unique: on
+	// the contrary, it is designed for multiple services implementing the same contract to share the same family name.
+	// Clients can then search for the contract implementation using the family name instead of a specific name.
+	optional string family_name = 4;
+
+	// The GRPC host address (same as url but without the exact API endpoint).
+	string host = 5;
+
+	// The GRPC API endpoint to call to use the service.
+	string url = 6;
+}
+
+// Parameters for Discovery.List() call.
+message DiscoveryListRequest {
+  // An optional filter which includes only the services containing the specified text.
+  // The match is always partial and not case sensitive. It searches name, aliases, family_name and friendly_name.
+  optional string query = 1;
+}
+
+// Response for Discovery.List() call.
+message DiscoveryListReply {
+  // The list of services matching the specified filter (if present) or all the services if no filter were specified.
+  repeated ServiceDescription services = 1;
+}
+
+// Parameters for Discovery.Find() call. 
+message DiscoveryFindRequest {
+  // The exact name of the service to find. Searches favour exact name matches and if nothing is found then
+  // it continues searching for aliases. If nothing is found then it searches for the family name and if multiple
+  // services implement that contract then an arbitrary one is returned. Use Discovery.List() if you want to implement
+  // your own logic to choose among multiple matches.
+  string name = 1;
+}
+
+// Response for Discovery.Find() call.
+message DiscoveryFindReply {
+  // The URL for the GRPC API endpoint for the service with the specified name. This field is not included
+  // in the response if no service matches the specified name.
+  optional string url = 1;
+}
+
+// Parameters for Discovery.Register() call.
+message DiscoveryRegisterRequest {
+	// The service to register, it must be a new service with an unique name.
+  ServiceDescription service = 1;
+}
+
+// Response for Discovery.Register() call.
+message DiscoveryRegisterReply {
+}

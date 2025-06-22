@@ -1,0 +1,58 @@
+﻿{
+	"name": "Tinkwell Ensamble Configuration",
+	"scopeName": "source.ensamble",
+	"fileTypes": [ "ensamble" ],
+	"patterns": [
+		{
+			"name": "keyword.control.ensamble",
+			"match": "\\b(import|runner|service|argument|arguments|properties|if)\\b"
+		},
+		{
+			"name": "constant.language.boolean.ensamble",
+			"match": "\\b(true|false)\\b"
+		},
+		{
+			"name": "string.quoted.double.ensamble",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.ensamble",
+					"match": "\\\\."
+				}
+			]
+		},
+		{
+			"name": "comment.line.double-slash.ensamble",
+			"begin": "//",
+			"end": "$"
+		},
+		{
+			"name": "punctuation.section.block.begin.ensamble",
+			"match": "\\{"
+		},
+		{
+			"name": "punctuation.section.block.end.ensamble",
+			"match": "\\}"
+		},
+		{
+			"name": "punctuation.separator.key-value.ensamble",
+			"match": ":"
+		},
+		{
+			"name": "variable.other.identifier.ensamble",
+			"match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+		},
+		{
+			"name": "meta.embedded.liquid.expression",
+			"begin": "\\{\\{",
+			"end": "\\}\\}"
+		},
+		{
+			"name": "meta.embedded.liquid.tag",
+			"begin": "\\{\\%",
+			"end": "\\%\\}"
+		}
+	],
+	"uuid": "aed7b732-ensamble-liquid-blocks"
+}
