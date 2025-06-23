@@ -27,13 +27,13 @@ message ServiceDescription {
 	// to find as service.
 	string name = 1;
 
-	// A list of "aliases" for this service. They are alternative names (without any spefic convention) that
+	// A list of "aliases" for this service. They are alternative names (without any specific convention) that
 	// can be used to search for the service. Each alias must be unique in the system, you should use them
-	// only if they are truly unique or if the include a namespaced package name.
+	// only if they are truly unique or if they include a namespaced package name.
 	repeated string aliases = 2;
 
 	// An optional alternative "friendly name" for the service. It is used only for display purposes and it does not
-	// partecipate in the search for a service. It does not need to be unique but it should be informative.
+	// participate in the search for a service. It does not need to be unique but it should be informative.
 	optional string friendly_name = 3;
 
 	// An optional family name. When multiple services implements the same contract - and each one has its own
@@ -73,9 +73,12 @@ message DiscoveryFindRequest {
 
 // Response for Discovery.Find() call.
 message DiscoveryFindReply {
+  // The URL for the GRPC API server hosting the service with the specified name (same as url but without the
+  // specific API endpoint). This field is not included in the response if no service matches the specified name.
+  optional string host = 1;
   // The URL for the GRPC API endpoint for the service with the specified name. This field is not included
   // in the response if no service matches the specified name.
-  optional string url = 1;
+  optional string url = 2;
 }
 
 // Parameters for Discovery.Register() call.

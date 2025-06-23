@@ -44,7 +44,10 @@ public sealed class DiscoveryService(IRegistry registry) : Discovery.DiscoveryBa
 
         var result = new DiscoveryFindReply();
         if (service is not null)
+        {
             result.Url = service.Url;
+            result.Host = service.Host;
+        }
 
         return Task.FromResult(result);
     }
