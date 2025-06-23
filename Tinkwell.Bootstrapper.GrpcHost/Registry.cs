@@ -28,13 +28,13 @@ sealed class Registry : IRegistry
             throw new ArgumentException("Service URL cannot be empty.");
 
         if (Exists(definition.Name))
-            throw new ArgumentException($"Another service with the same name '{definition.Name}' exists.");
+            throw new DuplicateNameException($"Another service with the same name '{definition.Name}' exists.");
 
         if (Exists(definition.FamilyName))
-            throw new ArgumentException($"Another service with the same family name '{definition.FamilyName}' exists.");
+            throw new DuplicateNameException($"Another service with the same family name '{definition.FamilyName}' exists.");
 
         if (definition.Aliases is not null && definition.Aliases.Any(x => Exists(x)))
-            throw new ArgumentException($"Another service with the same alias exists.");
+            throw new DuplicateNameException($"Another service with the same alias exists.");
     }
 
     public void AddGrpcEndpoint(ServiceDefinition definition)
@@ -112,7 +112,7 @@ sealed class Registry : IRegistry
     {
         get
         {
-            _localAddress ??= _configuration["Kestrel:Endpoints:gRPC:Url"] ?? "localhost";
+            _localAddress ??= _configuration["Kestrel:Endpoints:gRPC:Url"] ?? "https://localhost:5000";
             return _localAddress;
         }
     }
@@ -166,7 +166,7 @@ sealed class Registry : IRegistry
 
     private void TryRegisterWithMaster(ServiceDefinition definition)
     {
-        if (_masterAddress is null)
+        if (string.IsNullOrWhiteSpace(_masterAddress))
             return;
 
         _grpcChannel ??= GrpcChannel.ForAddress(_masterAddress);
@@ -174,18 +174,21 @@ sealed class Registry : IRegistry
 
         try
         {
-            client.Register(new DiscoveryRegisterRequest
+            ServiceDescription service = new()
             {
-                Service = new()
-                {
-                    Name = definition.Name,
-                    FriendlyName = definition.FriendlyName,
-                    FamilyName = definition.FamilyName,
-                    Url = definition.Url,
-                    Host = definition.Host,
-                    Aliases = { definition.Aliases }
-                }
-            });
+                Name = definition.Name,
+                Url = definition.Url,
+                Host = definition.Host,
+                Aliases = { definition.Aliases }
+            };
+
+            if (definition.FamilyName is not null)
+                service.FamilyName = definition.FamilyName;
+
+            if (definition.FriendlyName is not null)
+                service.FriendlyName = definition.FriendlyName;
+
+            client.Register(new DiscoveryRegisterRequest { Service = service });
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.AlreadyExists)
         {

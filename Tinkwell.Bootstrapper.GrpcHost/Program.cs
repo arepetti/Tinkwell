@@ -16,7 +16,7 @@ builder.Services
     .AddTransient<IActivity, RegisterServicesActivity>()
     .AddGrpc();
 
-await builder.DelegateConfigureServices();
+await builder.DelegateConfigureServicesAsync();
 
 var app = builder.Build();
 var registry = app.Services.GetRequiredService<IRegistry>();
@@ -24,14 +24,20 @@ var registry = app.Services.GetRequiredService<IRegistry>();
 // We have only one discovery service (the master) when running multiple gRPC hosts.
 // You can still view what's registered in each host with a GET of "/" for the exposed server
 // (but it's intended for debugging, not to be consume by other apps/services).
-if (string.IsNullOrWhiteSpace(app.Configuration.GetValue<string>("Discovery::Master")))
+if (app.IsMasterGrpcServer())
 {
     app.MapGrpcService<DiscoveryService>();
     registry.AddGrpcEndpoint<DiscoveryService>(new() { Aliases = ["Discovery", "DiscoveryService"] });
 }
 
-await app.DelegateConfigureRoutes();
+await app.DelegateConfigureRoutesAsync();
 
 app.MapGet("/", registry.AsText);
+
+using var watcher = ParentProcessWatcher.WhenNotFound(() =>
+{
+    app.Logger.LogWarning("Parent process has been terminated, quitting.");
+    app.Lifetime.StopApplication();
+});
 
 app.Run();

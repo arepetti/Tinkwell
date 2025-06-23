@@ -37,8 +37,8 @@ sealed class ChildProcess(ILogger logger, ProcessStartInfo startInfo, RunnerDefi
         Interlocked.Exchange(ref _stopping, false);
         _watching = watch;
         _process = Process.Start(_startInfo);
-        _logger.LogInformation("Started process {Name} ({PID}) from {Path}",
-            _process?.ProcessName, _process?.Id, _startInfo.FileName);
+        _logger.LogInformation("Started process {Name} ({PID}) from {Path}. Arguments: {0}",
+            _process?.ProcessName, _process?.Id, _startInfo.FileName, string.Join(' ', _startInfo.Arguments));
 
         if (_process is not null && watch)
         {

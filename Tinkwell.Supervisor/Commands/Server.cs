@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
-using System.IO.Pipelines;
 using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Supervisor.Commands;
@@ -71,7 +69,7 @@ sealed class Server : ICommandServer
         lock (_pipes)
             _pipes.Add(pipe);
 
-        _logger.LogInformation("Starting a new command pipe, {Count} active pipes", _pipes.Count);
+        _logger.LogDebug("Starting a new command pipe, {Count} active pipes", _pipes.Count);
         pipe.Start();
     }
 }

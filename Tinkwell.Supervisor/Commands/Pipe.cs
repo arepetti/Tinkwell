@@ -69,7 +69,7 @@ sealed class Pipe
 
             Connected?.Invoke(this, EventArgs.Empty);
 
-            while (!_abortTokenSource.Token.IsCancellationRequested || !server.IsConnected)
+            while (!_abortTokenSource.Token.IsCancellationRequested && server.IsConnected)
             {
                 var action = _interpreter.ReadAndProcessNextCommandAsync(reader, writer, _abortTokenSource.Token)
                     .GetAwaiter()
