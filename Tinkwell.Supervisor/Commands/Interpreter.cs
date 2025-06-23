@@ -90,7 +90,8 @@ sealed class Interpreter
             {
                 listCmd.OnExecute(() =>
                 {
-                    writer.WriteLine(string.Join(',', _runnerRegistry.Items.Select(x => x.Definition.Name)));
+                    var queryArgument = listCmd.Argument("query", "");
+                    writer.WriteLine(string.Join(',', FindAllByQuery(queryArgument.Value).Select(x => x.Definition.Name)));
                 });
             });
 
@@ -167,5 +168,14 @@ sealed class Interpreter
         }
 
         throw new ArgumentException($"Cannot find a runner with name '{name}' or PID '{pid}'.");
+    }
+
+    private IEnumerable<IChildProcess> FindAllByQuery(string? query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return _runnerRegistry.Items;
+
+        return _runnerRegistry.Items
+            .Where(x => x.Definition.Name.Contains(query, StringComparison.OrdinalIgnoreCase));
     }
 }

@@ -28,18 +28,27 @@ public sealed class NamedPipeServer : INamedPipeServer
 
     public void Close()
     {
-        if (IsOpen)
+        if (!IsOpen)
+            return;
+
+        _abortTokenSource.Cancel();
+
+        foreach (var pipe in _pipes.ToArray())
         {
-            _abortTokenSource.Cancel();
-
-            foreach (var pipe in _pipes)
+            try
+            {
                 pipe.Stop();
-
-            _pipes.Clear();
-
-            _abortTokenSource.Dispose();
-            _abortTokenSource = null;
+            }
+            catch (IOException)
+            {
+                // Ignore IO exceptions that may occur if the pipe is already closed.
+            }
         }
+
+        _pipes.Clear();
+
+        _abortTokenSource.Dispose();
+        _abortTokenSource = null;
     }
 
     private string? _pipeName;

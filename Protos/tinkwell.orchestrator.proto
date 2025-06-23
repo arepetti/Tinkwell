@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+option csharp_namespace = "Tinkwell.Services";
+
+package Tinkwell;
+
+// Optional service to manage runners.
+service Orchestrator {
+  // List all the runners currently active in the system.
+    rpc List (OrchestratorListRequest) returns (OrchestratorListReply);
+
+    // Start a runner which has been stopped with a call to Stop().
+    rpc Start (StartStopRunnerRequest) returns (StartStopRunnerResponse);
+
+    // Stop an existing runner.
+    rpc Stop (StartStopRunnerRequest) returns (StartStopRunnerResponse);
+
+    // Restart an existing runner (equivalent to calling Stop() followed by Start()).
+    rpc Restart (StartStopRunnerRequest) returns (StartStopRunnerResponse);
+
+    // Add a new runner in the target system.
+    rpc Add (AddRunnerRequest) returns (AddRunnerResponse);
+}
+
+// Request message for Orchestrator.list().
+message OrchestratorListRequest {
+    // Optional query to filter the runners. If specified then only runner whose name contain
+    // the specified text are returned (comparison is case insensitive).
+    optional string query = 1;
+}
+
+// Response message for Orchestrator.list().
+message OrchestratorListReply {
+    // Represents a single runner in the system.
+    message Runner {
+        // The full name of the runner.
+	    string name = 1;
+    }
+    // List of runners that satisfies the query condition in OrchestratorListRequest.query
+    repeated Runner runners = 1;
+}
+
+// Request messages for starting, stopping, and restarting runners.
+message StartStopRunnerRequest {
+    // The exact name of the runner to start/stop/restart. Name is case sensitive.
+	string name = 1;
+}
+
+// Response messages for starting, stopping, and restarting runners.
+message StartStopRunnerResponse {}
+
+// Request message to add a new runner with Orchestrator.add().
+message AddRunnerRequest {
+    // The full name of the runner to add. It must be unique in the system.
+	string name = 1;
+    // Path of the executable to run. It can be an absolute path, a relative path or
+    // the file name only (if it's in the working directory). On Windows the .exe extension
+    // can be omitted (so that you do not need to know the host OS when making the call).
+	string path = 2;
+    // Optional arguments to pass to the runner. It can be an empty string if no arguments are needed.
+	string arguments = 3;
+}
+
+// Response message for Orchestrator.add().
+message AddRunnerResponse {}

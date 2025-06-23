@@ -13,7 +13,9 @@ sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger, IFil
     {
         // Ideally we'd want ShellExecute=true but it's only for Windows; we could check for
         // !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) to use the "open" command but it doesn't
-        // work for all executables on MacOS so...
+        // work for all executables on MacOS. On the top of that we can't add environment variables with
+        // ShellExecute=true (we need them to inform the child about its name and the supervisor PID in
+        // an easy and portable way).
         var psi = new ProcessStartInfo()
         {
             FileName = ResolveFileName(definition.Path),

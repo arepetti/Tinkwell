@@ -32,7 +32,7 @@ if (app.IsMasterGrpcServer())
 
 await app.DelegateConfigureRoutesAsync();
 
-app.MapGet("/", registry.AsText);
+app.MapGet("/", () => registry.AsText());
 
 using var watcher = ParentProcessWatcher.WhenNotFound(() =>
 {
