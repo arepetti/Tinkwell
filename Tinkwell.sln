@@ -9,12 +9,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Protos", "Protos", "{02EA68
 	ProjectSection(SolutionItems) = preProject
 		Protos\tinkwell.discovery.proto = Protos\tinkwell.discovery.proto
 		Protos\tinkwell.orchestrator.proto = Protos\tinkwell.orchestrator.proto
+		Protos\tinkwell.store.proto = Protos\tinkwell.store.proto
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Supervisor", "Tinkwell.Supervisor\Tinkwell.Supervisor.csproj", "{3A1EA892-0D72-444B-9DAE-E03277D9E39B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{050A1DD5-4208-4AA3-B05B-E39E7BC6BA86} = {050A1DD5-4208-4AA3-B05B-E39E7BC6BA86}
 		{15779DF1-E17F-4897-8E40-118B23B87861} = {15779DF1-E17F-4897-8E40-118B23B87861}
+		{742A2D08-DD77-42D3-AD24-BB8F035CF2D5} = {742A2D08-DD77-42D3-AD24-BB8F035CF2D5}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Bootstrapper.GrpcHost", "Tinkwell.Bootstrapper.GrpcHost\Tinkwell.Bootstrapper.GrpcHost.csproj", "{15779DF1-E17F-4897-8E40-118B23B87861}"
@@ -24,6 +26,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Development.Vs.Ensamble", "Development\Syntax\Tinkwell.Development.Vs.Ensamble\Tinkwell.Development.Vs.Ensamble.csproj", "{1EE26471-109D-4A33-9654-9DCF7C8DBEF2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Orchestrator", "Tinkwell.Orchestrator\Tinkwell.Orchestrator.csproj", "{050A1DD5-4208-4AA3-B05B-E39E7BC6BA86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Store", "Tinkwell.Store\Tinkwell.Store.csproj", "{742A2D08-DD77-42D3-AD24-BB8F035CF2D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +55,10 @@ Global
 		{050A1DD5-4208-4AA3-B05B-E39E7BC6BA86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{050A1DD5-4208-4AA3-B05B-E39E7BC6BA86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{050A1DD5-4208-4AA3-B05B-E39E7BC6BA86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{742A2D08-DD77-42D3-AD24-BB8F035CF2D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{742A2D08-DD77-42D3-AD24-BB8F035CF2D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{742A2D08-DD77-42D3-AD24-BB8F035CF2D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{742A2D08-DD77-42D3-AD24-BB8F035CF2D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

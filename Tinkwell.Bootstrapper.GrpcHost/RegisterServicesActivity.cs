@@ -33,12 +33,15 @@ sealed class RegisterServicesActivity : IActivity
         var host = new HostProxy(builder, _serviceProvider);
         await ForEachRegistrarAsync(host, x => x.ConfigureServices(host), cancellationToken);
 
-        _logger.LogInformation("Loaded {Count} runners", _services?.Count());
+        _logger.LogInformation("{Name} loaded {Count} runner(s): {Runners}",
+            Environment.GetEnvironmentVariable(WellKnownNames.RunnerNameEnvironmentVariable),
+            _services?.Count(),
+            string.Join(',', _services!.Select(x => x.Name)));
     }
 
     public async Task ConfigureApplication(WebApplication app, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Configuring endpoints for GRPC services ");
+        _logger.LogDebug("Configuring endpoints for GRPC services");
         var host = new HostProxy(app);
         await ForEachRegistrarAsync(host, x => x.ConfigureRoutes(host), cancellationToken);
     }

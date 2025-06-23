@@ -9,8 +9,8 @@ runner grpchost "Tinkwell.Bootstrapper.GrpcHost" {
 }
 
 // Second gRPC server, it hosts Store service on its own. It's highly used, for better
-// performances we keep it on its own.
+// performances we keep it separate.
 runner grpchost_store "Tinkwell.Bootstrapper.GrpcHost" {
     arguments: "--Kestrel:Endpoints:Http2:Url=https://localhost:5001 --Discovery:Master={{ discovery_url }}"
-	service runner store "Tinkwell.Store.dll" if "false" {}
+	service runner store "Tinkwell.Store.dll" {}
 }
