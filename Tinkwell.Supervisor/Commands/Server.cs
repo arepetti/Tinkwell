@@ -6,70 +6,57 @@ namespace Tinkwell.Supervisor.Commands;
 
 sealed class Server : ICommandServer
 {
-    public Server(ILogger<Server> logger, IConfiguration configuration, IRegistry registry)
+    public Server(ILogger<Server> logger, IConfiguration configuration, IRegistry registry, INamedPipeServerFactory pipeServerFactory)
     {
         _logger = logger;
-        _configuration = configuration;
         _registry = registry;
+        _pipeServer = pipeServerFactory.Create();
 
         _enabled = configuration.GetValue("Supervisor::CommandServer:Enabled", true);
-        ServerId = configuration.GetValue("Supervisor::CommandServer:PipeName",
+        _pipeName = configuration.GetValue("Supervisor::CommandServer:PipeName",
             WellKnownNames.SupervisorCommandServerPipeName);
+        _maxConcurrentConnections = configuration.GetValue("Supervisor::CommandServer:MaxConcurrentConnections", 4);
     }
-
-    public string ServerId { get; }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         if (!_enabled)
             return Task.CompletedTask;
 
-        _abortTokenSource = new CancellationTokenSource();
-
-        CreatePipe();
+        _logger.LogDebug("Starting command server on pipe '{PipeName}'", _pipeName);
+        _pipeServer.MaxConcurrentConnections = _maxConcurrentConnections;
+        _pipeServer.Process += ReadAndProcessPipeData;
+        _pipeServer.Open(_pipeName);
 
         return Task.CompletedTask;
+    }
+
+    private void ReadAndProcessPipeData(object? sender, NamedPipeServerProcessEventArgs e)
+    {
+        var interpreter = new Interpreter(_logger, _registry);
+        interpreter.ReadAndProcessNextCommandAsync(e.Reader, e.Writer, e.CancellationToken)
+            .ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                    _logger.LogError(task.Exception, "Error processing command from pipe '{PipeName}'", _pipeName);
+                
+                if (task.IsFaulted || task.Result == Interpreter.ParsingResult.Stop)
+                    e.Disconnect();
+            }, TaskScheduler.Default)
+            .GetAwaiter()
+            .GetResult();
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        if (_abortTokenSource is null)
-            return Task.CompletedTask;
-
-        _abortTokenSource.Cancel();
-        _abortTokenSource.Dispose();
-
+        _pipeServer.Close();
         return Task.CompletedTask;
     }
 
     private readonly ILogger<Server> _logger;
-    private readonly IConfiguration _configuration;
     private readonly IRegistry _registry;
+    private readonly INamedPipeServer _pipeServer;
+    private readonly string _pipeName;
+    private readonly int _maxConcurrentConnections;
     private readonly bool _enabled;
-    private CancellationTokenSource? _abortTokenSource;
-    private readonly List<Pipe> _pipes = [];
-
-    private void CreatePipe()
-    {
-        var pipe = new Pipe(
-            ServerId,
-            _abortTokenSource!,
-            _logger,
-            _configuration,
-            _registry
-        );
-
-        pipe.Connected += (_, _) => CreatePipe();
-        pipe.Disconnected += (sender, _) =>
-        {
-            lock (_pipes)
-                _pipes.Remove((Pipe)sender!);
-        };
-
-        lock (_pipes)
-            _pipes.Add(pipe);
-
-        _logger.LogDebug("Starting a new command pipe, {Count} active pipes", _pipes.Count);
-        pipe.Start();
-    }
 }

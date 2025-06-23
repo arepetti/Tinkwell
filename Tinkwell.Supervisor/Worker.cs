@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.IO;
+using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Supervisor.Commands;
 using Tinkwell.Supervisor.Sentinel;
 
@@ -73,6 +74,7 @@ static class WorkerExtensions
                 .AddTransient<IEnsambleFileReader, EnsambleFileReader>()
                 .AddSingleton<IRegistry, Registry>()
                 .AddTransient<IChildProcessBuilder, SentinelProcessBuilder>()
+                .AddTransient<INamedPipeServerFactory, NamedPipeServerFactory>()
                 .AddSingleton<ICommandServer, Server>()
                 .AddHostedService<Worker>();
         });

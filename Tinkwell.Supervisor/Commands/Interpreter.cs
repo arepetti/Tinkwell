@@ -8,16 +8,16 @@ namespace Tinkwell.Supervisor.Commands;
 
 sealed class Interpreter
 {
-    public Interpreter(ILogger logger, IRegistry runnerRegistry)
-    {
-        _logger = logger;
-        _runnerRegistry = runnerRegistry;
-    }
-
     public enum ParsingResult
     {
         Continue,
         Stop,
+    }
+
+    public Interpreter(ILogger logger, IRegistry runnerRegistry)
+    {
+        _logger = logger;
+        _runnerRegistry = runnerRegistry;
     }
 
     public async Task<ParsingResult> ReadAndProcessNextCommandAsync(StreamReader reader, StreamWriter writer, CancellationToken cancellationToken)

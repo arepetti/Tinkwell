@@ -1,6 +1,6 @@
 // gRPC server, it hosts the Master Discovery Service.
 // Orchestrator service is also hosted here but it should be included only for debugging
-// purposes (it allows the remote execution of any command).
+// purposes (it allows the remote execution of any command!).
 runner grpchost "Tinkwell.Bootstrapper.GrpcHost" {
     arguments: "--Kestrel:Endpoints:Http2:Url=http://localhost:5000"
 	service runner orchestrator "Tinkwell.Units.Orchestrator" if "false" {}
