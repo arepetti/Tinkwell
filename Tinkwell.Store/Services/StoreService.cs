@@ -79,13 +79,16 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         }
         catch (ArgumentException e)
         {
-            _logger.LogError(e, "Call to {Name}() failed ({Exception}): {Reason}", callerName, e.GetType().Name, e.Message);
             throw new RpcException(new Status(StatusCode.InvalidArgument, e.Message));
         }
         catch (KeyNotFoundException e)
         {
-            _logger.LogError(e, "Call to {Name}() failed ({Exception}): {Reason}", callerName, e.GetType().Name, e.Message);
             throw new RpcException(new Status(StatusCode.NotFound, e.Message));
+        }
+        catch (NotSupportedException e)
+        {
+            // Most likely thrown when trying to convert between incompatible units
+            throw new RpcException(new Status(StatusCode.InvalidArgument, e.Message));
         }
         catch (InvalidOperationException e)
         {

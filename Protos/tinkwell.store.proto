@@ -10,58 +10,58 @@ import "google/protobuf/duration.proto";
 
 // Service to store values from various inputs (typically with their unit of measure).
 service Store {
-	// List all the measures currently stored.
-	rpc List (StoreListRequest) returns (StoreListReply);
+    // List all the measures currently stored.
+    rpc List (StoreListRequest) returns (StoreListReply);
 
-	// Register a new measure, it can be used to store values later.
-	rpc Register (StoreRegisterRequest) returns (StoreRegisterReply);
+    // Register a new measure, it can be used to store values later.
+    rpc Register (StoreRegisterRequest) returns (StoreRegisterReply);
 
-	// Update a measure with a new value, you need to call Register() before
-	// you can set a value for a measure.
-	rpc Update (StoreUpdateRequest) returns (StoreUpdateReply);
+    // Update a measure with a new value, you need to call Register() before
+    // you can set a value for a measure.
+    rpc Update (StoreUpdateRequest) returns (StoreUpdateReply);
 }
 
 // Request message for Store.List().
 message StoreListRequest {
-	// A filter to apply to the stored measures, it can be empty. If specified then only
-	// those measure whose name contains the specified text are included in the result.
-	// Search is case-insensitive.
-	optional string query = 1;
-	// Indicates whether to include the values in the result. If true then the latest known valu of
-	// each measure ius included,
-	optional bool include_values = 2;
+    // A filter to apply to the stored measures, it can be empty. If specified then only
+    // those measure whose name contains the specified text are included in the result.
+    // Search is case-insensitive.
+    optional string query = 1;
+    // Indicates whether to include the values in the result. If true then the latest known valu of
+    // each measure ius included,
+    optional bool include_values = 2;
 }
 
 // Response message for Store.List().
 message StoreListReply {
-	// Represents a measure.
+    // Represents a measure.
     message Item {
-		// Name of the measure.
-	    string name = 1;
-		// If StoreListRequest.include_values is true then this field contains the latest value. This value
-		// includes the unit of measure specified in unit (for example 3 °C).
-		optional string value = 2;
-		// Type of the measure (for example Temperature, Speed, etc).
-		string quantity_type = 3;
-		// The unit of measure (must be a valid unit of measure for quantity_type, for example DegreesCelsius).
-		string unit = 4;
+        // Name of the measure.
+        string name = 1;
+        // If StoreListRequest.include_values is true then this field contains the latest value. This value
+        // includes the unit of measure specified in unit (for example 3 °C).
+        optional string value = 2;
+        // Type of the measure (for example Temperature, Speed, etc).
+        string quantity_type = 3;
+        // The unit of measure (must be a valid unit of measure for quantity_type, for example DegreesCelsius).
+        string unit = 4;
     }
-	// List of measures, each measure is represented by an Item.
+    // List of measures, each measure is represented by an Item.
     repeated Item items = 1;
 }
 
 // Request message for Store.Register().
 message StoreRegisterRequest {
-	// Name of the measure, it must be unique.
-	string name = 1;
-	// Time to live for the measure, after this time the measure is considered expired and it will be discarded.
-	// Note that a measure is discarded only if there is a newer available value, otherwise it is kept indefinitely.
-	// If omitted then the measure is kept in the history until the list is full (then oldest measures are discarded).
-	optional google.protobuf.Duration ttl = 2;
-	// Type of the measure, it must be a valid type (for example Temperature, Speed, etc).
-	optional string quantity_type = 3;
-	// Unit of measure, it must be a valid unit of measure for the specified quantity_type (for example DegreesCelsius).
-	optional string unit = 4;
+    // Name of the measure, it must be unique.
+    string name = 1;
+    // Time to live for the measure, after this time the measure is considered expired and it will be discarded.
+    // Note that a measure is discarded only if there is a newer available value, otherwise it is kept indefinitely.
+    // If omitted then the measure is kept in the history until the list is full (then oldest measures are discarded).
+    optional google.protobuf.Duration ttl = 2;
+    // Type of the measure, it must be a valid type (for example Temperature, Speed, etc).
+    optional string quantity_type = 3;
+    // Unit of measure, it must be a valid unit of measure for the specified quantity_type (for example DegreesCelsius).
+    optional string unit = 4;
 }
 
 // Response message for Store.Register().
@@ -69,14 +69,14 @@ message StoreRegisterReply {}
 
 // Request message for Store.Update().
 message StoreUpdateRequest {
-	// Name of the measure to update, it must be registered before using Store.Register().
-	string name = 1;
-	// New value for this measure. It must include a valid unit of measure compatible with the type of
-	// quantity specified when registering the measure. If the unit of measure is different (but compatible)
-	// then it's converted automatically to the unit specified if StoreRegisterRequest. For example, if the unit 
-	// is DegreesCelsius and you pass the value 14 °F then it is converted to -10 °C.
-	// to 
-	string value = 2;
+    // Name of the measure to update, it must be registered before using Store.Register().
+    string name = 1;
+    // New value for this measure. It must include a valid unit of measure compatible with the type of
+    // quantity specified when registering the measure. If the unit of measure is different (but compatible)
+    // then it's converted automatically to the unit specified if StoreRegisterRequest. For example, if the unit 
+    // is DegreesCelsius and you pass the value 14 °F then it is converted to -10 °C.
+    // to 
+    string value = 2;
 }
 
 // Response message for Store.Update().

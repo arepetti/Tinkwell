@@ -21,32 +21,32 @@ service Discovery {
 
 // Describes a Service.
 message ServiceDescription {
-	// Represents the unique name associated with the service.
-	// It is made of the package name and the service name, for example "Tinkwell.Discovery".
-	// In each system there can be only one service with a specified name and it is the preferred method
-	// to find as service.
-	string name = 1;
+    // Represents the unique name associated with the service.
+    // It is made of the package name and the service name, for example "Tinkwell.Discovery".
+    // In each system there can be only one service with a specified name and it is the preferred method
+    // to find as service.
+    string name = 1;
 
-	// A list of "aliases" for this service. They are alternative names (without any specific convention) that
-	// can be used to search for the service. Each alias must be unique in the system, you should use them
-	// only if they are truly unique or if they include a namespaced package name.
-	repeated string aliases = 2;
+    // A list of "aliases" for this service. They are alternative names (without any specific convention) that
+    // can be used to search for the service. Each alias must be unique in the system, you should use them
+    // only if they are truly unique or if they include a namespaced package name.
+    repeated string aliases = 2;
 
-	// An optional alternative "friendly name" for the service. It is used only for display purposes and it does not
-	// participate in the search for a service. It does not need to be unique but it should be informative.
-	optional string friendly_name = 3;
+    // An optional alternative "friendly name" for the service. It is used only for display purposes and it does not
+    // participate in the search for a service. It does not need to be unique but it should be informative.
+    optional string friendly_name = 3;
 
-	// An optional family name. When multiple services implements the same contract - and each one has its own
-	// unique name - you cannot easily find which service to use. The family name does not need to be unique: on
-	// the contrary, it is designed for multiple services implementing the same contract to share the same family name.
-	// Clients can then search for the contract implementation using the family name instead of a specific name.
-	optional string family_name = 4;
+    // An optional family name. When multiple services implements the same contract - and each one has its own
+    // unique name - you cannot easily find which service to use. The family name does not need to be unique: on
+    // the contrary, it is designed for multiple services implementing the same contract to share the same family name.
+    // Clients can then search for the contract implementation using the family name instead of a specific name.
+    optional string family_name = 4;
 
-	// The GRPC host address (same as url but without the exact API endpoint).
-	string host = 5;
+    // The GRPC host address (same as url but without the exact API endpoint).
+    string host = 5;
 
-	// The GRPC API endpoint to call to use the service.
-	string url = 6;
+    // The GRPC API endpoint to call to use the service.
+    string url = 6;
 }
 
 // Parameters for Discovery.List() call.
@@ -83,7 +83,7 @@ message DiscoveryFindReply {
 
 // Parameters for Discovery.Register() call.
 message DiscoveryRegisterRequest {
-	// The service to register, it must be a new service with an unique name.
+    // The service to register, it must be a new service with an unique name.
   ServiceDescription service = 1;
 }
 
