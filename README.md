@@ -6,7 +6,9 @@ At this stage, the code is intended solely for **experimentation** with technica
 
 ## What for?
 
-This project does not contain the entire implementation of a "firmware-less Hub" (the Wasm host and library, UI and firmware repository won't be included for sure). That's because it can be used for different purposes then each specific use-case is going to be a separate repository. A couple of examples:
+This project does not contain the entire implementation of a "firmware-less Hub" (the Wasm host and library, UI and firmware repository won't be included for sure). That's because it can be used for different purposes then each specific use-case is going to be a separate repository.
+
+You can find a blog post at [Tinkwell: Firmware-less IoT and Lab Automation](https://dev.to/adriano-repetti/tinkwell-firmware-less-iot-and-lab-automation-2gef), here a tiny extract:
 
 * **Lab automation**: each lab instrument (whether it’s a spectrometer, thermal controller, or motion stage) often comes with its own driver or control script. Tinkwell can supervise each of these as a separate (monitored) runner process. To add a new device is as simple as adding a new `runner` entry in the Ensamble file.
     * With the Store module, you can track sensor readings (voltages, temperatures, concentrations) using unit-aware types. You can log conditions, perform derived computations and broadcast changes.
@@ -83,3 +85,5 @@ JournalBearingDeltaTemperature = JournalBearingOilReturnLineTemperature - Journa
 * Alerts: could be simple flags calculated when a condition is met (see the previous example for derived measures).
 * A simple scripting mechanism and command line tools.
 * A very simple web UI to manage the system, monitor its health, see logs and read measures (no dashboards for now!).
+* Pluggable strategies (for example to select how to store measures, how to do load balancing when fetching a service by family name, etc).
+* All the other predefined runners/services described in the blog post!
