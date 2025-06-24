@@ -4,15 +4,26 @@ This repository is a work in progress and serves as an exploratory reference imp
 
 At this stage, the code is intended solely for **experimentation** with technical solutions: it is not production-ready, and both its structure and content may (should!) change drastically at any time.
 
+## What for?
+
+This project does not contain the entire implementation of a "firmware-less Hub" (the Wasm host and library, UI and firmware repository won't be included for sure). That's because it can be used for different purposes then each specific use-case is going to be a separate repository. A couple of examples:
+
+* **Lab automation**: each lab instrument (whether it’s a spectrometer, thermal controller, or motion stage) often comes with its own driver or control script. Tinkwell can supervise each of these as a separate (monitored) runner process. To add a new device is as simple as adding a new `runner` entry in the Ensamble file.
+    * With the Store module, you can track sensor readings (voltages, temperatures, concentrations) using unit-aware types. You can log conditions, perform derived computations and broadcast changes.
+    * You could define workflows where launching a new test involves spinning up a sequence of runners: data collector, logger, analyzer, etc. Since runners can be composed hierarchically (one runner invoking others), you can build robust pipelines for repeatable experiments.
+    * Using gRPC-based discovery and command interfaces, external systems—or even human operators—can see what's running and monitor the progress of an experiment.
+* **Edge and Fog Computing in industrial IoT**: factories increasingly rely on edge devices to perform localized processing (e.g. anomaly detection from vibration sensors, temperature thresholds for safety cutoffs). Tinkwell offers a lightweight, resilient orchestration layer that doesn’t need containers or a full Kubernetes cluster—perfect for rugged industrial PCs at the edge.
+* **Test benches and automated QA stations**: like in labs, automated testing environments in industrial R&D departments often involve specialized hardware setups. Scripts or binaries controlling signal generators, power supplies, or data loggers can be isolated into runners. Ensamble files could represent test configurations, while the store tracks metrics such as voltage, temperature, or system throughput.
+
 ## Idea
 
-This approach is not useful only for IoT applications. A _system_ is composed of multiple _units_, each one dedicated to a specific task and it runs on its own isolated process. Units are launched by a _supervisor_ reading an _ensamble_ configuration file. Units communicates to each other using gRPC and they can find the available services through a _discovery_ service exposed by the supervisor.
+A _system_ is composed of multiple _units_, each one dedicated to a specific task and it runs on its own isolated process. Units are launched by a _supervisor_ reading an _ensamble_ configuration file. Units communicates to each other using gRPC and they can find the available services through a _discovery_ service exposed by the supervisor.
 
 The supervisor is in charge of launching and monitoring the health of all the units in the system but multiple sytems can cooperate in a _network_ and talk to each other without knowing where one specific is running.
 
 Units should expose gRPC services but they should also support a "_file-like access_" to the resources they manage, this enables scripting through simple shell programs (and the shell itself can be a unit accepting HTTP POST requests for the script to execute, for example).
 
-A minimal system.ensamble configuration file looks like this:
+A minimal `system.ensamble` configuration file looks like this:
 
 ```
 {% assign discovery_url = "https://localhost:5000"  %}
@@ -56,3 +67,19 @@ runner another_native_firmware "./bin/another_firmware" {
     arguments: "--Discovery:Master={{ discovery_url }}"
 }
 ```
+
+(yes, from the very first line you can understand that the source is pre-parsed and rendered with Liquid)
+
+## What's Missing?
+
+This code is just to explore an idea then, obviously, code quality has to vastly improve but there are a few bits that we surely need for an MVP:
+
+* Like Kubernetes we need a "health check" for the various runners. Possibly a simple "HealthCheck" gRPC service exposed by `GrpcHost` (included, optionally, as a `service runner`). A monitoring process can collect service performance and broadcast it somewhere (cloud services, system logs, our own Store).
+* Derived measures like:
+```
+JournalBearingTemperature = (JournalBearingTemperature1 + JournalBearingTemperature2) / 2
+JournalBearingDeltaTemperature = JournalBearingOilReturnLineTemperature - JournalBearingOilSupplyLineTemperature
+```
+* Alerts: could be simple flags calculated when a condition is met (see the previous example for derived measures).
+* A simple scripting mechanism and command line tools.
+* A very simple web UI to manage the system, monitor its health, see logs and read measures (no dashboards for now!).
