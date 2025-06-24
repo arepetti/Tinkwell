@@ -86,3 +86,4 @@ JournalBearingDeltaTemperature = JournalBearingOilReturnLineTemperature - Journa
 * A simple scripting mechanism and command line tools.
 * A very simple web UI to manage the system, monitor its health, see logs and read measures (no dashboards for now!).
 * Pluggable strategies (for example to select how to store measures, how to do load balancing when fetching a service by family name, etc).
+* All the other predefined runners/services described in the blog post!
