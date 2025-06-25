@@ -5,6 +5,8 @@ namespace Tinkwell.Bootstrapper.Ipc;
 
 public sealed class NamedPipeClient : INamedPipeClient
 {
+    public bool IsConnected => _client is not null && _client.IsConnected;
+
     public StreamReader Reader
     {
         get

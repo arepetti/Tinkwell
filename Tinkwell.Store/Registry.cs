@@ -19,7 +19,7 @@ sealed class Registry : IRegistry
             throw new ArgumentException($"Tuple '{metadata.QuantityType}' and '{metadata.Unit}' are not a valid combination.");
 
         if (!_store.Register(metadata, new(DefaultHistoryLength, metadata.Ttl)))
-            throw new InvalidOperationException($"Quantity '{metadata.Name}' is already registered.");
+            throw new ArgumentException($"Quantity '{metadata.Name}' is already registered.");
     }
 
     public void Update(string name, IQuantity value)

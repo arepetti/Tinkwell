@@ -3,6 +3,7 @@ namespace Tinkwell.Bootstrapper.Ipc
 {
     public interface INamedPipeClient : IDisposable
     {
+        bool IsConnected { get; }
         StreamReader Reader { get; }
         StreamWriter Writer { get; }
 
