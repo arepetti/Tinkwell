@@ -10,6 +10,7 @@ public enum EnsambleToken
     None,
     Identifier,
     String,
+    Equals,
     Colon,
     LBrace,
     RBrace,
@@ -59,6 +60,7 @@ public static class EnsambleTokenizer
             .Match(Keyword("false"), EnsambleToken.False)
 
             .Match(Identifier, EnsambleToken.Identifier)
+            .Match(Character.EqualTo('='), EnsambleToken.Equals)
             .Match(Character.EqualTo(':'), EnsambleToken.Colon)
             .Match(Character.EqualTo('{'), EnsambleToken.LBrace)
             .Match(Character.EqualTo('}'), EnsambleToken.RBrace)

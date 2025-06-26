@@ -9,8 +9,8 @@ static class IRegistryExtensions
         var text = new StringBuilder();
         foreach (var service in registry.Services)
         {
-            string? name = service.FriendlyName ?? service.Name;
-            if (service.FamilyName is not null && !string.Equals(name, service.FamilyName, StringComparison.OrdinalIgnoreCase))
+            string? name = string.IsNullOrWhiteSpace(service.FriendlyName) ? service.Name : service.FriendlyName;
+            if (!string.IsNullOrWhiteSpace(service.FamilyName) && !string.Equals(name, service.FamilyName, StringComparison.OrdinalIgnoreCase))
                 name = $"{name} ({service.FamilyName})";
             text.AppendLine($"{name}={service.Url}");
         }

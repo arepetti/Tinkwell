@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Collections.Concurrent;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper.Ipc;
 
@@ -11,12 +12,15 @@ sealed class Server : ICommandServer
         _logger = logger;
         _registry = registry;
         _pipeServer = pipeServerFactory.Create();
+        _endpoints = new Endpoints(configuration);
 
-        _enabled = configuration.GetValue("Supervisor::CommandServer:Enabled", true);
-        _pipeName = configuration.GetValue("Supervisor::CommandServer:PipeName",
+        _enabled = configuration.GetValue("Supervisor:CommandServer:Enabled", true);
+        _pipeName = configuration.GetValue("Supervisor:CommandServer:PipeName",
             WellKnownNames.SupervisorCommandServerPipeName);
-        _maxConcurrentConnections = configuration.GetValue("Supervisor::CommandServer:MaxConcurrentConnections", 4);
+        _maxConcurrentConnections = configuration.GetValue("Supervisor:CommandServer:MaxConcurrentConnections", 4);
     }
+
+    public event EventHandler? Signaled;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -34,6 +38,20 @@ sealed class Server : ICommandServer
     private void ReadAndProcessPipeData(object? sender, NamedPipeServerProcessEventArgs e)
     {
         var interpreter = new Interpreter(_logger, _registry);
+        interpreter.Signaled += (_, _) => Signaled?.Invoke(this, EventArgs.Empty);
+        interpreter.ClaimUrl += (_, e) => e.Value = _endpoints.Claim(e.MachineName, e.Runner);
+        interpreter.QueryUrl += (_, e) => e.Value = _endpoints.Query(e.Runner);
+        interpreter.ClaimRole += (_, e) =>
+        {
+            if (_roles.TryGetValue(e.Role!, out string? masterAddress))
+            {
+                e.Value = masterAddress;
+                return;
+            }
+            
+            if (!_roles.TryAdd(e.Role!, _endpoints.Query(e.Runner)!))
+                e.Value = _roles[e.Role!];
+        };
         interpreter.ReadAndProcessNextCommandAsync(e.Reader, e.Writer, e.CancellationToken)
             .ContinueWith(task =>
             {
@@ -59,4 +77,6 @@ sealed class Server : ICommandServer
     private readonly string _pipeName;
     private readonly int _maxConcurrentConnections;
     private readonly bool _enabled;
+    private readonly Endpoints _endpoints;
+    private readonly ConcurrentDictionary<string, string> _roles = new();
 }

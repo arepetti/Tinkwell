@@ -33,8 +33,8 @@ sealed class Worker : IHostedService
             return;
         }
 
-        await _registry.StartAsync(_ensambleFilePath, cancellationToken);
         await _commandServer.StartAsync(cancellationToken);
+        await _registry.StartAsync(_commandServer, _ensambleFilePath, cancellationToken);
 
         _logger.LogInformation("Supervisor started successfully");
     }

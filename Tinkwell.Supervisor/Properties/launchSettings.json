@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Tinkwell.Supervisor": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "TINKWELL_CERT_PATH": "config\\certs\\ADRIANO-LP-tinkwell-devcert.pfx",
+        "TINKWELL_CERT_PASS": "1234"
+      }
+    }
+  }
+}

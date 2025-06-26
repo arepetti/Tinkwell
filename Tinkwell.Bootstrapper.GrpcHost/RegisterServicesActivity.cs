@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Ipc;
+using Tinkwell.Bootstrapper.Ipc.Extensions;
 using Tinkwell.Bootstrapper.Rpc;
 
 namespace Tinkwell.Bootstrapper.GrpcHost;
@@ -98,28 +99,14 @@ sealed class RegisterServicesActivity : IActivity
         if (_services is not null)
             return _services;
 
-        string serverName = _configuration.GetValue("Supervisor::CommandServer:ServerName", ".");
+        var definition = await _pipeClient.SendCommandToSupervisorAndDisconnectAsync<RunnerDefinition>(
+            _configuration, $"runners get --pid {Environment.ProcessId}", cancellationToken);
 
-        string pipeName = _configuration.GetValue("Supervisor::CommandServer:PipeName",
-            WellKnownNames.SupervisorCommandServerPipeName);
-
-        _pipeClient.Connect(serverName, pipeName);
-        try
+        return [.. _evaluator.Filter(definition.Children).Select(x => new HostedGrpcServer
         {
-            var definition = await _pipeClient.SendCommandAndWaitReplyAsync<RunnerDefinition>(
-                $"runners get --pid {Environment.ProcessId}", cancellationToken);
-
-            return [.. _evaluator.Filter(definition.Children).Select(x => new HostedGrpcServer
-            {
-                Name = x.Name,
-                Path = x.Path
-            })];
-        }
-        finally
-        {
-            await _pipeClient.SendCommandAsync("exit", cancellationToken);
-            _pipeClient.Disconnect();
-        }
+            Name = x.Name,
+            Path = x.Path
+        })];
     }
 
     sealed class HostProxy : IGrpcServerHost

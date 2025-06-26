@@ -1,4 +1,5 @@
 ﻿using Tinkwell.Bootstrapper.Ensamble;
+using Tinkwell.Supervisor.Commands;
 
 namespace Tinkwell.Supervisor;
 
@@ -6,13 +7,15 @@ interface IRegistry
 {
     IEnumerable<IChildProcess> Items { get; }
 
-    Task StartAsync(string configurationPath, CancellationToken cancellationToken);
+    Task StartAsync(ICommandServer commandServer, string configurationPath, CancellationToken cancellationToken);
 
     Task StopAsync(CancellationToken cancellationToken);
 
     IChildProcess? FindByName(string name);
 
     IChildProcess? FindById(int pid);
+
+    IEnumerable<IChildProcess> FindAllByQuery(string? query);
 
     void AddNew(RunnerDefinition definition, bool start);
 

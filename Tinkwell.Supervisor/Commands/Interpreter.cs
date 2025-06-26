@@ -20,6 +20,11 @@ sealed class Interpreter
         _runnerRegistry = runnerRegistry;
     }
 
+    public event EventHandler<InterpreterResolveValueEventArgs>? ClaimRole;
+    public event EventHandler<InterpreterResolveValueEventArgs>? ClaimUrl;
+    public event EventHandler<InterpreterResolveValueEventArgs>? QueryUrl;
+    public event EventHandler? Signaled;
+
     public async Task<ParsingResult> ReadAndProcessNextCommandAsync(StreamReader reader, StreamWriter writer, CancellationToken cancellationToken)
     {
         string? input = (await reader.ReadLineAsync(cancellationToken))?.Trim();
@@ -82,6 +87,25 @@ sealed class Interpreter
             exitCmd.OnExecute(() => TerminateParsingExitCode);
         });
 
+        app.Command("signal", signalCmd =>
+        {
+            var nameArgument = signalCmd.Argument("name", "");
+            signalCmd.OnExecute(() =>
+            {
+                writer.WriteLine("OK");
+                Signaled?.Invoke(this, EventArgs.Empty);
+            });
+        });
+
+        SetupCommandRunners(writer, app);
+        SetupCommandEndpoints(writer, app);
+        SetupCommandRoles(writer, app);
+
+        return app;
+    }
+
+    private void SetupCommandRunners(StreamWriter writer, CommandLineApplication app)
+    {
         app.Command("runners", runnersCmd =>
         {
             runnersCmd.OnExecute(() => MissingArgumentsExitCode);
@@ -91,7 +115,7 @@ sealed class Interpreter
                 listCmd.OnExecute(() =>
                 {
                     var queryArgument = listCmd.Argument("query", "");
-                    writer.WriteLine(string.Join(',', FindAllByQuery(queryArgument.Value).Select(x => x.Definition.Name)));
+                    writer.WriteLine(string.Join(',', _runnerRegistry.FindAllByQuery(queryArgument.Value).Select(x => x.Definition.Name)));
                 });
             });
 
@@ -105,7 +129,8 @@ sealed class Interpreter
                 var pathArgument = addCmd.Argument("path", "");
                 addCmd.AllowArgumentSeparator = true;
 
-                addCmd.OnExecute(() => {
+                addCmd.OnExecute(() =>
+                {
                     _logger.LogInformation("Adding new runner {Path}", nameArgument.Value!.Trim('"'));
                     _runnerRegistry.AddNew(
                         nameArgument.Value!.Trim('"') ?? "",
@@ -120,14 +145,13 @@ sealed class Interpreter
                 var nameArgument = getCmd.Argument("name", "");
                 var pidOption = getCmd.Option("-p|--pid", "", CommandOptionType.SingleValue);
 
-                getCmd.OnExecute(() => {
+                getCmd.OnExecute(() =>
+                {
                     var process = FindByNameOrId(nameArgument.Value?.Trim('"'), pidOption.Value());
                     writer.WriteLine(System.Text.Json.JsonSerializer.Serialize(process.Definition));
                 });
             });
         });
-
-        return app;
 
         void AddCommandOnRunner(CommandLineApplication parentCommand, string commandName, Action<IChildProcess> action)
         {
@@ -136,13 +160,88 @@ sealed class Interpreter
                 var nameArgument = cmd.Argument("name", "");
                 var pidOption = cmd.Option("-p|--pid", "", CommandOptionType.SingleValue);
 
-                cmd.OnExecute(() => {
+                cmd.OnExecute(() =>
+                {
                     var process = FindByNameOrId(nameArgument.Value?.Trim('"'), pidOption.Value());
                     action(process);
                     writer.WriteLine("OK");
                 });
             });
         }
+    }
+
+    private void SetupCommandEndpoints(StreamWriter writer, CommandLineApplication app)
+    {
+        app.Command("endpoints", endpointsCmd =>
+        {
+            endpointsCmd.OnExecute(() => MissingArgumentsExitCode);
+
+            endpointsCmd.Command("claim", claimCmd =>
+            {
+                var machineNameArgument = claimCmd.Argument("machine", "");
+                var runnerNameArgument = claimCmd.Argument("runner", "");
+
+                claimCmd.OnExecute(() =>
+                {
+                    ArgumentException.ThrowIfNullOrWhiteSpace(machineNameArgument.Value);
+                    ArgumentException.ThrowIfNullOrWhiteSpace(runnerNameArgument.Value);
+
+                    var ea = new InterpreterResolveValueEventArgs(machineNameArgument.Value!, runnerNameArgument.Value!);
+                    ClaimUrl?.Invoke(this, ea);
+                    if (string.IsNullOrWhiteSpace(ea.Value))
+                        throw new ArgumentException($"Cannot claim an endpoint URL for '{ea.Runner}'.");
+
+                    writer.WriteLine(ea.Value);
+                });
+            });
+
+            endpointsCmd.Command("query", queryCmd =>
+            {
+                var name = queryCmd.Argument("name", "");
+
+                queryCmd.OnExecute(() =>
+                {
+                    ArgumentException.ThrowIfNullOrWhiteSpace(name.Value);
+
+                    var ea = new InterpreterResolveValueEventArgs("", name.Value!);
+                    QueryUrl?.Invoke(this, ea);
+                    if (string.IsNullOrWhiteSpace(ea.Value))
+                        throw new ArgumentException($"Cannot query the endpoint URL for '{ea.Runner}'.");
+
+                    writer.WriteLine(ea.Value);
+                });
+            });
+        });
+    }
+
+    private void SetupCommandRoles(StreamWriter writer, CommandLineApplication app)
+    {
+        app.Command("roles", rolesCmd =>
+        {
+            rolesCmd.OnExecute(() => MissingArgumentsExitCode);
+
+            rolesCmd.Command("claim", claimCmd =>
+            {
+                var roleArgument = claimCmd.Argument("role", "");
+                var machineArgument = claimCmd.Argument("machine", "");
+                var runnerNameArgument = claimCmd.Argument("runner", "");
+
+                claimCmd.OnExecute(() =>
+                {
+                    ArgumentException.ThrowIfNullOrWhiteSpace(roleArgument.Value);
+                    ArgumentException.ThrowIfNullOrWhiteSpace(machineArgument.Value);
+                    ArgumentException.ThrowIfNullOrWhiteSpace(runnerNameArgument.Value);
+
+                    var ea = new InterpreterResolveValueEventArgs(
+                        roleArgument.Value,
+                        machineArgument.Value,
+                        runnerNameArgument.Value!);
+                    ClaimRole?.Invoke(this, ea);
+
+                    writer.WriteLine(ea.Value);
+                });
+            });
+        });
     }
 
     private IChildProcess FindByNameOrId(string? name, string? pid)
@@ -153,7 +252,7 @@ sealed class Interpreter
         if (pid is not null)
         {
             if (!int.TryParse(pid, CultureInfo.InvariantCulture, out int id))
-                throw new BootstrapperException($"Invalid PID '{pid}'.");
+                throw new ArgumentException($"Invalid PID '{pid}'.");
 
             var process = _runnerRegistry.FindById(id);
             if (process is not null)
@@ -168,14 +267,5 @@ sealed class Interpreter
         }
 
         throw new ArgumentException($"Cannot find a runner with name '{name}' or PID '{pid}'.");
-    }
-
-    private IEnumerable<IChildProcess> FindAllByQuery(string? query)
-    {
-        if (string.IsNullOrWhiteSpace(query))
-            return _runnerRegistry.Items;
-
-        return _runnerRegistry.Items
-            .Where(x => x.Definition.Name.Contains(query, StringComparison.OrdinalIgnoreCase));
     }
 }

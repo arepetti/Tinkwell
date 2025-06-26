@@ -45,8 +45,10 @@ sealed class ChildProcess(ILogger logger, ProcessStartInfo startInfo, RunnerDefi
             string name = _process.ProcessName;
             int pid = _process.Id;
 
+            // _process might be already null when Exited is invoked (that's why ?.ExitCode), it
+            // might happen when shutting down.
             _process.EnableRaisingEvents = true;
-            _process.Exited += (_, _) => Exited?.Invoke(this, new(name, pid, _process.ExitCode));
+            _process.Exited += (_, _) => Exited?.Invoke(this, new(name, pid, _process?.ExitCode ?? 1));
         }
     }
 

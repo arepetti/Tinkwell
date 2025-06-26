@@ -70,6 +70,29 @@ sealed class EnsambleParser
         from svc in Parse.Ref(() => Runner!)
         select svc;
 
+    // Parses key=value like phase=0
+    private static readonly TokenListParser<EnsambleToken, KeyValuePair<string, string>> ParseActivationPair =
+        from key in Identifier
+        from eq in Token.EqualTo(EnsambleToken.Equals)
+        from value in Identifier.Or(UnquotedString)
+        select new KeyValuePair<string, string>(key, value);
+
+    // blocking,phase=1,startup=delayed
+    // If value only then translates to: "blocking" -> "mode=blocking"
+    private static readonly TokenListParser<EnsambleToken, Dictionary<string, string>> ParseActivationValue =
+        from first in Identifier
+        from rest in
+            (from comma in Token.EqualTo(EnsambleToken.Identifier).Where(t => t.Kind == EnsambleToken.Identifier && t.ToStringValue() == ",")
+             from pair in ParseActivationPair
+             select pair).Many()
+        select rest.Prepend(new KeyValuePair<string, string>("mode", first)).ToDictionary(p => p.Key, p => p.Value);
+
+    private static readonly TokenListParser<EnsambleToken, KeyValuePair<string, object>> ActivationProperty =
+        from key in Token.EqualTo(EnsambleToken.Identifier).Where(t => t.ToStringValue() == "activation")
+        from _ in Token.EqualTo(EnsambleToken.Colon)
+        from mode in ParseActivationValue
+        select new KeyValuePair<string, object>("activation", mode);
+
     private static readonly TokenListParser<EnsambleToken, RunnerDefinition> Runner =
         from _ in Token.EqualTo(EnsambleToken.Runner)
         from name in Identifier.Or(UnquotedString)
@@ -80,6 +103,7 @@ sealed class EnsambleParser
         from inner in
             PropertiesBlock.Select(p => (object)p)
             .Or(ArgumentsBlock.Select(a => (object)new KeyValuePair<string, string>("arguments", a)))
+            .Or(ActivationProperty.Select(a => (object)a))
             .Or(ServiceBlock.Select(svc => (object)svc))
             .Many()
 
@@ -91,7 +115,11 @@ sealed class EnsambleParser
             Condition = condition,
             Arguments = inner.OfType<KeyValuePair<string, string>>()
                              .FirstOrDefault(kv => kv.Key == "arguments").Value,
-            Properties = inner.OfType<Dictionary<string, object>>().FirstOrDefault() ?? new Dictionary<string, object>(),
+            Activation = inner.OfType<KeyValuePair<string, object>>()
+                  .Where(kv => kv.Key == "activation")
+                  .Select(kv => (Dictionary<string, string>)kv.Value)
+                  .FirstOrDefault() ?? new(),
+            Properties = inner.OfType<Dictionary<string, object>>().FirstOrDefault() ?? new(),
             Children = inner.OfType<RunnerDefinition>().ToList()
         };
 

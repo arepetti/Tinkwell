@@ -10,6 +10,10 @@ public enum RegistrySearchMode
 
 public interface IRegistry
 {
+    string? LocalAddress { get; set; }
+
+    string? MasterAddress { get; set; }
+
     public IEnumerable<ServiceDefinition> Services { get; }
 
     void Validate(ServiceDefinition definition);

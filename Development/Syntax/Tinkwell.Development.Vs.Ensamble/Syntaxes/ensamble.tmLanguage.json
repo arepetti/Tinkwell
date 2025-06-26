@@ -5,7 +5,7 @@
 	"patterns": [
 		{
 			"name": "keyword.control.ensamble",
-			"match": "\\b(import|runner|service|argument|arguments|properties|if)\\b"
+			"match": "\\b(import|runner|service|argument|arguments|activation|properties|if)\\b"
 		},
 		{
 			"name": "constant.language.boolean.ensamble",

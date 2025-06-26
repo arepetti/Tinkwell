@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ensamble;
+using Tinkwell.Supervisor.Commands;
 
 namespace Tinkwell.Supervisor;
 
@@ -10,7 +11,7 @@ sealed class Registry(ILogger<Registry> logger, IEnsambleFileReader reader, IChi
 {
     public IEnumerable<IChildProcess> Items => _items;
 
-    public async Task StartAsync(string configurationPath, CancellationToken cancellationToken)
+    public async Task StartAsync(ICommandServer commandServer, string configurationPath, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting registry with configuration: {ConfigurationPath}", configurationPath);
         _logger.LogTrace("OS: {OsDescription} ({OsArchitecture}), Process: {ProcessArchitecture}",
@@ -25,7 +26,15 @@ sealed class Registry(ILogger<Registry> logger, IEnsambleFileReader reader, IChi
         if (cancellationToken.IsCancellationRequested)
             return;
 
-        ForEach(nameof(IChildProcess.Start), item => item.Start());
+        var barrier = new SignalBarrier();
+        commandServer.Signaled += barrier.HandleSignal;
+
+        ForEach(nameof(IChildProcess.Start), async (item) =>
+        {
+            item.Start();
+            if (item.Definition.IsBlockingActivation())
+                await barrier.WaitAndResetAsync();
+        });
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -41,6 +50,15 @@ sealed class Registry(ILogger<Registry> logger, IEnsambleFileReader reader, IChi
 
     public IChildProcess? FindById(int id)
         => _items.FirstOrDefault(x => x.Id == id);
+
+    public IEnumerable<IChildProcess> FindAllByQuery(string? query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return _items;
+
+        return _items
+            .Where(x => x.Definition.Name.Contains(query, StringComparison.OrdinalIgnoreCase));
+    }
 
     public void AddNew(RunnerDefinition definition, bool start)
     {
@@ -78,4 +96,20 @@ sealed class Registry(ILogger<Registry> logger, IEnsambleFileReader reader, IChi
         }
         _logger.LogInformation("Applied '{ActionName}' on {Count} child processes", actionName, _items.Count());
     }
+
+    private void ForEach(string actionName, Func<IChildProcess, Task> action)
+        => ForEach(actionName, item => action(item).GetAwaiter().GetResult());
+}
+
+file class SignalBarrier
+{
+    public async Task WaitAndResetAsync()
+    {
+        await _tcs.Task;
+        _tcs = new();
+    }
+
+    public void HandleSignal(object? sender, EventArgs e) => _tcs.TrySetResult();
+
+    private TaskCompletionSource _tcs = new();
 }

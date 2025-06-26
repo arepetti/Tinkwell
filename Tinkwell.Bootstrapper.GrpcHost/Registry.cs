@@ -13,8 +13,11 @@ sealed class Registry : IRegistry
     public Registry(IConfiguration configuration)
     {
         _configuration = configuration;
-        _masterAddress = _configuration.GetValue<string>("Discovery:Master");
     }
+
+    public string? LocalAddress { get; set; }
+
+    public string? MasterAddress { get; set; }
 
     IEnumerable<ServiceDefinition> IRegistry.Services
         => _services;
@@ -41,6 +44,7 @@ sealed class Registry : IRegistry
     {
         // TODO: add locking here, someone else might add a service after Validate() but before
         // we add the object to the collection.
+        Console.WriteLine("Registering {0} on {1}", definition.Name, Extensions.RunnerName);
         Validate(definition);
         _services.Add(definition);
     }
@@ -48,14 +52,15 @@ sealed class Registry : IRegistry
     public void AddGrpcEndpoint<TService>(ServiceDefinition? definition)
     {
         string name = definition?.Name ?? GetServiceFullName(typeof(TService));
+        Console.WriteLine("Registering<T> {0} on {1}", name, Extensions.RunnerName);
         var finalDefinition = new ServiceDefinition()
         {
             Name = name,
             FriendlyName = definition?.FriendlyName,
             FamilyName = definition?.FamilyName,
             Aliases = definition?.Aliases ?? [],
-            Host = definition?.Host ?? ServerAddress,
-            Url = definition?.Url ?? $"{ServerAddress}/{name}",
+            Host = definition?.Host ?? LocalAddress,
+            Url = definition?.Url ?? $"{LocalAddress}/{name}",
         };
 
         // This method is called only when registering a new service, if we're a slave host
@@ -103,19 +108,8 @@ sealed class Registry : IRegistry
     }
 
     private readonly IConfiguration _configuration;
-    private string? _masterAddress;
-    private string? _localAddress;
     private readonly ConcurrentBag<ServiceDefinition> _services = new();
     private GrpcChannel? _grpcChannel;
-
-    private string ServerAddress
-    {
-        get
-        {
-            _localAddress ??= _configuration["Kestrel:Endpoints:gRPC:Url"] ?? "https://localhost:5000";
-            return _localAddress;
-        }
-    }
 
     private static string GetServiceFullName(Type serviceType)
     {
@@ -166,10 +160,11 @@ sealed class Registry : IRegistry
 
     private void TryRegisterWithMaster(ServiceDefinition definition)
     {
-        if (string.IsNullOrWhiteSpace(_masterAddress))
+        Console.WriteLine("Registering '{0}' on '{1}'", definition.Name, MasterAddress);
+        if (string.IsNullOrWhiteSpace(MasterAddress))
             return;
 
-        _grpcChannel ??= GrpcChannel.ForAddress(_masterAddress);
+        _grpcChannel ??= GrpcChannel.ForAddress(MasterAddress);
         var client = new Discovery.DiscoveryClient(_grpcChannel);
 
         try
@@ -182,10 +177,10 @@ sealed class Registry : IRegistry
                 Aliases = { definition.Aliases }
             };
 
-            if (definition.FamilyName is not null)
+            if (!string.IsNullOrWhiteSpace(definition.FamilyName))
                 service.FamilyName = definition.FamilyName;
 
-            if (definition.FriendlyName is not null)
+            if (!string.IsNullOrWhiteSpace(definition.FriendlyName))
                 service.FriendlyName = definition.FriendlyName;
 
             client.Register(new DiscoveryRegisterRequest { Service = service });
@@ -195,6 +190,10 @@ sealed class Registry : IRegistry
             // The service is already registered, we throw the same exception thrown
             // by Validate() for a local duplicate.
             throw new ArgumentException($"Another service with the same name '{definition.Name}' exists.");
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine(e.ToString());
         }
     }
 }

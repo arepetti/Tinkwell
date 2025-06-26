@@ -4,6 +4,8 @@ This repository is a work in progress and serves as an exploratory reference imp
 
 At this stage, the code is intended solely for **experimentation** with technical solutions: it is not production-ready, and both its structure and content may (should!) change drastically at any time.
 
+See [SETUP.md](SETUP.md) for instructions.
+
 ## What for?
 
 This project does not contain the entire implementation of a "firmware-less Hub" (the Wasm host and library, UI and firmware repository won't be included for sure). That's because it can be used for different purposes then each specific use-case is going to be a separate repository.
