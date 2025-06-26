@@ -19,7 +19,6 @@ bool isMasterDiscovery = builder.TryClaimRole(
 builder.WebHost.ConfigureKestrel(options =>
 {
     var certificate = builder.ResolveCertificate();
-    Console.WriteLine(certificate.Path);
     options.ListenLocalhost(port, configure =>
     {
         configure.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;

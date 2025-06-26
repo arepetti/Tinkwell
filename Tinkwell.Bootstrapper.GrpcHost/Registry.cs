@@ -44,7 +44,6 @@ sealed class Registry : IRegistry
     {
         // TODO: add locking here, someone else might add a service after Validate() but before
         // we add the object to the collection.
-        Console.WriteLine("Registering {0} on {1}", definition.Name, Extensions.RunnerName);
         Validate(definition);
         _services.Add(definition);
     }
@@ -52,7 +51,6 @@ sealed class Registry : IRegistry
     public void AddGrpcEndpoint<TService>(ServiceDefinition? definition)
     {
         string name = definition?.Name ?? GetServiceFullName(typeof(TService));
-        Console.WriteLine("Registering<T> {0} on {1}", name, Extensions.RunnerName);
         var finalDefinition = new ServiceDefinition()
         {
             Name = name,
@@ -160,7 +158,6 @@ sealed class Registry : IRegistry
 
     private void TryRegisterWithMaster(ServiceDefinition definition)
     {
-        Console.WriteLine("Registering '{0}' on '{1}'", definition.Name, MasterAddress);
         if (string.IsNullOrWhiteSpace(MasterAddress))
             return;
 
@@ -190,10 +187,6 @@ sealed class Registry : IRegistry
             // The service is already registered, we throw the same exception thrown
             // by Validate() for a local duplicate.
             throw new ArgumentException($"Another service with the same name '{definition.Name}' exists.");
-        }
-        catch(Exception e)
-        {
-            Console.WriteLine(e.ToString());
         }
     }
 }

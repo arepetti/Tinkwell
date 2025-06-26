@@ -4,7 +4,7 @@ This repository is a work in progress and serves as an exploratory reference imp
 
 At this stage, the code is intended solely for **experimentation** with technical solutions: it is not production-ready, and both its structure and content may (should!) change drastically at any time.
 
-See [SETUP.md](SETUP.md) for instructions.
+See [Setup.md](./Documentation/Setup.md) for instructions.
 
 ## What for?
 
