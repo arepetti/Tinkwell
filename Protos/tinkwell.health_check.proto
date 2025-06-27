@@ -17,6 +17,7 @@ message HealthCheckResponse {
     NOT_SERVING = 2;
     DEGRADED = 3;
   }
-  ServingStatus status = 1;
-  optional string message = 2;
+  string name = 1;
+  ServingStatus status = 2;
+  optional string message = 3;
 }

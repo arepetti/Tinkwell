@@ -6,18 +6,15 @@ namespace Tinkwell.Bootstrapper.GrpcHost;
 
 static class Extensions
 {
-    public static string RunnerName
-        => Environment.GetEnvironmentVariable(WellKnownNames.RunnerNameEnvironmentVariable) ?? "";
-
     public static int ClaimPort(this WebApplicationBuilder builder)
     {
         var client = new NamedPipeClient();
         string? portNumber = client.SendCommandToSupervisorAndDisconnectAsync(
-            builder.Configuration, $"endpoints claim \"{Environment.MachineName}\" \"{RunnerName}\"")
+            builder.Configuration, $"endpoints claim \"{Environment.MachineName}\" \"{HostingInformation.RunnerName}\"")
             .GetAwaiter().GetResult();
 
         if (string.IsNullOrWhiteSpace(portNumber))
-            throw new InvalidOperationException($"Failed to claim an endpoint for runner '{RunnerName}' on machine '{Environment.MachineName}'.");
+            throw new InvalidOperationException($"Failed to claim an endpoint for runner '{HostingInformation.RunnerName}' on machine '{Environment.MachineName}'.");
 
         return int.Parse(portNumber, CultureInfo.InvariantCulture);
     }
@@ -26,11 +23,11 @@ static class Extensions
     {
         var client = new NamedPipeClient();
         masterAddress = client.SendCommandToSupervisorAndDisconnectAsync(
-            builder.Configuration, $"roles claim \"{role}\" \"{Environment.MachineName}\" \"{RunnerName}\"")
+            builder.Configuration, $"roles claim \"{role}\" \"{Environment.MachineName}\" \"{HostingInformation.RunnerName}\"")
             .GetAwaiter().GetResult();
 
         localAddress = client.SendCommandToSupervisorAndDisconnectAsync(
-            builder.Configuration, $"endpoints query \"{RunnerName}\"")
+            builder.Configuration, $"endpoints query \"{HostingInformation.RunnerName}\"")
             .GetAwaiter().GetResult();
 
         return string.IsNullOrWhiteSpace(masterAddress);

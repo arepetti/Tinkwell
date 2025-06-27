@@ -31,6 +31,8 @@ public interface IRegistry
 
     IEnumerable<ServiceDefinition> FindAll(string name, RegistrySearchMode options);
 
+    IEnumerable<ServiceDefinition> FindAll(Func<ServiceDefinition, bool> predicate);
+
     IEnumerable<ServiceDefinition> FindAll(string name)
         => FindAll(name, RegistrySearchMode.PartialMatch | RegistrySearchMode.IgnoreCase);
 }

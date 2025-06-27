@@ -28,17 +28,14 @@ public sealed class DiscoveryService(IRegistry registry) : Discovery.DiscoveryBa
 
             description.Aliases.AddRange(definition.Aliases);
 
-            if (IsAlternateName(description, description.FriendlyName))
+            if (!string.IsNullOrWhiteSpace(definition.FriendlyName))
                 description.FriendlyName = definition.FriendlyName;
 
-            if (IsAlternateName(description, description.FamilyName))
+            if (!string.IsNullOrWhiteSpace(definition.FamilyName))
                 description.FamilyName = definition.FamilyName;
 
             return description;
         }
-
-        static bool IsAlternateName(ServiceDescription description, string? altName)
-            => altName is not null && !string.Equals(description.Name, altName, StringComparison.Ordinal);
     }
 
     public override Task<DiscoveryFindReply> Find(DiscoveryFindRequest request, ServerCallContext context)
@@ -54,6 +51,23 @@ public sealed class DiscoveryService(IRegistry registry) : Discovery.DiscoveryBa
                 result.Host = service.Host;
             }
 
+            return result;
+        });
+    }
+
+    public override Task<DiscoveryFindAllReply> FindAll(DiscoveryFindAllRequest request, ServerCallContext context)
+    {
+        if (string.IsNullOrWhiteSpace(request.FamilyName))
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "Family name is required."));
+     
+        return ExecuteWithErrorHandling(() =>
+        {
+            var result = new DiscoveryFindAllReply();
+            var hosts = _registry
+                .FindAll(x => string.Equals(x.FamilyName, request.FamilyName, StringComparison.Ordinal))
+                .Select(x => x.Host);
+
+            result.Hosts.AddRange(hosts);
             return result;
         });
     }

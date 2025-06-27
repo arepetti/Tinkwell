@@ -3,9 +3,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Tinkwell.Bootstrapper;
 
-public interface IDllHost
+public interface IDllHost : ITinkwellHostRunnerBase
 {
-    string RunnerName { get; }
-    IDictionary<string, object> Properties { get; }
     IHostBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate);
 }

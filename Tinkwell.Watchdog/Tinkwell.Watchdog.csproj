@@ -13,6 +13,7 @@
 	<ItemGroup>
 		<PackageReference Include="Google.Protobuf" Version="3.31.1" />
 		<PackageReference Include="Grpc.Core" Version="2.46.6" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.64.0" />
 		<PackageReference Include="Grpc.Tools" Version="2.72.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,11 +22,22 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Services\" />
 	  <Folder Include="Protos\" />
+	  <Folder Include="Services\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Protobuf Include="..\Protos\tinkwell.discovery.proto" GrpcServices="Client">
+	    <Link>Protos\tinkwell.discovery.proto</Link>
+	  </Protobuf>
+	  <Protobuf Include="..\Protos\tinkwell.health_check.proto" GrpcServices="Client">
+	    <Link>Protos\tinkwell.health_check.proto</Link>
+	  </Protobuf>
+	  <Protobuf Include="..\Protos\tinkwell.store.proto" GrpcServices="Client">
+	    <Link>Protos\tinkwell.store.proto</Link>
+	  </Protobuf>
 	</ItemGroup>
 
 </Project>

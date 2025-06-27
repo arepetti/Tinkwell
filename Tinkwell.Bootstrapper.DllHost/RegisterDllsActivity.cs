@@ -89,7 +89,7 @@ sealed class RegisterDllsActivity : IActivity
             _configuration, $"runners get --pid {Environment.ProcessId}", cancellationToken);
 
         if (definition.Children.Any(x => x.Activation.Count != 0))
-            _logger.LogWarning("One or more children of {Name} have activation requirements which are not supported and they're going to be ignored.", Extensions.RunnerName);
+            _logger.LogWarning("One or more children of {Name} have activation requirements which are not supported and they're going to be ignored.", HostingInformation.RunnerName);
 
         return _evaluator.Filter(definition.Children)
             .Select(x => new HostedDll(x.Name, x.Path, x.Properties))

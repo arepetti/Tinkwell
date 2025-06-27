@@ -1,14 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Bootstrapper.DllHost;
 
 static class Extensions
 {
-    public static string RunnerName
-        => Environment.GetEnvironmentVariable(WellKnownNames.RunnerNameEnvironmentVariable) ?? "";
-
     public static async Task DelegateConfigureServicesAsync(this IHostBuilder builder, string[] args)
     {
         // We use the shadow host to support DI when configuring

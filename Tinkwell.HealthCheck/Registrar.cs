@@ -1,7 +1,7 @@
-﻿using System.Globalization;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Tinkwell.Bootstrapper;
 using Tinkwell.HealthCheck.Services;
+using Tinkwell.Services;
 
 namespace Tinkwell.HealthCheck;
 
@@ -11,8 +11,8 @@ public sealed class Registrar : IHostedGrpcServerRegistrar
     {
         host.MapGrpcService<HealthCheckService>(new()
         {
-            Name = $"Tinkwell.HealthCheck.({host.RunnerName})",
-            FamilyName = "Tinkwell.HealthCheck",
+            Name = $"{Tinkwell.Services.HealthCheck.Descriptor.FullName}.({host.RunnerName})",
+            FamilyName = Tinkwell.Services.HealthCheck.Descriptor.Name,
         });
     }
 
@@ -22,10 +22,10 @@ public sealed class Registrar : IHostedGrpcServerRegistrar
         {
             return new MonitoringOptions
             {
-                Interval = TimeSpan.FromSeconds(Math.Clamp(GetInt32(host.Properties, "interval", DefaultInterval), 5, int.MaxValue)),
-                Samples = Math.Clamp(GetInt32(host.Properties, "maximum_cpu_usage", DefaultSample), 1, 10),
-                EmaAlpha = Math.Clamp(GetInt32(host.Properties, "ema_alpha", 70), DefaultEmaAlpha, 100) / 100.0,
-                MaximumCpuUsage = Math.Clamp(GetInt32(host.Properties, "samples", DefaultMaximumCpuUsage), 1, 100),
+                Interval = TimeSpan.FromSeconds(Math.Clamp(host.GetPropertyInt32("interval", DefaultInterval), 5, int.MaxValue)),
+                Samples = Math.Clamp(host.GetPropertyInt32("maximum_cpu_usage", DefaultSample), 1, 10),
+                EmaAlpha = Math.Clamp(host.GetPropertyInt32("ema_alpha", 70), DefaultEmaAlpha, 100) / 100.0,
+                MaximumCpuUsage = Math.Clamp(host.GetPropertyInt32("samples", DefaultMaximumCpuUsage), 1, 100),
             };
         });
         host.Services.AddHostedService<Worker>();
@@ -37,29 +37,4 @@ public sealed class Registrar : IHostedGrpcServerRegistrar
     private const int DefaultSample = 5;
     private const int DefaultEmaAlpha = 70;
     private const int DefaultMaximumCpuUsage = 90;
-
-    private static int GetInt32(IDictionary<string, object> properties, string name, int defaultValue)
-    {
-        if (properties.TryGetValue(name, out var obj))
-        {
-            if (obj is int)
-                return (int)obj;
-
-            try
-            {
-                var str = Convert.ToString(obj, CultureInfo.InvariantCulture);
-                return int.TryParse(str, CultureInfo.InvariantCulture, out int value) ? value : defaultValue;
-            }
-            catch (FormatException)
-            {
-                return defaultValue;
-            }
-            catch (InvalidCastException) 
-            {
-                return defaultValue;
-            }
-        }
-
-        return defaultValue;
-    }
 }

@@ -21,13 +21,13 @@ sealed class Worker : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("DllHost '{HostName}' started successfully", Extensions.RunnerName);
-        await _pipeClient.SendCommandToSupervisorAndDisconnectAsync(_configuration, $"signal \"{Extensions.RunnerName}\"");
+        _logger.LogInformation("DllHost '{HostName}' started successfully", HostingInformation.RunnerName);
+        await _pipeClient.SendCommandToSupervisorAndDisconnectAsync(_configuration, $"signal \"{HostingInformation.RunnerName}\"");
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("DllHost '{HostName}' stopped successfully", Extensions.RunnerName);
+        _logger.LogInformation("DllHost '{HostName}' stopped successfully", HostingInformation.RunnerName);
         return Task.CompletedTask;
     }
 

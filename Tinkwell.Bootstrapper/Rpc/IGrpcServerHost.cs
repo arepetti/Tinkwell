@@ -3,10 +3,8 @@ using Tinkwell.Bootstrapper.Ensamble;
 
 namespace Tinkwell.Bootstrapper;
 
-public interface IGrpcServerHost
+public interface IGrpcServerHost : ITinkwellHostRunnerBase
 {
     IServiceCollection Services { get; }
-    string RunnerName { get; }
-    IDictionary<string, object> Properties { get; }
     void MapGrpcService<TService>(ServiceDefinition? definition = default) where TService : class;
 }

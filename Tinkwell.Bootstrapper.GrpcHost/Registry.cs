@@ -95,6 +95,12 @@ sealed class Registry : IRegistry
         });
     }
 
+    public IEnumerable<ServiceDefinition> FindAll(Func<ServiceDefinition, bool> predicate)
+    {
+        ArgumentNullException.ThrowIfNull(predicate, nameof(predicate));
+        return _services.Where(predicate);
+    }
+
     public bool Exists(string? name)
     {
         if (string.IsNullOrWhiteSpace(name))

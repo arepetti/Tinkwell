@@ -1,3 +1,4 @@
+using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.GrpcHost;
@@ -54,7 +55,7 @@ registry.LocalAddress = localAddress;
 if (isMasterDiscovery)
 {
     app.MapGrpcService<DiscoveryService>();
-    registry.AddGrpcEndpoint<DiscoveryService>(new() { Aliases = ["Discovery", "DiscoveryService"] });
+    registry.AddGrpcEndpoint<DiscoveryService>(new() { Aliases = [Tinkwell.Services.Discovery.Descriptor.Name] });
 }
 
 await app.DelegateConfigureRoutesAsync();
@@ -70,7 +71,7 @@ using var watcher = ParentProcessWatcher.WhenNotFound(() =>
 app.Lifetime.ApplicationStarted.Register(() =>
 {
     var client = app.Services.GetRequiredService<INamedPipeClient>();
-    client.SendCommandToSupervisorAndDisconnectAsync(app.Configuration, $"signal \"{Extensions.RunnerName}\"")
+    client.SendCommandToSupervisorAndDisconnectAsync(app.Configuration, $"signal \"{HostingInformation.RunnerName}\"")
         .GetAwaiter()
         .GetResult();
 });
