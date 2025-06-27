@@ -30,20 +30,16 @@ Units should expose gRPC services but they should also support a "_file-like acc
 A minimal `system.ensamble` configuration file looks like this:
 
 ```
-{% assign discovery_url = "https://localhost:5000"  %}
-
 runner grpchost "Tinkwell.Bootstrapper.GrpcHost" {
-    arguments: "--Kestrel:Endpoints:Http2:Url={{ discovery_url }}"
 	service runner orchestrator "Tinkwell.Orchestrator.dll" {}
 }
 
 runner grpchost_store "Tinkwell.Bootstrapper.GrpcHost" {
-    arguments: "--Kestrel:Endpoints:Http2:Url=https://localhost:5001 --Discovery:Master={{ discovery_url }}"
+    activation: blocking
 	service runner store "Tinkwell.Store.dll" {}
 }
 
 runner cpumonitor "Tinkwell.Bootstrapper.SensorHost" if "platform = 'linux'" {
-    arguments: "--Discovery:Master={{ discovery_url }}"
     service runner cpu_temperature "Pi.Units.VcGend.dll" 
         properties: {
             command: "measure_temp"
@@ -61,18 +57,14 @@ runner cpumonitor "Tinkwell.Bootstrapper.SensorHost" if "platform = 'linux'" {
 }
 
 runner some_firmware "Tinkwell.Bootstrapper.WasmHost"" {
-    arguments: "--Discovery:Master={{ discovery_url }}"
     properties: {
         path: "some_firmware.wasm"
     }
 }
 
 runner another_native_firmware "./bin/another_firmware" {
-    arguments: "--Discovery:Master={{ discovery_url }}"
 }
 ```
-
-(yes, from the very first line you can understand that the source is pre-parsed and rendered with Liquid)
 
 ## What's Missing?
 
