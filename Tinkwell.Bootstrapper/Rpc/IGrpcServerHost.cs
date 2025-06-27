@@ -1,9 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Tinkwell.Bootstrapper.Ensamble;
 
 namespace Tinkwell.Bootstrapper.Rpc;
 
 public interface IGrpcServerHost
 {
     IServiceCollection Services { get; }
-    void MapGrpcService<TService>() where TService : class;
+    string RunnerName { get; }
+    IDictionary<string, object> Properties { get; }
+    void MapGrpcService<TService>(ServiceDefinition? definition = default) where TService : class;
 }

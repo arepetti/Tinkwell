@@ -1,4 +1,4 @@
-namespace Tinkwell.Bootstrapper.GrpcHost;
+namespace Tinkwell.Bootstrapper.Ensamble;
 
 public sealed class ServiceDefinition
 {

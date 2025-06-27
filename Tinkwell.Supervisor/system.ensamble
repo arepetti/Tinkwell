@@ -1,9 +1,11 @@
 runner grpchost "Tinkwell.Bootstrapper.GrpcHost" {
 	activation: blocking
 	service runner orchestrator "Tinkwell.Orchestrator.dll" {}
+	service runner "Tinkwell.HealthCheck.dll" {}
 }
 
 runner grpchost_store "Tinkwell.Bootstrapper.GrpcHost" {
 	activation: blocking
 	service runner store "Tinkwell.Store.dll" {}
+	service runner "Tinkwell.HealthCheck.dll" {}
 }

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Reflection;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Services;
 
 namespace Tinkwell.Bootstrapper.GrpcHost;
@@ -32,9 +33,6 @@ sealed class Registry : IRegistry
 
         if (Exists(definition.Name))
             throw new DuplicateNameException($"Another service with the same name '{definition.Name}' exists.");
-
-        if (Exists(definition.FamilyName))
-            throw new DuplicateNameException($"Another service with the same family name '{definition.FamilyName}' exists.");
 
         if (definition.Aliases is not null && definition.Aliases.Any(x => Exists(x)))
             throw new DuplicateNameException($"Another service with the same alias exists.");

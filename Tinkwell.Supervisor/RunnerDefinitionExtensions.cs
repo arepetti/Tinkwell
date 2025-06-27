@@ -6,10 +6,10 @@ namespace Tinkwell.Supervisor;
 static class RunnerDefinitionExtensions
 {
     public static bool ShouldKeepAlive(this RunnerDefinition definition, bool defaultValue = true)
-        => GetOptionValue(definition, "keep-alive", defaultValue);
+        => GetOptionValue(definition, "keep_alive", defaultValue);
 
     public static bool IsBlockingActivation(this RunnerDefinition definition, bool defaultValue = true)
-        => GetActivationValue(definition, "mode", "non-blocking").Equals("blocking", StringComparison.Ordinal);
+        => GetActivationValue(definition, "mode", "non_blocking").Equals("blocking", StringComparison.Ordinal);
 
     private static bool GetOptionValue(RunnerDefinition definition, string key, bool defaultValue)
     {

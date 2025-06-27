@@ -13,10 +13,12 @@
 
 	<ItemGroup>
 		<PackageReference Include="Grpc.AspNetCore" Version="2.64.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
+	  <ProjectReference Include="..\Tinkwell.HealthCheck\Tinkwell.HealthCheck.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -24,7 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Protobuf Include="..\Protos\tinkwell.discovery.proto">
+	  <Protobuf Include="..\Protos\tinkwell.discovery.proto" GrpcServices="Both">
 	    <Link>Protos\tinkwell.discovery.proto</Link>
 	  </Protobuf>
 	</ItemGroup>

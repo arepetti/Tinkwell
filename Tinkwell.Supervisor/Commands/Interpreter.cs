@@ -21,6 +21,7 @@ sealed class Interpreter
     }
 
     public event EventHandler<InterpreterResolveValueEventArgs>? ClaimRole;
+    public event EventHandler<InterpreterResolveValueEventArgs>? QueryRole;
     public event EventHandler<InterpreterResolveValueEventArgs>? ClaimUrl;
     public event EventHandler<InterpreterResolveValueEventArgs>? QueryUrl;
     public event EventHandler? Signaled;
@@ -82,6 +83,12 @@ sealed class Interpreter
     private CommandLineApplication ParseCommandLine(StreamWriter writer, string input)
     {
         var app = new CommandLineApplication();
+
+        app.Command("ping", exitCmd =>
+        {
+            exitCmd.OnExecute(() => writer.WriteLine("OK"));
+        });
+
         app.Command("exit", exitCmd =>
         {
             exitCmd.OnExecute(() => TerminateParsingExitCode);
@@ -237,6 +244,21 @@ sealed class Interpreter
                         machineArgument.Value,
                         runnerNameArgument.Value!);
                     ClaimRole?.Invoke(this, ea);
+
+                    writer.WriteLine(ea.Value);
+                });
+            });
+
+            rolesCmd.Command("query", queryRole =>
+            {
+                var roleArgument = queryRole.Argument("role", "");
+
+                queryRole.OnExecute(() =>
+                {
+                    ArgumentException.ThrowIfNullOrWhiteSpace(roleArgument.Value);
+
+                    var ea = new InterpreterResolveValueEventArgs(roleArgument.Value, "", "");
+                    QueryRole?.Invoke(this, ea);
 
                     writer.WriteLine(ea.Value);
                 });

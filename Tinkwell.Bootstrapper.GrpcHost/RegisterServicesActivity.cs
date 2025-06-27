@@ -31,8 +31,10 @@ sealed class RegisterServicesActivity : IActivity
         Debug.Assert(_serviceProvider is not null);
 
         _logger.LogDebug("Configuring dependencies for GRPC services ");
-        var host = new HostProxy(builder, _serviceProvider);
-        await ForEachRegistrarAsync(host, x => x.ConfigureServices(host), cancellationToken);
+        await ForEachRegistrarAsync(
+            () => new HostProxy(builder, _serviceProvider),
+            (host, service) => service.ConfigureServices(host),
+            cancellationToken);
 
         _logger.LogInformation("{Name} loaded {Count} runner(s): {Runners}",
             Environment.GetEnvironmentVariable(WellKnownNames.RunnerNameEnvironmentVariable),
@@ -43,8 +45,10 @@ sealed class RegisterServicesActivity : IActivity
     public async Task ConfigureApplication(WebApplication app, CancellationToken cancellationToken)
     {
         _logger.LogDebug("Configuring endpoints for GRPC services");
-        var host = new HostProxy(app);
-        await ForEachRegistrarAsync(host, x => x.ConfigureRoutes(host), cancellationToken);
+        await ForEachRegistrarAsync(
+            () => new HostProxy(app),
+            (host, service) => service.ConfigureRoutes(host),
+            cancellationToken);
     }
 
     private IServiceProvider? _serviceProvider;
@@ -54,7 +58,7 @@ sealed class RegisterServicesActivity : IActivity
     private readonly IEnsambleConditionEvaluator _evaluator;
     private IEnumerable<HostedGrpcServer>? _services;
 
-    private async Task ForEachRegistrarAsync(HostProxy host, Action<IHostedGrpcServerRegistrar> action, CancellationToken cancellationToken)
+    private async Task ForEachRegistrarAsync(Func<HostProxy> hostFactory, Action<HostProxy, IHostedGrpcServerRegistrar> action, CancellationToken cancellationToken)
     {
         _services ??= await FetchServiceListAsync(cancellationToken);
 
@@ -64,8 +68,11 @@ sealed class RegisterServicesActivity : IActivity
                 break;
 
             _logger.LogDebug("Configuring {Name}", service.Name);
+            var host = hostFactory();
+            host.RunnerName = service.Name;
+            host.Properties = service.Properties;
             foreach (var registrar in LoadRegistrarsFrom(host, service))
-                action(registrar);
+                action(host, registrar);
         }
     }
 
@@ -102,19 +109,19 @@ sealed class RegisterServicesActivity : IActivity
         var definition = await _pipeClient.SendCommandToSupervisorAndDisconnectAsync<RunnerDefinition>(
             _configuration, $"runners get --pid {Environment.ProcessId}", cancellationToken);
 
+        if (definition.Children.Any(x => x.Activation.Count != 0))
+            _logger.LogWarning("One or more children of {Name} have activation requirements which are not supported and they're going to be ignored.", Extensions.RunnerName);
+
         return [.. _evaluator.Filter(definition.Children).Select(x => new HostedGrpcServer
         {
             Name = x.Name,
-            Path = x.Path
+            Path = x.Path,
+            Properties = x.Properties,
         })];
     }
 
     sealed class HostProxy : IGrpcServerHost
     {
-        private readonly WebApplication? _app;
-        private readonly IHostApplicationBuilder? _builder;
-        private readonly IServiceProvider? _serviceProvider;
-
         public HostProxy(WebApplication app)
         {
             _app = app;
@@ -138,13 +145,21 @@ sealed class RegisterServicesActivity : IActivity
             }
         }
 
-        public void MapGrpcService<TService>() where TService : class
+        public string RunnerName { get; internal set; } = null!;
+
+        public IDictionary<string, object> Properties { get; internal set; } = null!;
+
+        public void MapGrpcService<TService>(ServiceDefinition? definition = default) where TService : class
         {
             ThrowNotSupportedIfNull(_app);
 
-            _app.Services.GetRequiredService<IRegistry>().AddGrpcEndpoint<TService>();
+            _app.Services.GetRequiredService<IRegistry>().AddGrpcEndpoint<TService>(definition);
             _app.MapGrpcService<TService>();
         }
+
+        private readonly WebApplication? _app;
+        private readonly IHostApplicationBuilder? _builder;
+        private readonly IServiceProvider? _serviceProvider;
 
         private static void ThrowNotSupportedIfNull([NotNull] object? value)
         {
@@ -157,6 +172,7 @@ sealed class RegisterServicesActivity : IActivity
     {
         public required string Name { get; set; }
         public required string Path { get; init; }
+        public required Dictionary<string, object> Properties { get; init; }
         public Assembly? Assembly { get; set; }
     }
 }

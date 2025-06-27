@@ -1,3 +1,5 @@
+using Tinkwell.Bootstrapper.Ensamble;
+
 namespace Tinkwell.Bootstrapper.GrpcHost;
 
 [Flags]
@@ -20,7 +22,7 @@ public interface IRegistry
 
     void AddGrpcEndpoint(ServiceDefinition definition);
 
-    void AddGrpcEndpoint<TService>(ServiceDefinition? definition = null);
+    void AddGrpcEndpoint<TService>(ServiceDefinition? definition = default);
 
     ServiceDefinition? Find(string name, RegistrySearchMode options);
 

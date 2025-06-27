@@ -52,6 +52,14 @@ sealed class Server : ICommandServer
             if (!_roles.TryAdd(e.Role!, _endpoints.Query(e.Runner)!))
                 e.Value = _roles[e.Role!];
         };
+        interpreter.QueryRole += (_, e) =>
+        {
+            if (_roles.TryGetValue(e.Role!, out string? masterAddress))
+            {
+                e.Value = masterAddress;
+                return;
+            }
+        };
         interpreter.ReadAndProcessNextCommandAsync(e.Reader, e.Writer, e.CancellationToken)
             .ContinueWith(task =>
             {

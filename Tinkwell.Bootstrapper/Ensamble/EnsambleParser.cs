@@ -93,42 +93,47 @@ sealed class EnsambleParser
         from mode in ParseActivationValue
         select new KeyValuePair<string, object>("activation", mode);
 
+    private static readonly TokenListParser<EnsambleToken, (string? Name, string Path)> RunnerNameAndPath =
+        from first in Identifier.Or(UnquotedString)
+        from maybeSecond in UnquotedString.Try()!.OptionalOrDefault()
+        select maybeSecond != null
+            ? (Name: first, Path: maybeSecond)
+            : (Name: (string?)null, Path: first);
+
     private static readonly TokenListParser<EnsambleToken, RunnerDefinition> Runner =
         from _ in Token.EqualTo(EnsambleToken.Runner)
-        from name in Identifier.Or(UnquotedString)
-        from path in UnquotedString
+        from nameAndPath in RunnerNameAndPath
         from condition in Token.EqualTo(EnsambleToken.If).IgnoreThen(UnquotedString)!.OptionalOrDefault()
         from __ in Token.EqualTo(EnsambleToken.LBrace)
-
         from inner in
             PropertiesBlock.Select(p => (object)p)
             .Or(ArgumentsBlock.Select(a => (object)new KeyValuePair<string, string>("arguments", a)))
             .Or(ActivationProperty.Select(a => (object)a))
             .Or(ServiceBlock.Select(svc => (object)svc))
             .Many()
-
         from ___ in Token.EqualTo(EnsambleToken.RBrace)
         select new RunnerDefinition
         {
-            Name = name,
-            Path = path,
+            Name = nameAndPath.Name ?? $"anonymous-{Guid.NewGuid()}",
+            Path = nameAndPath.Path,
             Condition = condition,
             Arguments = inner.OfType<KeyValuePair<string, string>>()
                              .FirstOrDefault(kv => kv.Key == "arguments").Value,
             Activation = inner.OfType<KeyValuePair<string, object>>()
-                  .Where(kv => kv.Key == "activation")
-                  .Select(kv => (Dictionary<string, string>)kv.Value)
-                  .FirstOrDefault() ?? new(),
+                              .Where(kv => kv.Key == "activation")
+                              .Select(kv => kv.Value)
+                              .OfType<Dictionary<string, string>>()
+                              .FirstOrDefault() ?? new(),
             Properties = inner.OfType<Dictionary<string, object>>().FirstOrDefault() ?? new(),
             Children = inner.OfType<RunnerDefinition>().ToList()
         };
 
     private static readonly TokenListParser<EnsambleToken, string> ImportLine =
         Token.EqualTo(EnsambleToken.Import).IgnoreThen(UnquotedString);
-    
+
     static readonly TokenListParser<EnsambleToken,
         (List<string> Imports, List<RunnerDefinition> Runners)> File =
         from imports in ImportLine.Many()
         from runners in Runner.Many() // Not AtLeastOne() because we might import other files only
         select (imports.ToList(), runners.ToList());
-} 
+}
