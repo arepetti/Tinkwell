@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ensamble;
 
 namespace Tinkwell.Supervisor.Sentinel;
@@ -74,38 +73,31 @@ sealed class SupervisionedChildProcess : IChildProcess, IDisposable
         if (_process.IsRunning)
             return;
 
-        _crashCounter.Increment();
-        _logger.LogWarning("Process {Name} ({FriendlyName}) ({PID}) exited (exit code {ExitCode}) unexpectedly",
-            e.Name, Definition.Name, e.Pid, e.ExitCode);
-
         _process.Detach();
 
-        // If the LAST time the process exited neatly (exit code == 0) then we give it another chance
-        if (ShouldRestart(e.ExitCode))
+        // If the process exited gracefully then we should NOT restart it, it could be that we are
+        // shutting down or that it completed its task.
+        if (e.ExitCode == 0)
         {
-            _logger.LogInformation("Restarting {Name}", Definition.Name);
-            Start();
+            _logger.LogInformation("Process {Name} terminated gracefully", Definition.Name);
         }
         else
         {
-            _logger.LogError("Runner {Name} ({FriendlyName}) crashed too many times, shutting down.", e.Name, Definition.Name);
-            throw new BootstrapperException("One or more runners crashed too many times.");
+            _crashCounter.Increment();
+            _logger.LogWarning("Process {Name} ({FriendlyName}) ({PID}) exited (exit code {ExitCode}) unexpectedly",
+                e.Name, Definition.Name, e.Pid, e.ExitCode);
+
+            // If lately it didn't crash too often then we give it another chance
+            if (_crashCounter.CountIn(CrashIntervalInSeconds) < MaximumNumberOfCrashesPerInterval)
+            {
+                _logger.LogInformation("Restarting {Name}", Definition.Name);
+                Start();
+            }
+            else
+            {
+                _logger.LogCritical("Runner {Name} ({FriendlyName}) crashed too many times, shutting down.", e.Name, Definition.Name);
+                Environment.Exit(1);
+            }
         }
-    }
-
-    private bool ShouldRestart(int latestExitCode)
-    {
-        // If lately it didn't crash too often then we give it another chance
-        if (_crashCounter.CountIn(CrashIntervalInSeconds) < MaximumNumberOfCrashesPerInterval)
-            return true;
-
-        // However in the recent past it crashed (even just once, apart this time) then we
-        // can't restart it even if the exit code is 0. Some processes spawns children and exit immediately:
-        // we can't monitor them and we do not want to crash everything filling the memory with new instances.
-        // Ideally those processes should be marked with "keep-alive=false" option but let's help debugging them.
-        if (latestExitCode == 0 && _crashCounter.PeekCount() == 1)
-            return true;
-
-        return false;
     }
 }

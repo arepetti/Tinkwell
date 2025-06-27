@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
-using Tinkwell.Bootstrapper.Rpc;
+using Tinkwell.Bootstrapper;
 using Tinkwell.HealthCheck.Services;
 
 namespace Tinkwell.HealthCheck;

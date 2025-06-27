@@ -1,4 +1,4 @@
-﻿namespace Tinkwell.Bootstrapper.Rpc;
+﻿namespace Tinkwell.Bootstrapper;
 
 public interface IHostedGrpcServerRegistrar
 {

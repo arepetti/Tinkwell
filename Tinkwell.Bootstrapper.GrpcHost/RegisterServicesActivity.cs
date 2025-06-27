@@ -4,7 +4,6 @@ using System.Reflection;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Ipc.Extensions;
-using Tinkwell.Bootstrapper.Rpc;
 
 namespace Tinkwell.Bootstrapper.GrpcHost;
 
@@ -39,7 +38,10 @@ sealed class RegisterServicesActivity : IActivity
         _logger.LogInformation("{Name} loaded {Count} runner(s): {Runners}",
             Environment.GetEnvironmentVariable(WellKnownNames.RunnerNameEnvironmentVariable),
             _services?.Count(),
-            string.Join(',', _services!.Select(x => x.Name)));
+            string.Join(',', _services!.Select(x => Trim(x.Name))));
+
+        static string Trim(string text)
+            => text.Length > 8 ? text.Substring(0, 12) + "..." : text;
     }
 
     public async Task ConfigureApplication(WebApplication app, CancellationToken cancellationToken)

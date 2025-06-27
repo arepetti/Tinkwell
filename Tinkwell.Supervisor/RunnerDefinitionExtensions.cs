@@ -9,7 +9,7 @@ static class RunnerDefinitionExtensions
         => GetOptionValue(definition, "keep_alive", defaultValue);
 
     public static bool IsBlockingActivation(this RunnerDefinition definition, bool defaultValue = true)
-        => GetActivationValue(definition, "mode", "non_blocking").Equals("blocking", StringComparison.Ordinal);
+        => GetActivationValue(definition, "mode", "blocking").Equals("blocking", StringComparison.Ordinal);
 
     private static bool GetOptionValue(RunnerDefinition definition, string key, bool defaultValue)
     {

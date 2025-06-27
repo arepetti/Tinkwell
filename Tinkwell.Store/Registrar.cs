@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Tinkwell.Bootstrapper.Rpc;
+using Tinkwell.Bootstrapper;
 using Tinkwell.Store.Services;
 
 namespace Tinkwell.Store;

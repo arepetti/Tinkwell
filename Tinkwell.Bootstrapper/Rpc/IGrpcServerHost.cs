@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Tinkwell.Bootstrapper.Ensamble;
 
-namespace Tinkwell.Bootstrapper.Rpc;
+namespace Tinkwell.Bootstrapper;
 
 public interface IGrpcServerHost
 {

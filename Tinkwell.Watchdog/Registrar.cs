@@ -1,17 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Tinkwell.Bootstrapper.Ipc;
-using Tinkwell.Bootstrapper.Rpc;
+﻿using Tinkwell.Bootstrapper;
 
 namespace Tinkwell.Watchdog;
 
-public sealed class Registrar : IHostedGrpcServerRegistrar
+public sealed class Registrar : IHostedDllRegistrar
 {
-    public void ConfigureRoutes(IGrpcServerHost host)
-    {
-        // host.MapGrpcService<OrchestratorService>();
-    }
-
-    public void ConfigureServices(IGrpcServerHost host)
+    public void ConfigureServices(IDllHost host)
     {
         // host.Services.AddSingleton<INamedPipeClient, NamedPipeClient>();
     }

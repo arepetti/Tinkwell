@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ipc;
-using Tinkwell.Bootstrapper.Rpc;
 using Tinkwell.Orchestrator.Services;
 
 namespace Tinkwell.Orchestrator;
