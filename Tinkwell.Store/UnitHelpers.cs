@@ -41,16 +41,15 @@ static class UnitHelpers
 
     public static bool IsValidUnit(string unitTypeName, string? unitName)
     {
-        //var unitType = ParseQuantityType(unitTypeName, throwOnError: false);
-        //if (unitType is null)
-        //    return false;
+        var unitType = ParseQuantityType(unitTypeName, throwOnError: false);
+        if (unitType is null)
+            return false;
 
-        //// Scalar unit types can have an empty/null unit name, as they represent a dimensionless quantity.
-        //if (string.IsNullOrWhiteSpace(unitName) && typeof(UnitsNet.Units.ScalarUnit).IsAssignableFrom(unitType))
-        //    return true;
+        // Scalar unit types can have an empty/null unit name, as they represent a dimensionless quantity.
+        if (string.IsNullOrWhiteSpace(unitName) && unitType == typeof(Scalar))
+            return true;
 
-        //return UnitParser.Default.TryParse(unitName, unitType, CultureInfo.InvariantCulture, out _);
-        return true;
+        return UnitParser.Default.TryParse(unitName, unitType, CultureInfo.InvariantCulture, out _);
     }
 
     public static IQuantity Parse(QuantityMetadata metadata, string value)

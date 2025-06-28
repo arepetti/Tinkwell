@@ -19,6 +19,16 @@ service Store {
     // Update a measure with a new value, you need to call Register() before
     // you can set a value for a measure.
     rpc Update (StoreUpdateRequest) returns (StoreUpdateReply);
+
+    // Subscribe to changes for a specific measure. The measure does not need to be registered
+    // when you subscribe for changes (note that you will receive updates but no notification for when
+    // the measure is registered).
+    rpc SubscribeTo (SubscribeToRequest) returns (stream StoreChangeResponse);
+
+    // Subscribe to changes for all the quantities that meet the specified criteria.
+    // Note that you're going to receive events also for measures not yet registered
+    // (but matching the criteria) when this function has been called.
+    rpc SubscribeToMatching (SubscribeToMatchingRequest) returns (stream StoreChangeResponse);
 }
 
 // Request message for Store.List().
@@ -75,9 +85,59 @@ message StoreUpdateRequest {
     // quantity specified when registering the measure. If the unit of measure is different (but compatible)
     // then it's converted automatically to the unit specified if StoreRegisterRequest. For example, if the unit 
     // is DegreesCelsius and you pass the value 14 °F then it is converted to -10 °C.
-    // to 
     string value = 2;
 }
 
 // Response message for Store.Update().
 message StoreUpdateReply {}
+
+// Request for Store.SubscribeTo().
+message SubscribeToRequest {
+    // The name of the quantity to subscribe to. It must be an exact match.
+    string name = 1;
+}
+
+// Request for Store.SubscribeToMatching().
+message SubscribeToMatchingRequest {
+    // The matching pattern. Supported wildcards:
+    //   * matches any sequence of characters (including empty)
+    //   ? matches any single character
+    //   [abc] matches one character in the set (e.g., 'a', 'b', or 'c')
+    //   [^abc] matches one character NOT in the set
+    //   [a-z] matches one character in the given range
+    // Examples:
+    //   "Temp.*" matches "Temp.A", "Temp.Room1", but not "Temperature"
+    //   "T?st" matches "Test", "Tast", "Tost"
+    //   "[Bb]lue" matches "Blue" and "blue", but not "glue"
+    string pattern = 1;
+}
+
+// Represents a quantity (a value and its unit of measure).
+message Quantity {
+    // The unit of measure (such as DegreesCelsius, MetersPerSecond, etc).
+    string unit = 1;
+    // The type of the quantity (such as Temperature, Speed, etc).
+    string quantity_type = 2;
+    // The value of the quantity, it can be either a number or a text.
+    oneof value {
+        // The value associated with this quantity, if numeric.
+        double number = 3;
+        // The value associated with this quantity, if text.
+        string text = 4;
+    }
+}
+
+// Response containing a list of changes occurred in the Store.
+message StoreChangeResponse {
+    // Represents a single change in the Store.
+    message StoreChange {
+        reserved 3;
+        // The name of the quantity that changed.
+        string name = 1;
+        // The new value of the quantity.
+        Quantity new_value = 2;
+    }
+    // The list of changes. It may contain one or more changes (if changes have been batched) and if the
+    // same measure changed multiple times then all the individual changes are listed (from oldest to newest).
+    repeated StoreChange changes = 1;
+}
