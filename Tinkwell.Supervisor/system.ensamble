@@ -5,7 +5,11 @@ runner discovery "Tinkwell.Bootstrapper.GrpcHost" {
 
 runner store "Tinkwell.Bootstrapper.GrpcHost" {
 	service runner "Tinkwell.Store.dll" {}
-	service runner reducer "Tinkwell.Reducer.dll" {}
+	service runner reducer "Tinkwell.Reducer.dll" {
+		properties: {
+			path: "./measures.twm"
+		}
+	}
 	service runner "Tinkwell.HealthCheck.dll" {}
 }
 

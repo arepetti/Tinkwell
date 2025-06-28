@@ -11,6 +11,9 @@
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Include="..\Shared\DiscoveryHelper.cs" Link="DiscoveryHelper.cs" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="Google.Protobuf" Version="3.31.1" />
 		<PackageReference Include="Grpc.Net.Client" Version="2.64.0" />
 		<PackageReference Include="Grpc.Tools" Version="2.72.0">
@@ -34,9 +37,6 @@
 	  </Protobuf>
 	</ItemGroup>
 	<ItemGroup>
-	  <None Update="derivatives.json">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
 	  <None Update="measures.twm">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

@@ -19,11 +19,11 @@ property_value   ::= QUOTED_STRING | number_literal | identifier_list
 
 ---
 
-### 📝 String Values
+### String Values
 
-All textual values in the configuration must be wrapped in **double quotes** (`"`). These include fields like `type`, `unit`, `expression`, `description`, and `category`.
+All textual values in the configuration must be wrapped in double quotes (`"`). These include fields like `type`, `unit`, `expression`, `description`, and `category`.
 
-#### 🔹 Basic Strings
+#### Basic Strings
 
 Basic quoted string values look like this:
 
@@ -33,7 +33,7 @@ type: "ElectricalPower"
 category: "Energy Monitoring"
 ```
 
-#### 🔹 Escaping Characters
+#### Escaping Characters
 
 To include special characters like double quotes or backslashes inside a string, use escape sequences:
 
@@ -46,7 +46,7 @@ To include special characters like double quotes or backslashes inside a string,
 
 These follow **C-style** string escape rules and are parsed accordingly.
 
-#### 🔹 Multiline Strings
+#### Multiline Strings
 
 Use a backslash (`\`) at the end of the line to indicate that the string continues on the next line. This works for values like `description` and `expression`:
 
@@ -71,7 +71,8 @@ measure "Measure.Name" {
 }
 ```
 
-The measure name must be enclosed in double quotes. The name of the measure can be any alphanumeric value (plus `-_.` and spaces) Keys and values are separated by `:`, no quotes are needed for most values. Lines starting with `//` are considered comments and ignored.
+The measure name could be enclosed in double quotes. The name of the measure can be any alphanumeric value (plus `-_.` and spaces) but if it's a standard C identifier then you do not need to quote it.
+Lines starting with `//` are considered comments and ignored.
 
 ---
 
@@ -79,24 +80,18 @@ The measure name must be enclosed in double quotes. The name of the measure can 
 
 ### `type` *(optional)*
 
-Specifies the quantity type:
+Specifies the quantity type.
 
 ```text
 type: Electrical Power
 ```
-It must be a valid _quantity type_ identifier. For legibility the single word can be separate with spaces, these two are then equivalent:
+It must be a valid _quantity type_ identifier:
 
 ```text
- measure "Power 1" {
-    type: Electrical Power
-    unit: Watt
-    expression: Voltage1 * Current1
-}
-
- measure "Power 2" {
+ measure "Power" {
     type: ElectricalPower
     unit: Watt
-    expression: Voltage2 * Current2
+    expression: Voltage * Current
 }
 ```
 
@@ -112,16 +107,13 @@ Defines the unit of measurement.
 unit: Watt
 ```
 
-As for `type` the words can be separated with spaces. 
-
-Default: empty string
+It must be a valid unit of measure for the type of quantity specified in `type`. Default: empty string
 
 ---
 
 ### `expression` *(required)*
 
-A mathematical expression. You can use any measure in the system, they must be already defined when this configuration file is parsed.
-If the name of a measure is alphanumeric (and it does not start with a number) then you do not need to enclose it with square brackets.
+A mathematical expression which returns the calculated value of the derived measure.
 
 ```text
 expression: Voltage * Current
@@ -135,11 +127,14 @@ expression: [Zone1.Temperature] + \
             [Zone3.Temperature]
 ```
 
+You can use any measure in the system, they **must be already defined when this configuration file is loaded**.
+If the name of a measure is alphanumeric (and it does not start with a number) then you do not need to enclose it with square brackets.
+
 ---
 
 ### `description` *(optional)*
 
-Free text. Supports multi-line continuation:
+Free text. Supports multi-line continuation.
 
 ```text
 description: Calculates total energy. \
@@ -150,7 +145,7 @@ description: Calculates total energy. \
 
 ### `minimum`, `maximum` *(optional)*
 
-Numeric boundaries for the derived value:
+Numeric boundaries for the derived value.
 
 ```text
 minimum: 0.0
@@ -162,31 +157,31 @@ You can specify only `minimum` or only `maximum`. When a boundaries is specified
 
 ### `tags` *(optional)*
 
-Comma-separated list of keywords:
+Comma-separated list of keywords.
 
 ```text
 tags: energy, power, analytics
 ```
 
-You can use this to group your measures and searches (using `List()` from the `Tinkwell.Store` service) support filtering by tag.
+Useful to organise your measures, you can run searches (using `List()` from `Tinkwell.Store` service) filtered by tag.
 
 ---
 
 ### `category` *(optional)*
 
-A classification label:
+A classification label.
 
 ```text
 category: Energy Management
 ```
 
-You can categorize your measures and searches (using `List()` from `Tinkwell.Store` service) support filtering by category.
+Useful to organise your measures, you can run searches (using `List()` from `Tinkwell.Store` service) filtered by category.
 
 ---
 
 ### `precision` *(optional)*
 
-Specifies how many decimal places to round to:
+Specifies how many decimal places to round to.
 
 ```text
 precision: 2

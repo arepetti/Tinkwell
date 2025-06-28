@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Tinkwell.Reducer;
 
-public class Worker : BackgroundService
+sealed class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private readonly Reducer _reducer;

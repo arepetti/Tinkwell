@@ -1,17 +1,17 @@
 ﻿measure voltage {
-	type: "ElectricPotential",
-	unit: "Volt",
+	type: "ElectricPotential"
+	unit: "Volt"
 	expression: "5"
 }
 
 measure current {
-	type: "ElectricCurrent",
-	unit: "Ampere",
+	type: "ElectricCurrent"
+	unit: "Ampere"
 	expression: "2"
 }
 
 measure power {
-	type: "Power",
-	unit: "Watt",
+	type: "Power"
+	unit: "Watt"
 	expression: "voltage * current"
 }
