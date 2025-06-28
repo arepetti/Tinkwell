@@ -26,6 +26,18 @@ sealed class Registry : IRegistry
     {
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(value);
+
+        if (!_store.TryGetEntry(name, out var entry))
+            throw new KeyNotFoundException($"No measure registered with the name '{name}'.");
+
+        var metadata = entry!.Metadata;
+
+        if (metadata.Minimum.HasValue && value.Value < metadata.Minimum.Value)
+            throw new ArgumentOutOfRangeException(nameof(value), $"Value {value.Value} is less than the registered minimum {metadata.Minimum.Value} for measure '{name}'.");
+
+        if (metadata.Maximum.HasValue && value.Value > metadata.Maximum.Value)
+            throw new ArgumentOutOfRangeException(nameof(value), $"Value {value.Value} is greater than the registered maximum {metadata.Maximum.Value} for measure '{name}'.");
+
         _store.Update(name, value);
     }
 

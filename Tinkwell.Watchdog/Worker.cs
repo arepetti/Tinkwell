@@ -88,7 +88,7 @@ sealed class Worker(
     {
         Debug.Assert(_discoveryChannel is not null);
 
-        var (discovery, store) = await CreateClientsAsync();
+        var (discovery, store) = await CreateClientsAsync(cancellationToken);
         var discoveryResponse = await discovery.FindAllAsync(new() { FamilyName = HealthCheck.Descriptor.Name }, cancellationToken: cancellationToken);
         foreach (var host in discoveryResponse.Hosts)
         {
@@ -132,7 +132,7 @@ sealed class Worker(
                exception.StatusCode == StatusCode.Internal;
     }
 
-    private async Task<(Discovery.DiscoveryClient discovery, Store.StoreClient store)> CreateClientsAsync()
+    private async Task<(Discovery.DiscoveryClient discovery, Store.StoreClient store)> CreateClientsAsync(CancellationToken cancellationToken)
     {
         var discovery = new Discovery.DiscoveryClient(_discoveryChannel);
 

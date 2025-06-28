@@ -75,4 +75,10 @@ public sealed class QuantityMetadata : IStorageMetadata
     private string _quantityType = nameof(Scalar);
     private Type? _resolvedQuantityType;
     private Enum? _resolvedUnit;
+
+    public double? Minimum { get; set; }
+    public double? Maximum { get; set; }
+    public List<string> Tags { get; set; } = new();
+    public string? Category { get; set; }
+    public int? Precision { get; set; }
 }

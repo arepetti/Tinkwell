@@ -5,6 +5,7 @@ option csharp_namespace = "Tinkwell.Services";
 package Tinkwell;
 
 import "google/protobuf/duration.proto";
+import "google/protobuf/wrappers.proto";
 
 // TODO: add somewhere the full list of supported units (quantity type, name, abbreviation).
 
@@ -20,6 +21,12 @@ service Store {
     // you can set a value for a measure.
     rpc Update (StoreUpdateRequest) returns (StoreUpdateReply);
 
+    // Gets the current value of a single measure.
+    rpc Get(GetRequest) returns (GetResponse);
+
+    // Gets the current values of multiple measures.
+    rpc GetMany(GetManyRequest) returns (GetManyResponse);
+
     // Subscribe to changes for a specific measure. The measure does not need to be registered
     // when you subscribe for changes (note that you will receive updates but no notification for when
     // the measure is registered).
@@ -29,17 +36,43 @@ service Store {
     // Note that you're going to receive events also for measures not yet registered
     // (but matching the criteria) when this function has been called.
     rpc SubscribeToMatching (SubscribeToMatchingRequest) returns (stream StoreChangeResponse);
+
+    // Subscribe to changes for a specific set of measures.
+    rpc SubscribeToSet (SubscribeToSetRequest) returns (stream StoreChangeResponse);
+}
+
+// Represents a quantity (a value and its unit of measure).
+message Quantity {
+    // The unit of measure (such as DegreesCelsius, MetersPerSecond, etc).
+    string unit = 1;
+    // The type of the quantity (such as Temperature, Speed, etc).
+    string quantity_type = 2;
+    // The value of the quantity, it can be either a number or a text.
+    oneof value {
+        // The value associated with this quantity, if numeric.
+        double number = 3;
+        // The value associated with this quantity, if text.
+        string text = 4;
+    }
 }
 
 // Request message for Store.List().
 message StoreListRequest {
-    // A filter to apply to the stored measures, it can be empty. If specified then only
-    // those measure whose name contains the specified text are included in the result.
-    // Search is case-insensitive.
-    optional string query = 1;
     // Indicates whether to include the values in the result. If true then the latest known valu of
     // each measure ius included,
-    optional bool include_values = 2;
+    optional bool include_values = 1;
+    // A filter to apply to the stored measures, it can be empty. If specified then only
+    // those measure whose name contains the specified text are included in the result.
+    // Search is case-insensitive.  Wildcards such as * and ? are supported.
+    // For example "JournalBearing.Temperature.*" matches all the measures that start with "JournalBearing.Temperature."
+    // and "JournalBearing.*.*Oil*" matches all the measures that start with "JournalBearing." and contain "Oil" in the
+    // third part of the name." ? works as a single character wildcard, for example "JournalBearing.Temperature.Oil?"
+    // matches all the measures that starts with the specified string and ends with any other single character.
+    optional string query = 2;
+    // Filter by tag. Only measures containing this tag will be returned.
+    optional string tag = 3;
+    // Filter by category. Only measures belonging to this category will be returned.
+    optional string category = 4;
 }
 
 // Response message for Store.List().
@@ -49,12 +82,22 @@ message StoreListReply {
         // Name of the measure.
         string name = 1;
         // If StoreListRequest.include_values is true then this field contains the latest value. This value
-        // includes the unit of measure specified in unit (for example 3 °C).
+        // includes the unit of measure specified in unit (for example 3 Â°C).
         optional string value = 2;
         // Type of the measure (for example Temperature, Speed, etc).
         string quantity_type = 3;
         // The unit of measure (must be a valid unit of measure for quantity_type, for example DegreesCelsius).
         string unit = 4;
+        // Optional: The minimum expected value for this measure.
+        optional google.protobuf.DoubleValue minimum = 5;
+        // Optional: The maximum expected value for this measure.
+        optional google.protobuf.DoubleValue maximum = 6;
+        // Optional: A list of tags associated with this measure.
+        repeated string tags = 7;
+        // Optional: The category this measure belongs to.
+        optional string category = 8;
+        // Optional: The precision (number of decimal places) to round the value to.
+        optional google.protobuf.Int32Value precision = 9;
     }
     // List of measures, each measure is represented by an Item.
     repeated Item items = 1;
@@ -72,6 +115,16 @@ message StoreRegisterRequest {
     optional string quantity_type = 3;
     // Unit of measure, it must be a valid unit of measure for the specified quantity_type (for example DegreesCelsius).
     optional string unit = 4;
+    // Optional: The minimum expected value for this measure.
+    optional google.protobuf.DoubleValue minimum = 5;
+    // Optional: The maximum expected value for this measure.
+    optional google.protobuf.DoubleValue maximum = 6;
+    // Optional: A list of tags associated with this measure.
+    repeated string tags = 7;
+    // Optional: The category this measure belongs to.
+    optional string category = 8;
+    // Optional: The precision (number of decimal places) to round the value to.
+    optional google.protobuf.Int32Value precision = 9;
 }
 
 // Response message for Store.Register().
@@ -83,13 +136,37 @@ message StoreUpdateRequest {
     string name = 1;
     // New value for this measure. It must include a valid unit of measure compatible with the type of
     // quantity specified when registering the measure. If the unit of measure is different (but compatible)
-    // then it's converted automatically to the unit specified if StoreRegisterRequest. For example, if the unit 
-    // is DegreesCelsius and you pass the value 14 °F then it is converted to -10 °C.
+    // then it's converted automatically to the unit specified if StoreRegisterRequest. For example, if the unit
+    // is DegreesCelsius and you pass the value 14 Â°F then it is converted to -10 Â°C.
     string value = 2;
 }
 
 // Response message for Store.Update().
 message StoreUpdateReply {}
+
+// Request for Store.Get().
+message GetRequest {
+    // The name of the quantity to retrieve.
+    string name = 1;
+}
+
+// Response for Store.Get().
+message GetResponse {
+    // The requested quantity.
+    Quantity value = 1;
+}
+
+// Request for Store.GetMany().
+message GetManyRequest {
+    // The names of the quantities to retrieve.
+    repeated string names = 1;
+}
+
+// Response for Store.GetMany().
+message GetManyResponse {
+    // A map of quantity names to their values.
+    map<string, Quantity> values = 1;
+}
 
 // Request for Store.SubscribeTo().
 message SubscribeToRequest {
@@ -99,32 +176,19 @@ message SubscribeToRequest {
 
 // Request for Store.SubscribeToMatching().
 message SubscribeToMatchingRequest {
-    // The matching pattern. Supported wildcards:
-    //   * matches any sequence of characters (including empty)
-    //   ? matches any single character
-    //   [abc] matches one character in the set (e.g., 'a', 'b', or 'c')
-    //   [^abc] matches one character NOT in the set
-    //   [a-z] matches one character in the given range
-    // Examples:
-    //   "Temp.*" matches "Temp.A", "Temp.Room1", but not "Temperature"
-    //   "T?st" matches "Test", "Tast", "Tost"
-    //   "[Bb]lue" matches "Blue" and "blue", but not "glue"
+    // The matching pattern. Important: contrarily to Store.List(), the search is case sensitive.
+    // Wildcards such as * and ? are supported.
+    // For example "JournalBearing.Temperature.*" matches all the measures that start with "JournalBearing.Temperature."
+    // and "JournalBearing.*.*Oil*" matches all the measures that start with "JournalBearing." and contain "Oil" in the
+    // third part of the name." ? works as a single character wildcard, for example "JournalBearing.Temperature.Oil?"
+    // matches all the measures that starts with the specified string and ends with any other single character.
     string pattern = 1;
 }
 
-// Represents a quantity (a value and its unit of measure).
-message Quantity {
-    // The unit of measure (such as DegreesCelsius, MetersPerSecond, etc).
-    string unit = 1;
-    // The type of the quantity (such as Temperature, Speed, etc).
-    string quantity_type = 2;
-    // The value of the quantity, it can be either a number or a text.
-    oneof value {
-        // The value associated with this quantity, if numeric.
-        double number = 3;
-        // The value associated with this quantity, if text.
-        string text = 4;
-    }
+// Request for Store.SubscribeToSet().
+message SubscribeToSetRequest {
+    // The names of the quantities to subscribe to.
+    repeated string names = 1;
 }
 
 // Response containing a list of changes occurred in the Store.

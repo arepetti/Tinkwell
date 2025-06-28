@@ -22,14 +22,44 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         return RunWithErrorHandling(() =>
         {
             var result = new StoreListReply();
-            result.Items.AddRange(_registry.FindAll().Select(x =>
+            var measures = _registry.FindAll();
+
+            if (!string.IsNullOrEmpty(request.Query))
+            {
+                try
+                {
+                    var regex = new Regex(Tinkwell.Bootstrapper.Expressions.TextHelpers.GitLikeWildcardToRegex(request.Query), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    measures = measures.Where(x => regex.IsMatch(x.Name));
+                }
+                catch (ArgumentException e)
+                {
+                    throw new RpcException(new Status(StatusCode.InvalidArgument, $"Invalid query pattern: {e.Message}"));
+                }
+            }
+
+            if (!string.IsNullOrEmpty(request.Tag))
+            {
+                measures = measures.Where(x => x.Tags.Contains(request.Tag, StringComparer.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrEmpty(request.Category))
+            {
+                measures = measures.Where(x => string.Equals(x.Category, request.Category, StringComparison.OrdinalIgnoreCase));
+            }
+
+            result.Items.AddRange(measures.Select(x =>
             {
                 var item = new StoreListReply.Types.Item()
                 {
                     Name = x.Name,
                     QuantityType = x.QuantityType,
                     Unit = x.Unit,
+                    Minimum = x.Minimum,
+                    Maximum = x.Maximum,
+                    Category = x.Category ?? string.Empty,
+                    Precision = x.Precision,
                 };
+                item.Tags.AddRange(x.Tags);
 
                 if (request.IncludeValues)
                 {
@@ -55,7 +85,12 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
                 Ttl = request.Ttl?.ToTimeSpan(),
                 QuantityType = request.QuantityType,
                 Unit = request.Unit,
+                Minimum = request.Minimum,
+                Maximum = request.Maximum,
+                Category = request.Category,
+                Precision = request.Precision,
             });
+            _registry.Find(request.Name).Tags.AddRange(request.Tags); // Add tags after registration
 
             return new StoreRegisterReply();
         });
@@ -71,14 +106,45 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         });
     }
 
+    public override Task<GetResponse> Get(GetRequest request, ServerCallContext context)
+    {
+        return RunWithErrorHandling(() =>
+        {
+            var value = _registry.GetCurrentValue(request.Name);
+            if (value is null)
+                throw new RpcException(new Status(StatusCode.NotFound, $"No measure registered with the name '{request.Name}'."));
+
+            return new GetResponse { Value = ToQuantityProto(value) };
+        });
+    }
+
+    public override Task<GetManyResponse> GetMany(GetManyRequest request, ServerCallContext context)
+    {
+        return RunWithErrorHandling(() =>
+        {
+            var response = new GetManyResponse();
+            foreach (var name in request.Names)
+            {
+                var value = _registry.GetCurrentValue(name);
+                if (value is not null)
+                    response.Values.Add(name, ToQuantityProto(value));
+            }
+
+            return response;
+        });
+    }
+
+    public override async Task SubscribeToSet(SubscribeToSetRequest request, IServerStreamWriter<StoreChangeResponse> responseStream, ServerCallContext context)
+    {
+        var names = new HashSet<string>(request.Names);
+        await HandleSubscription(responseStream, context, names.Contains, $"set = {string.Join(", ", names)})"
+        );
+    }
+
     public override async Task SubscribeTo(SubscribeToRequest request, IServerStreamWriter<StoreChangeResponse> responseStream, ServerCallContext context)
     {
         await HandleSubscription(
-            responseStream,
-            context,
-            name => string.Equals(name, request.Name, StringComparison.Ordinal),
-            $"name = {request.Name}"
-        );
+            responseStream, context,  name => name.Equals(request.Name, StringComparison.Ordinal), $"name = {request.Name}");
     }
 
     public override async Task SubscribeToMatching(SubscribeToMatchingRequest request, IServerStreamWriter<StoreChangeResponse> responseStream, ServerCallContext context)

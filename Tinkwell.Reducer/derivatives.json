@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Derived.Power",
+    "quantityType": "Power",
+    "unit": "Watt",
+    "expression": "[Voltage] * [Current]"
+  },
+  {
+    "name": "Derived.Voltage.Squared",
+    "quantityType": "ElectricPotentialSquared",
+    "unit": "VoltSquared",
+    "expression": "[Voltage] * [Voltage]"
+  }
+]
