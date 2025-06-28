@@ -20,9 +20,21 @@ sealed class Endpoints(IConfiguration configuration)
     {
         foreach (var  endpoint in _endpoints.Values)
         {
-            string? url = endpoint.QueryFor(runnerName);
+            string? url = endpoint.Query(runnerName);
             if (url is not null)
                 return url;
+        }
+
+        return null;
+    }
+
+    public string? InverseQuery(string url)
+    {
+        foreach (var endpoint in _endpoints.Values)
+        {
+            string? runnerName = endpoint.InverseQuery(url);
+            if (runnerName is not null)
+                return runnerName;
         }
 
         return null;
@@ -51,12 +63,26 @@ sealed class Endpoints(IConfiguration configuration)
             }
         }
 
-        public string? QueryFor(string runnerName)
+        public string? Query(string runnerName)
         {
             lock (_endpoints)
             {
                if (_endpoints.TryGetValue(runnerName, out string? url))
                     return url;
+
+                return null;
+            }
+        }
+
+        public string? InverseQuery(string url)
+        {
+            lock (_endpoints)
+            {
+                foreach (var entry in _endpoints)
+                {
+                    if (string.Equals(entry.Value, url, StringComparison.InvariantCultureIgnoreCase))
+                        return entry.Key;
+                }
 
                 return null;
             }

@@ -40,7 +40,13 @@ sealed class Server : ICommandServer
         var interpreter = new Interpreter(_logger, _registry);
         interpreter.Signaled += (_, _) => Signaled?.Invoke(this, EventArgs.Empty);
         interpreter.ClaimUrl += (_, e) => e.Value = _endpoints.Claim(e.MachineName, e.Runner);
-        interpreter.QueryUrl += (_, e) => e.Value = _endpoints.Query(e.Runner);
+        interpreter.QueryUrl += (_, e) =>
+        {
+            if (e.Inverted)
+                e.Value = _endpoints.InverseQuery(e.Runner); // Yep, we get the URL from here, TODO: Add different EventArgs?
+            else
+                e.Value = _endpoints.Query(e.Runner);
+        };
         interpreter.ClaimRole += (_, e) =>
         {
             if (_roles.TryGetValue(e.Role!, out string? masterAddress))

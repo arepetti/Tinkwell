@@ -21,5 +21,7 @@ sealed class InterpreterResolveValueEventArgs : EventArgs
 
     public string Runner { get; }
 
+    public bool Inverted { get; set; }
+
     public string? Value { get; set; }
 }

@@ -205,17 +205,19 @@ sealed class Interpreter
             endpointsCmd.Command("query", queryCmd =>
             {
                 var name = queryCmd.Argument("name", "");
+                var inverse = queryCmd.Option<bool>("-i|--inverse", "", CommandOptionType.SingleValue);
 
                 queryCmd.OnExecute(() =>
                 {
                     ArgumentException.ThrowIfNullOrWhiteSpace(name.Value);
 
                     var ea = new InterpreterResolveValueEventArgs("", name.Value!);
+                    ea.Inverted = inverse.HasValue() && inverse.ParsedValue;
                     QueryUrl?.Invoke(this, ea);
-                    if (string.IsNullOrWhiteSpace(ea.Value))
-                        throw new ArgumentException($"Cannot query the endpoint URL for '{ea.Runner}'.");
+                    if (string.IsNullOrWhiteSpace(ea.Value) && !ea.Inverted)
+                        throw new ArgumentException($"Cannot query the endpoint for '{ea.Runner}'.");
 
-                    writer.WriteLine(ea.Value);
+                    writer.WriteLine(ea.Value ?? "");
                 });
             });
         });
