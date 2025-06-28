@@ -60,7 +60,7 @@ sealed class Worker(
                 {
                     await CollectHealthDataAsync(stoppingToken);
                 }
-                catch (Exception e)
+                catch (Exception e) when (e is not OperationCanceledException)
                 {
                     _logger.LogError(e, "An unexpected error occurred while collecting health data. The worker will try again on the next run.");
                 }

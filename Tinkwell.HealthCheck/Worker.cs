@@ -2,42 +2,30 @@
 
 namespace Tinkwell.HealthCheck;
 
-sealed class Worker : IHostedService
+sealed class Worker : BackgroundService
 {
     public Worker(MonitoringOptions options, IProcessInspector processInspector, IRegistry registry)
     {
         _options = options;
-        _timer = new Timer(OnUpdate);
         _processInspector = processInspector;
         _registry = registry;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _timer.Change(TimeSpan.Zero, _options.Interval);
-        return Task.CompletedTask;
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        _timer.Change(Timeout.Infinite, Timeout.Infinite);
-        return Task.CompletedTask;
+        using var timer = new PeriodicTimer(_options.Interval);
+        while (await timer.WaitForNextTickAsync(stoppingToken))
+            _registry.Enqueue(await CollectData(stoppingToken));
     }
 
     private readonly MonitoringOptions _options;
     private readonly IProcessInspector _processInspector;
-    private readonly Timer _timer;
     private readonly IRegistry _registry;
 
-    private void OnUpdate(object? _)
-    {
-        _registry.Enqueue(CollectData());
-    }
-
-    private DataSample CollectData()
+    private async Task<DataSample> CollectData(CancellationToken cancellationToken)
     {
         var first = _processInspector.Inspect();
-        Thread.Sleep(1000);
+        await Task.Delay(1000, cancellationToken);
         var second = _processInspector.Inspect();
 
         return new()

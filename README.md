@@ -32,14 +32,15 @@ A minimal `system.ensamble` configuration file looks like this:
 ```
 runner grpchost "Tinkwell.Bootstrapper.GrpcHost" {
 	service runner orchestrator "Tinkwell.Orchestrator.dll" {}
+    service runner "Tinkwell.HealthCheck.dll" {}
 }
 
-runner grpchost_store "Tinkwell.Bootstrapper.GrpcHost" {
-    activation: blocking
-	service runner store "Tinkwell.Store.dll" {}
+runner store "Tinkwell.Bootstrapper.GrpcHost" {
+	service runner "Tinkwell.Store.dll" {}
+    service runner "Tinkwell.HealthCheck.dll" {}
 }
 
-runner cpumonitor "Tinkwell.Bootstrapper.SensorHost" if "platform = 'linux'" {
+runner "Tinkwell.Bootstrapper.SensorHost" if "platform = 'linux'" {
     service runner cpu_temperature "Pi.Units.VcGend.dll" 
         properties: {
             command: "measure_temp"
@@ -54,6 +55,11 @@ runner cpumonitor "Tinkwell.Bootstrapper.SensorHost" if "platform = 'linux'" {
             device: "~/dev/voltage"
         }
     }
+    service runner "Tinkwell.HealthCheck.dll" {}
+}
+
+runner watchdog "Tinkwell.Bootstrapper.DllHost" {
+    service runner "Tinkwell.Watchdog.dll" {}
 }
 
 runner some_firmware "Tinkwell.Bootstrapper.WasmHost"" {
@@ -70,7 +76,7 @@ runner another_native_firmware "./bin/another_firmware" {
 
 This code is just to explore an idea then, obviously, code quality has to vastly improve but there are a few bits that we surely need for an MVP:
 
-* Like Kubernetes we need a "health check" for the various runners. Possibly a simple "HealthCheck" gRPC service exposed by `GrpcHost` (included, optionally, as a `service runner`). A monitoring process can collect service performance and broadcast it somewhere (cloud services, system logs, our own Store).
+* We have a VERY basic watchdog, now we need something to "act" on that. Broadcasting alerts/news? Running a local script? A new "host" that executes scripts based on events broadcasted through the alerts/news service (this could also work in tandem with alerts from the Trigger firmlet)
 * Derived measures like:
 ```
 JournalBearingTemperature = (JournalBearingTemperature1 + JournalBearingTemperature2) / 2
@@ -80,4 +86,5 @@ JournalBearingDeltaTemperature = JournalBearingOilReturnLineTemperature - Journa
 * A simple scripting mechanism and command line tools.
 * A very simple web UI to manage the system, monitor its health, see logs and read measures (no dashboards for now!).
 * Pluggable strategies (for example to select how to store measures, how to do load balancing when fetching a service by family name, etc).
+* Update the store to support plain text data and to broadcast changes!!!
 * All the other predefined runners/services described in the blog post!

@@ -19,9 +19,12 @@ sealed class Registry : IRegistry
         }
     }
 
-    public (DataSample[] Data, DataSample Average) Snapshot()
+    public (DataSample[] Data, DataSample Average, DataQuality Quality) Snapshot()
     {
         var data = TakeSnapshot();
+        if (data.Length == 0)
+            return (Array.Empty<DataSample>(), DataSample.Invalid, DataQuality.Terrible);
+
         var average = new DataSample
         {
             CpuUsage = Average(data.Select(x => x.CpuUsage)),
@@ -30,7 +33,7 @@ sealed class Registry : IRegistry
             HandleCount = Average(data.Select(x => x.HandleCount)),
         };
 
-        return (data, average);
+        return (data, average, DataQuality.Good);
     }
 
     private readonly MonitoringOptions _options;
