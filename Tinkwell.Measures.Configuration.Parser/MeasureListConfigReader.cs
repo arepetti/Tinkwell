@@ -23,22 +23,18 @@ public sealed class MeasureListConfigReader
         if (cancellationToken.IsCancellationRequested)
             return;
 
-        var parsedEntries = MeasureListConfigParser<T>.Parse(content);
-
-        foreach (var entry in parsedEntries)
+        var entries = MeasureListConfigParser<T>.Parse(content);
+        measures.AddRange(entries.OfType<T>());
+        foreach (var import in entries.OfType<ImportDirective>())
         {
-            if (entry is T measureDefinition)
-            {
-                measures.Add(measureDefinition);
-            }
-            else if (entry is ImportDirective importDirective)
-            {
-                if (string.IsNullOrEmpty(baseDirectory))
-                    throw new InvalidOperationException($"Cannot resolve relative import '{importDirective.FilePath}' without a base directory.");
-
-                var importedFilePath = Path.Combine(baseDirectory, importDirective.FilePath);
-                await ReadFileRecursiveAsync(importedFilePath, Path.GetDirectoryName(importedFilePath), measures, cancellationToken);
-            }
+            // Note: we do not simply pass baseDirectory because an import might contain a partial path, like:
+            // import "./power/measures.twm"
+            // In this case we do not want a subsequent import called from "./power/measures.twm" to be relative
+            // to the current directory. It's not really about security, but about ensuring that the import paths
+            // are resolved correctly relative to the original file ensuring that you do not need to go and change
+            // them manually if you change the name of the directory where they're in!!!
+            var path = Path.Combine(baseDirectory ?? ".", import.FilePath);
+            await ReadFileRecursiveAsync(path, Path.GetDirectoryName(path), measures, cancellationToken);
         }
     }
 }

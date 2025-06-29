@@ -8,13 +8,19 @@ runner store "Tinkwell.Bootstrapper.GrpcHost" {
 	service runner "Tinkwell.HealthCheck.dll" {}
 }
 
+runner events "Tinkwell.Bootstrapper.GrpcHost" {
+	service runner "Tinkwell.EventsGateway.dll" {}
+	service runner "Tinkwell.HealthCheck.dll" {}
+}
+
 runner watchdog "Tinkwell.Bootstrapper.DllHost" {
 	service runner "Tinkwell.Watchdog.dll" {}
 }
-runner watchdog "Tinkwell.Bootstrapper.DllHost" {
-	service runner reducer "Tinkwell.Reducer.dll" {
+runner reducer "Tinkwell.Bootstrapper.DllHost" {
+	service runner "Tinkwell.Reducer.dll" {
 		properties {
 			path: "./measures.twm"
 		}
 	}
 }
+

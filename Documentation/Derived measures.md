@@ -2,22 +2,7 @@
 
 This document describes the syntax used to define **derived measures** in Tinkwell Reducer's configuration files.
 
----
-
 ## Syntax Overview
-
-Each configuration file consists of one or more `measure` blocks:
-
-```ebnf
-config           ::= (measure_block)*
-measure_block    ::= 'measure' QUOTED_IDENTIFIER '{' measure_property* '}'
-measure_property ::= property_key ':' property_value
-property_key     ::= 'type' | 'unit' | 'expression' | 'description' | 'minimum'
-                   | 'maximum' | 'tags' | 'category' | 'precision'
-property_value   ::= QUOTED_STRING | number_literal | identifier_list
-```
-
----
 
 ### String Values
 
@@ -60,11 +45,11 @@ expression: "[Zone1] + [Zone2] + \
 
 Each backslash should be placed **at the very end of the line** with no trailing characters after it. The continuation line may be indented for readability.
 
----
-
 ## Basic Structure
 
 ```text
+import "path/to/another_file.twm"
+
 measure "Measure.Name" {
     key: value
     ...
@@ -74,16 +59,14 @@ measure "Measure.Name" {
 The measure name could be enclosed in double quotes. The name of the measure can be any alphanumeric value (plus `-_.` and spaces) but if it's a standard C identifier then you do not need to quote it.
 Lines starting with `//` are considered comments and ignored.
 
----
-
 ## Reference
 
-### `type` *(optional)*
+### `type` _(optional*)_
 
 Specifies the quantity type.
 
 ```text
-type: Electrical Power
+type: ElectricalPower
 ```
 It must be a valid _quantity type_ identifier:
 
@@ -95,11 +78,13 @@ It must be a valid _quantity type_ identifier:
 }
 ```
 
-Default: `Scalar`
+Default: `Scalar`.
+
+\* Can be omitted for forward-declaration of a measure defined elsewhere in the system or when declaring a _scalar_ measure.
 
 ---
 
-### `unit` *(optional)*
+### `unit` _(optional*)_
 
 Defines the unit of measurement.
 
@@ -109,9 +94,11 @@ unit: "Watt"
 
 It must be a valid unit of measure for the type of quantity specified in `type`. Default: empty string
 
+\* Can be omitted for forward-declaration of a measure defined elsewhere in the system or when declaring a _scalar_ measure (in that case also `type` is optional).
+
 ---
 
-### `expression` *(required)*
+### `expression` _(required*)_
 
 A mathematical expression which returns the calculated value of the derived measure.
 
@@ -129,6 +116,8 @@ expression: "[Zone1.Temperature] + \
 
 You can use any measure in the system, they **must be already defined when this configuration file is loaded**.
 If the name of a measure is alphanumeric (and it does not start with a number) then you do not need to enclose it with square brackets.
+
+\* If omitted then the measure is ignored and considered a forward-declaration of a measure defined elsewhere in the system.
 
 ---
 
@@ -188,8 +177,6 @@ precision: 2
 ```
 
 Note that this rounding is not for presentation purposes, if specified then the value stored has this number of decimals. If omitted then the number is not rounded and it's stored in double precision.
-
----
 
 ## Full Example
 

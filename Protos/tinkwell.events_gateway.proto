@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+option csharp_namespace = "Tinkwell.Services";
+
+import "google/protobuf/timestamp.proto";
+
+package Tinkwell;
+
+// The EventsGateway service allows publishing events to a message broker.
+service EventsGateway {
+    // Publish an event to the message broker.
+    // Returns a correlation_id that can be used to track the event (if a correlation ID has been
+    // provided then it's the same one).
+    rpc Publish(PublishRequest) returns (PublishResponse);
+    // Subscribe to the event specified in the request.
+    rpc SubscribeTo(SubscribeToRequest) returns (stream SubscribeResponse);
+    // Subscribe to all the events matching the criteria specified in the request.
+    rpc SubscribeToMatching(SubscribeToMatchingRequest) returns (stream SubscribeResponse);
+}
+
+// Verbs for SVO events�describing what has happened.
+enum Verb {
+    // A new resource or entity was created
+    CREATED       = 0;
+    // A resource or entity was retrieved/read
+    READ          = 1;
+    // A resource or entity was updated/modified
+    UPDATED       = 2;
+    // A resource or entity was deleted/removed
+    DELETED       = 3;
+    // A derived measure or calculation was performed
+    CALCULATED    = 4;
+    // A process, job or task has started
+    STARTED       = 5;
+    // A process, job or task has finished successfully
+    COMPLETED     = 6;
+    // A process, job or task was stopped or interrupted
+    STOPPED       = 7;
+    // A process, job or task was paused
+    PAUSED        = 8;
+    // A previously paused process, job or task has resumed
+    RESUMED       = 9;
+    // An anomaly or condition was automatically detected
+    DETECTED      = 10;
+    // An alarm or rule evaluation has fired/triggered
+    TRIGGERED     = 11;
+    // An alarm has been cleared or is no longer active
+    CLEARED       = 12;
+    // An incident, alert or issue has been resolved
+    RESOLVED      = 13;
+    // An action, operation or task has failed
+    FAILED        = 14;
+    // An action, operation or task has succeeded
+    SUCCEEDED     = 15;
+    // A message, event or item has been processed
+    PROCESSED     = 16;
+    // An event or message was received by a consumer
+    RECEIVED      = 17;
+    // An event or message was published/emitted into the bus
+    PUBLISHED     = 18;
+    // An event, message or notification was acknowledged
+    ACKNOWLEDGED  = 19;
+    // A timed or scheduled item has expired
+    EXPIRED       = 20;
+    // A failed operation or message delivery was retried
+    RETRIED       = 21;
+    // Generic action made by Subject on Object (use only if there is nothing more specific!)
+    ACTED         = 22;
+}
+
+// The request message for publishing an event.
+message PublishRequest {
+    // A short, unique identifier for this event type.
+    // E.g. "AlarmTriggered", "UserSignedUp"
+    string topic = 1;
+    // The primary entity this event is about.
+    // For an alarm: the measure being monitored, e.g. "avg_cpu"
+    // For a user action: the user ID, e.g. "user-1234"
+    string subject = 2;
+    // The action that occurred.
+    // E.g. TRIGGERED, CREATED, DELETED, CALCULATED
+    Verb   verb = 3;
+    // The secondary resource or rule this event acted on.
+    // For an alarm: the rule ID, e.g. "cpu_high_rule"
+    string object = 4;
+    // Optional free-form payload (often JSON) carrying event details.
+    // E.g.
+    //   "{\"threshold\":80, \"value\":93.5}"
+    //   "{\"userEmail\":\"foo@example.com\",\"plan\":\"pro\"}"
+    optional string payload       = 5;
+    // Optional correlation ID to tie together a chain of events.
+    // If you omit this, the service will generate one (e.g. a UUID).
+    optional string correlation_id = 6;
+    // The timestamp when the event occurred.
+    google.protobuf.Timestamp occurred_at = 7;
+}
+
+// The response message for publishing an event.
+message PublishResponse {
+    // Unique ID for the published event.
+    string id = 1;
+    // The correlation ID of the published event. This is the same as the one provided in the request
+    // if one has been provided or a newly generated one otherwise.
+    string correlation_id = 2;
+}
+
+// Request for subscribing to an event.
+message SubscribeToRequest {
+    // Topic of the event for which you want to receive notifications.
+    string topic = 1;
+}
+
+// Request for subscribing to all the events that match the filter.
+message SubscribeToMatchingRequest {
+    // If specified then you're going to receive only events matching this topic. The match is case sensitive.
+    // Wildcards such as * and ? are supported.
+    // For example "Alarm*" matches all the events that start with "Alarm".
+    // ? works as a single character wildcard. It suports groups as in "[Bb]lue", it matches both
+    // "Blue" and "blue". You can negate groups as as in "[^Bb]lue", it matches "Glue" but not "blue" or "Blue".
+    // You can also specify ranges "[a-zA-Z]".
+    optional string topic = 1;
+    // If specified the you're going to receive only events with this subject. The match is case sensitive.
+    // Same wildcards described for topic can be used here.
+    optional string subject = 2;
+    // If specified the you're going to receive only events with this verb. The match is case sensitive.
+    // Same wildcards described for topic can be used here.
+    optional Verb verb = 3;
+    // If specified the you're going to receive only events with this object. The match is case sensitive.
+    // Same wildcards described for topic can be used here.
+    optional string object = 4;
+}
+
+message SubscribeResponse {
+    // An unique UUID for this event.
+    string id = 1;
+    // A short, unique identifier for this event type.
+    string topic = 2;
+    // The primary entity this event is about.
+    string subject = 3;
+    // The action that occurred.
+    Verb   verb = 4;
+    // The secondary resource or rule this event acted on.
+    string object = 5;
+    // Optional free-form payload (often JSON) carrying event details.
+    optional string payload = 6;
+    // Correlation ID to tie together a chain of events.
+    string correlation_id = 7;
+    // The timestamp when the event occurred.
+    google.protobuf.Timestamp occurred_at = 8;
+}

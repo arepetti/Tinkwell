@@ -14,6 +14,7 @@ sealed class Pipe
 
     public event EventHandler? Connected;
     public event EventHandler? Disconnected;
+    public event EventHandler<NamedPipeServerErrorEventArgs>? Error;
     public event EventHandler<NamedPipeServerProcessEventArgs>? Process;
 
     public void Start()
@@ -68,6 +69,10 @@ sealed class Pipe
         }
         catch (OperationCanceledException)
         {
+        }
+        catch (IOException e)
+        {
+            Error?.Invoke(this, new NamedPipeServerErrorEventArgs(e));
         }
 
         Disconnected?.Invoke(this, EventArgs.Empty);
