@@ -3,7 +3,7 @@ using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
-using Tinkwell.Reducer.Parser;
+using Tinkwell.Measures.Configuration.Parser;
 using UnitsNet;
 
 namespace Tinkwell.Reducer;
@@ -26,7 +26,8 @@ sealed class Reducer : IAsyncDisposable
             c => new Services.Store.StoreClient(c), cancellationToken);
 
         _logger.LogDebug("Loading derived measures from {Path}", _options.Path);
-        _derivedMeasures = await _configReader.ReadFromFileAsync(_options.Path, cancellationToken);
+        _derivedMeasures = await _configReader.ReadFromFileAsync<MeasureDefinition>(
+            _options.Path, x => !string.IsNullOrWhiteSpace(x.Expression), cancellationToken);
 
         // If there are no measures to calculate we do not subscribe to anything and just terminate here
         if (!_derivedMeasures.Any())
@@ -70,7 +71,7 @@ sealed class Reducer : IAsyncDisposable
     private readonly DependencyWalker _dependencyWalker;
     private GrpcChannel? _storeChannel;
     private Services.Store.StoreClient? _storeClient;
-    private IEnumerable<DerivedMeasure> _derivedMeasures = [];
+    private IEnumerable<MeasureDefinition> _derivedMeasures = [];
 
     private async Task RegisterDerivedMeasuresAsync(CancellationToken cancellationToken)
     {
@@ -160,7 +161,7 @@ sealed class Reducer : IAsyncDisposable
             changedMeasure, affectedMeasures?.Count ?? 0, stopwatch.ElapsedMilliseconds);
     }
 
-    private async Task RecalculateMeasureAsync(DerivedMeasure measure, CancellationToken cancellationToken)
+    private async Task RecalculateMeasureAsync(MeasureDefinition measure, CancellationToken cancellationToken)
     {
         Debug.Assert(_storeClient is not null);
 
@@ -194,7 +195,7 @@ sealed class Reducer : IAsyncDisposable
         }
     }
 
-    private async Task<IQuantity?> EvaluateMeasureExpression(DerivedMeasure measure, CancellationToken cancellationToken)
+    private async Task<IQuantity?> EvaluateMeasureExpression(MeasureDefinition measure, CancellationToken cancellationToken)
     {
         Debug.Assert(_storeClient is not null);
 
@@ -226,7 +227,7 @@ sealed class Reducer : IAsyncDisposable
         return result;
     }
 
-    private IQuantity? ConvertResultToQuantity(DerivedMeasure measure, object? result)
+    private IQuantity? ConvertResultToQuantity(MeasureDefinition measure, object? result)
     {
         if (result is null)
             return null;

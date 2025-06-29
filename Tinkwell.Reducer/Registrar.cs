@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Tinkwell.Bootstrapper;
-using Tinkwell.Reducer.Parser;
+using Tinkwell.Measures.Configuration.Parser;
 
 namespace Tinkwell.Reducer;
 

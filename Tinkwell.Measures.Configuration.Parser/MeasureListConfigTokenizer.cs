@@ -3,7 +3,7 @@ using Superpower.Model;
 using Superpower.Parsers;
 using Superpower.Tokenizers;
 
-namespace Tinkwell.Reducer.Parser;
+namespace Tinkwell.Measures.Configuration.Parser;
 
 public enum MeasureListConfigToken
 {
@@ -24,7 +24,8 @@ public enum MeasureListConfigToken
     MaximumKeyword,
     TagsKeyword,
     CategoryKeyword,
-    PrecisionKeyword
+    PrecisionKeyword,
+    ImportKeyword
 }
 
 static class MeasureListConfigTokenizer
@@ -54,6 +55,7 @@ static class MeasureListConfigTokenizer
         .Match(Keyword("tags"), MeasureListConfigToken.TagsKeyword)
         .Match(Keyword("category"), MeasureListConfigToken.CategoryKeyword)
         .Match(Keyword("precision"), MeasureListConfigToken.PrecisionKeyword)
+        .Match(Keyword("import"), MeasureListConfigToken.ImportKeyword)
         .Match(Numerics.DecimalDouble, MeasureListConfigToken.Number)
         .Match(QuotedString.CStyle, MeasureListConfigToken.QuotedString)
         .Match(Identifier.CStyle, MeasureListConfigToken.Identifier)

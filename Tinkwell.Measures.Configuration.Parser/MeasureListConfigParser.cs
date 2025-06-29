@@ -3,14 +3,19 @@ using Superpower.Parsers;
 using System.Globalization;
 using System.Text;
 
-namespace Tinkwell.Reducer.Parser;
+namespace Tinkwell.Measures.Configuration.Parser;
 
-public static class MeasureListConfigParser
+public sealed class ImportDirective
 {
-    public static IEnumerable<DerivedMeasure> Parse(string text)
+    public required string FilePath { get; set; }
+}
+
+public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new()
+{
+    public static IEnumerable<object> Parse(string text)
     {
         var tokens = MeasureListConfigTokenizer.Instance.Tokenize(FlattenMultilines(text));
-        return MeasureBlockParser.Many().Parse(tokens);
+        return ConfigEntryParser.Many().Parse(tokens);
     }
 
     private static TokenListParser<MeasureListConfigToken, string> Identifier =>
@@ -66,13 +71,22 @@ public static class MeasureListConfigParser
         .Or(from prec in IntegerValue(MeasureListConfigToken.PrecisionKeyword)
             select ("precision", (object)prec));
 
-    private static TokenListParser<MeasureListConfigToken, DerivedMeasure> MeasureBlockParser =>
+    private static TokenListParser<MeasureListConfigToken, T> MeasureBlockParser =>
         from _ in Token.EqualTo(MeasureListConfigToken.MeasureKeyword)
         from name in IdentifierOrQuotedString
         from __ in Token.EqualTo(MeasureListConfigToken.LBrace)
         from properties in PropertyParser.Many()
         from ___ in Token.EqualTo(MeasureListConfigToken.RBrace)
-        select CreateDerivedMeasure(name, properties);
+        select CreateMeasureDefinition(name, properties);
+
+    private static TokenListParser<MeasureListConfigToken, ImportDirective> ImportDirectiveParser =>
+        from _ in Token.EqualTo(MeasureListConfigToken.ImportKeyword)
+        from filePath in QuotedString.Select(Unquote)
+        select new ImportDirective { FilePath = filePath };
+
+    private static TokenListParser<MeasureListConfigToken, object> ConfigEntryParser =>
+        MeasureBlockParser.Select(m => (object)m)
+        .Or(ImportDirectiveParser.Select(i => (object)i));
 
     private static string Unquote(string s) =>
         s.Length >= 2 && s.StartsWith('"') && s.EndsWith('"')
@@ -92,13 +106,11 @@ public static class MeasureListConfigParser
             line = line.Trim();
             if (line.EndsWith('\\') && !(buffer.Length == 0 && line.StartsWith("//")))
             {
-                // Remove the trailing backslash and continue to the next line
                 buffer.Append(line.TrimEnd('\\').Trim() + " ");
                 continue;
             }
             else
             {
-                // Were we in a continuation?
                 if (buffer.Length > 0)
                 {
                     buffer.Append(line);
@@ -118,9 +130,9 @@ public static class MeasureListConfigParser
         return string.Join("\n", result);
     }
 
-    private static DerivedMeasure CreateDerivedMeasure(string name, (string Key, object Value)[] properties)
+    private static T CreateMeasureDefinition(string name, (string Key, object Value)[] properties)
     {
-        var measure = new DerivedMeasure
+        var measure = new T
         {
             Name = name,
             QuantityType = "Scalar",

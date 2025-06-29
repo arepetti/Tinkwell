@@ -24,7 +24,9 @@
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
 		<PackageReference Include="NCalcSync" Version="5.4.2" />
 		<PackageReference Include="UnitsNet" Version="5.74.0" />
-		<PackageReference Include="Superpower" Version="3.1.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Tinkwell.Measures.Configuration.Parser\Tinkwell.Measures.Configuration.Parser.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
@@ -38,6 +40,9 @@
 	  </Protobuf>
 	</ItemGroup>
 	<ItemGroup>
+	  <None Update="constants.twm">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="measures.twm">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

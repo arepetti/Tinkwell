@@ -1,14 +1,4 @@
-﻿measure voltage {
-	type: "ElectricPotential"
-	unit: "Volt"
-	expression: "5"
-}
-
-measure current {
-	type: "ElectricCurrent"
-	unit: "Ampere"
-	expression: "2"
-}
+﻿import "constants.twm"
 
 measure power {
 	type: "Power"

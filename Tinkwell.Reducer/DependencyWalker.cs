@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using NCalc;
 
+using Tinkwell.Measures.Configuration.Parser;
+
 namespace Tinkwell.Reducer;
 
 sealed class DependencyWalker
@@ -16,7 +18,7 @@ sealed class DependencyWalker
 
     // Analyzes the dependencies between the derived measures and determines the calculation order.
     // Returns true if the dependencies were successfully resolved and no circular dependencies were found; otherwise, false.
-    public bool Analyze(IEnumerable<DerivedMeasure> derivedMeasures)
+    public bool Analyze(IEnumerable<MeasureDefinition> derivedMeasures)
     {
         _derivedMeasures = derivedMeasures;
         _forwardDependencyMap.Clear();
@@ -30,7 +32,7 @@ sealed class DependencyWalker
     private readonly Dictionary<string, List<string>> _forwardDependencyMap = new();
     private readonly Dictionary<string, List<string>> _reverseDependencyMap = new();
     private List<string> _calculationOrder = new();
-    private IEnumerable<DerivedMeasure> _derivedMeasures = Enumerable.Empty<DerivedMeasure>();
+    private IEnumerable<MeasureDefinition> _derivedMeasures = Enumerable.Empty<MeasureDefinition>();
 
     private void ExtractDependencies()
     {
