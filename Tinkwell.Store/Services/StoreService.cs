@@ -170,40 +170,47 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         string subscriptionIdentifier)
     {
         _logger.LogDebug("Client subscribed to '{Subscription}'", subscriptionIdentifier);
-        var tcs = new TaskCompletionSource();
-
-        EventHandler<ValueChangedEventArgs<IQuantity>> valueChangedHandler = async (_, args) =>
-        {
-            if (!nameMatcher(args.Name))
-                return;
-
-            try
-            {
-                var response = new StoreChangeResponse();
-                response.Changes.Add(new StoreChangeResponse.Types.StoreChange
-                {
-                    Name = args.Name,
-                    NewValue = ToQuantityProto(args.NewValue)
-                });
-
-                await responseStream.WriteAsync(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send update for subscription '{Subscription}'. Client may have disconnected.", subscriptionIdentifier);
-                tcs.TrySetCanceled();
-            }
-        };
-
-        _registry.ValueChanged += valueChangedHandler;
         try
         {
-            using var _ = context.CancellationToken.Register(() => tcs.TrySetCanceled());
-            await tcs.Task;
+            var tcs = new TaskCompletionSource();
+
+            EventHandler<ValueChangedEventArgs<IQuantity>> valueChangedHandler = async (_, args) =>
+            {
+                if (!nameMatcher(args.Name))
+                    return;
+
+                try
+                {
+                    var response = new StoreChangeResponse();
+                    response.Changes.Add(new StoreChangeResponse.Types.StoreChange
+                    {
+                        Name = args.Name,
+                        NewValue = ToQuantityProto(args.NewValue)
+                    });
+
+                    await responseStream.WriteAsync(response);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send update for subscription '{Subscription}'. Client may have disconnected.", subscriptionIdentifier);
+                    tcs.TrySetCanceled();
+                }
+            };
+
+            _registry.ValueChanged += valueChangedHandler;
+            try
+            {
+                using var _ = context.CancellationToken.Register(() => tcs.TrySetCanceled());
+                await tcs.Task;
+            }
+            finally
+            {
+                _registry.ValueChanged -= valueChangedHandler;
+            }
         }
-        finally
+        catch (OperationCanceledException)
         {
-            _registry.ValueChanged -= valueChangedHandler;
+            // Forced cancellation without using the CancellationToken
         }
 
         _logger.LogDebug("Client unsubscribed from '{Subscription}'", subscriptionIdentifier);

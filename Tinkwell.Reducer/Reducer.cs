@@ -1,7 +1,6 @@
 using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
-using NCalc;
 using System.Diagnostics;
 using System.Globalization;
 using Tinkwell.Reducer.Parser;
@@ -17,25 +16,35 @@ sealed class Reducer : IAsyncDisposable
         _discovery = discovery;
         _configReader = configReader;
         _options = options;
+        _dependencyWalker = new();
     }
 
+    // This method ends when the subscription is interrupted!
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         (_storeChannel, _storeClient) = await _discovery.FindServiceAsync(Services.Store.Descriptor.FullName,
             c => new Services.Store.StoreClient(c), cancellationToken);
 
-        _logger.LogInformation("Loading derived measures from {Path}", _options.Path);
+        _logger.LogDebug("Loading derived measures from {Path}", _options.Path);
         _derivedMeasures = await _configReader.ReadFromFileAsync(_options.Path, cancellationToken);
 
-        ExtractDependencies();
-        if (!ApplyTopologicalSort())
+        if (!_derivedMeasures.Any())
+        {
+            _logger.LogWarning("No derived measures to calculate, Reducer is going to sit idle.");
+            return;
+        }
+
+        if (!_dependencyWalker.Analyze(_derivedMeasures))
         {
             _logger.LogCritical("Circular dependency detected in derived measures. Aborting Reducer startup.");
             return;
         }
 
+        _logger.LogDebug("Calculating and registering the new measures");
         await RegisterDerivedMeasuresAsync(cancellationToken);
         await CalculateInitialValuesAsync(cancellationToken);
+
+        _logger.LogInformation("Reducer started successfully, now subscribing for changes");
         await SubscribeToChangesAsync(cancellationToken);
     }
 
@@ -55,75 +64,10 @@ sealed class Reducer : IAsyncDisposable
     private readonly DiscoveryHelper _discovery;
     private readonly MeasureListConfigReader _configReader;
     private readonly ReducerOptions _options;
+    private readonly DependencyWalker _dependencyWalker;
     private GrpcChannel? _storeChannel;
     private Services.Store.StoreClient? _storeClient;
     private IEnumerable<DerivedMeasure> _derivedMeasures = [];
-    private readonly Dictionary<string, List<string>> _forwardDependencyMap = new(); // measure -> its direct dependencies
-    private readonly Dictionary<string, List<string>> _reverseDependencyMap = new(); // dependency -> measures that depend on it
-    private List<string> _calculationOrder = new();
-
-    private void ExtractDependencies()
-    {
-        foreach (var measure in _derivedMeasures)
-        {
-            var expression = new Expression(measure.Expression);
-            measure.Dependencies = expression.GetParameterNames();
-
-            _forwardDependencyMap[measure.Name] = measure.Dependencies;
-
-            foreach (var dependency in measure.Dependencies)
-            {
-                if (!_reverseDependencyMap.ContainsKey(dependency))
-                    _reverseDependencyMap[dependency] = new List<string>();
-
-                _reverseDependencyMap[dependency].Add(measure.Name);
-            }
-        }
-    }
-
-    private bool ApplyTopologicalSort()
-    {
-        // Classic topological sort (https://en.wikipedia.org/wiki/Topological_sorting) using Kahn's algorithm.
-        var inDegree = new Dictionary<string, int>();
-        foreach (var measure in _derivedMeasures)
-            inDegree[measure.Name] = 0;
-
-        foreach (var entry in _forwardDependencyMap)
-        {
-            foreach (var dependency in entry.Value)
-            {
-                // Only consider dependencies that are also derived measures
-                if (inDegree.ContainsKey(dependency))
-                    inDegree[entry.Key]++;
-            }
-        }
-
-        var queue = new Queue<string>();
-        foreach (var measure in _derivedMeasures)
-        {
-            if (inDegree[measure.Name] == 0)
-                queue.Enqueue(measure.Name);
-        }
-
-        _calculationOrder.Clear();
-        while (queue.Count > 0)
-        {
-            var current = queue.Dequeue();
-            _calculationOrder.Add(current);
-
-            if (_reverseDependencyMap.TryGetValue(current, out var dependents))
-            {
-                foreach (var dependent in dependents)
-                {
-                    inDegree[dependent]--;
-                    if (inDegree[dependent] == 0)
-                        queue.Enqueue(dependent);
-                }
-            }
-        }
-
-        return _calculationOrder.Count == _derivedMeasures.Count();
-    }
 
     private async Task RegisterDerivedMeasuresAsync(CancellationToken cancellationToken)
     {
@@ -131,7 +75,7 @@ sealed class Reducer : IAsyncDisposable
 
         // TODO: add support for Store.RegisterMany() so that we can batch
         // this process instead of calling Store.Register() too many times.
-        foreach (var measureName in _calculationOrder)
+        foreach (var measureName in _dependencyWalker.CalculationOrder)
         {
             var measure = _derivedMeasures.First(m => m.Name == measureName);
             _logger.LogDebug("Registering derived measure {Name}", measure.Name);
@@ -150,7 +94,7 @@ sealed class Reducer : IAsyncDisposable
 
     private async Task CalculateInitialValuesAsync(CancellationToken cancellationToken)
     {
-        foreach (var measureName in _calculationOrder)
+        foreach (var measureName in _dependencyWalker.CalculationOrder)
         {
             var measure = _derivedMeasures.First(m => m.Name == measureName);
             await RecalculateMeasureAsync(measure, cancellationToken);
@@ -161,7 +105,7 @@ sealed class Reducer : IAsyncDisposable
     {
         Debug.Assert(_storeClient is not null);
 
-        var uniqueDependencies = _forwardDependencyMap.Values.SelectMany(x => x).Distinct().ToList();
+        var uniqueDependencies = _dependencyWalker.ForwardDependencyMap.Values.SelectMany(x => x).Distinct().ToList();
         if (uniqueDependencies.Count == 0)
             return;
 
@@ -180,7 +124,7 @@ sealed class Reducer : IAsyncDisposable
         }
         catch (RpcException e) when (e.StatusCode == StatusCode.Cancelled)
         {
-            _logger.LogWarning("Subscription cancelled.");
+            _logger.LogDebug("Subscription cancelled by the host.");
         }
         catch (Exception e)
         {
@@ -190,13 +134,16 @@ sealed class Reducer : IAsyncDisposable
 
     private async Task HandleChangeAsync(string changedMeasure, CancellationToken cancellationToken)
     {
-        if (_reverseDependencyMap.TryGetValue(changedMeasure, out var affectedMeasures))
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+
+        if (_dependencyWalker.ReverseDependencyMap.TryGetValue(changedMeasure, out var affectedMeasures))
         {
             // Filter affected measures to only include those that are derived measures
             var derivedAffectedMeasures = affectedMeasures.Where(name => _derivedMeasures.Any(dm => dm.Name == name)).ToList();
 
             // Recalculate in topological order
-            foreach (var measureName in _calculationOrder)
+            foreach (var measureName in _dependencyWalker.CalculationOrder)
             {
                 if (derivedAffectedMeasures.Contains(measureName))
                 {
@@ -205,6 +152,10 @@ sealed class Reducer : IAsyncDisposable
                 }
             }
         }
+
+        stopwatch.Stop();
+        _logger.LogDebug("Change of '{ChangedMeasureName}' affected {AffectedCount} measure(s) and took {Time} ms to complete",
+            changedMeasure, affectedMeasures?.Count ?? 0, stopwatch.ElapsedMilliseconds);
     }
 
     private async Task RecalculateMeasureAsync(DerivedMeasure measure, CancellationToken cancellationToken)

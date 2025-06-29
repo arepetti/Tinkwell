@@ -29,7 +29,7 @@ Units should expose gRPC services but they should also support a "_file-like acc
 
 A minimal `system.ensamble` configuration file looks like this:
 
-```
+```text
 runner grpchost "Tinkwell.Bootstrapper.GrpcHost" {
 	service runner orchestrator "Tinkwell.Orchestrator.dll" {}
     service runner "Tinkwell.HealthCheck.dll" {}
@@ -72,19 +72,38 @@ runner another_native_firmware "./bin/another_firmware" {
 }
 ```
 
+If you have derived measures then you could defined like so:
+
+```text
+// This is just a constant, we can use it to simulate changes forcing an update using PostMan
+measure voltage {
+	type: "ElectricPotential"
+	unit: "Volt"
+	expression: "5"
+}
+
+measure current {
+	type: "ElectricCurrent"
+	unit: "Ampere"
+	expression: "2"
+}
+
+// This is a derived measure, it's recalculated when its dependencies change
+measure power {
+	type: "Power"
+	unit: "Watt"
+	expression: "voltage * current"
+}
+```
+
 ## What's Missing?
 
 This code is just to explore an idea then, obviously, code quality has to vastly improve but there are a few bits that we surely need for an MVP:
 
 * We have a VERY basic watchdog, now we need something to "act" on that. Broadcasting alerts/news? Running a local script? A new "host" that executes scripts based on events broadcasted through the alerts/news service (this could also work in tandem with alerts from the Trigger firmlet)
-* Derived measures like:
-```
-JournalBearingTemperature = (JournalBearingTemperature1 + JournalBearingTemperature2) / 2
-JournalBearingDeltaTemperature = JournalBearingOilReturnLineTemperature - JournalBearingOilSupplyLineTemperature
-```
 * Alerts: could be simple flags calculated when a condition is met (see the previous example for derived measures).
 * A simple scripting mechanism and command line tools.
 * A very simple web UI to manage the system, monitor its health, see logs and read measures (no dashboards for now!).
 * Pluggable strategies (for example to select how to store measures, how to do load balancing when fetching a service by family name, etc).
-* Update the store to support plain text data and to broadcast changes!!!
+* Update the store to support plain text data!!!
 * All the other predefined runners/services described in the blog post!

@@ -89,9 +89,9 @@ It must be a valid _quantity type_ identifier:
 
 ```text
  measure "Power" {
-    type: ElectricalPower
-    unit: Watt
-    expression: Voltage * Current
+    type: "ElectricalPower"
+    unit: "Watt"
+    expression: "Voltage * Current"
 }
 ```
 
@@ -104,7 +104,7 @@ Default: `Scalar`
 Defines the unit of measurement.
 
 ```text
-unit: Watt
+unit: "Watt"
 ```
 
 It must be a valid unit of measure for the type of quantity specified in `type`. Default: empty string
@@ -116,15 +116,15 @@ It must be a valid unit of measure for the type of quantity specified in `type`.
 A mathematical expression which returns the calculated value of the derived measure.
 
 ```text
-expression: Voltage * Current
+expression: "Voltage * Current"
 ```
 
 If the expression is long you can split it over multiple lines with `\`:
 
 ```text
-expression: [Zone1.Temperature] + \
+expression: "[Zone1.Temperature] + \
             [Zone2.Temperature] + \
-            [Zone3.Temperature]
+            [Zone3.Temperature]"
 ```
 
 You can use any measure in the system, they **must be already defined when this configuration file is loaded**.
@@ -137,8 +137,8 @@ If the name of a measure is alphanumeric (and it does not start with a number) t
 Free text. Supports multi-line continuation.
 
 ```text
-description: Calculates total energy. \
-             Used for dashboard summaries.
+description: "Calculates total energy. \
+             Used for dashboard summaries."
 ```
 
 ---
@@ -160,7 +160,7 @@ You can specify only `minimum` or only `maximum`. When a boundaries is specified
 Comma-separated list of keywords.
 
 ```text
-tags: energy, power, analytics
+tags: "energy, power, analytics"
 ```
 
 Useful to organise your measures, you can run searches (using `List()` from `Tinkwell.Store` service) filtered by tag.
@@ -172,7 +172,7 @@ Useful to organise your measures, you can run searches (using `List()` from `Tin
 A classification label.
 
 ```text
-category: Energy Management
+category: "Energy Management"
 ```
 
 Useful to organise your measures, you can run searches (using `List()` from `Tinkwell.Store` service) filtered by category.
@@ -195,40 +195,40 @@ Note that this rounding is not for presentation purposes, if specified then the 
 
 ```text
 // This is a new derived measure, "Electrical.Power" is its name
- measure "Electrical.Power" {
-    type: Electrical Power
-    unit: Watt
-    expression: Voltage * Current
-    description: Calculates the electrical power from voltage and current. \
-                This measure is fundamental for energy monitoring.
+measure "Electrical.Power" {
+    type: "ElectricalPower"
+    unit: "Watt"
+    expression: "Voltage * Current"
+    description: "Calculates the electrical power from voltage and current. \
+                This measure is fundamental for energy monitoring."
     minimum: 0.0
     maximum: 5000.0
-    tags: electrical, power, energy, calculation
-    category: Energy Management
+    tags: "electrical, power, energy, calculation"
+    category: "Energy Management"
     precision: 2
 }
 
- measure "HVAC.AverageTemperature" {
-    type: Temperature
-    unit: Degree Celsius
-    expression: ([Zone1.Temperature] + [Zone2.Temperature] + [Zone3.Temperature]) / 3
-    description: Computes the average temperature across three HVAC zones. \
-                Useful for overall building climate control.
+measure "HVAC.AverageTemperature" {
+    type: "Temperature"
+    unit: "DegreeCelsius"
+    expression: "([Zone1.Temperature] + [Zone2.Temperature] + [Zone3.Temperature]) / 3"
+    description: "Computes the average temperature across three HVAC zones. \
+                Useful for overall building climate control."
     minimum: 18.0
     maximum: 25.0
-    tags: hvac, temperature, average, climate
-    category: Building Automation
+    tags: "hvac, temperature, average, climate"
+    category: "Building Automation"
     precision: 1 
 }
 
- measure "System.UptimeHours" {
-    type: Duration
-    unit: Hour
-    expression: [System.UptimeSeconds] / 3600
-    description: Converts system uptime from seconds to hours. \
-                Provides a more readable format for long-term operation.
-    tags: system, uptime, monitoring
-    category: IT Infrastructure
+measure "System.UptimeHours" {
+    type: "Duration"
+    unit: "Hour"
+    expression: "[System.UptimeSeconds] / 3600"
+    description: "Converts system uptime from seconds to hours. \
+                Provides a more readable format for long-term operation."
+    tags: "system, uptime, monitoring"
+    category: "IT Infrastructure"
     precision: 0
 }
 ```

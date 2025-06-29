@@ -10,8 +10,8 @@ measure current {
 	expression: "2"
 }
 
-measure v2 {
-	type: "ElectricPotential"
-	unit: "Volt"
-	expression: "voltage * voltage"
+measure power {
+	type: "Power"
+	unit: "Watt"
+	expression: "voltage * current"
 }
