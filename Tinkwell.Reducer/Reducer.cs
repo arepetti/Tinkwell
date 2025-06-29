@@ -19,21 +19,24 @@ sealed class Reducer : IAsyncDisposable
         _dependencyWalker = new();
     }
 
-    // This method ends when the subscription is interrupted!
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        // The first step is to discover the Store service, which is our single source of truth for all measure values
         (_storeChannel, _storeClient) = await _discovery.FindServiceAsync(Services.Store.Descriptor.FullName,
             c => new Services.Store.StoreClient(c), cancellationToken);
 
         _logger.LogDebug("Loading derived measures from {Path}", _options.Path);
         _derivedMeasures = await _configReader.ReadFromFileAsync(_options.Path, cancellationToken);
 
+        // If there are no measures to calculate we do not subscribe to anything and just terminate here
         if (!_derivedMeasures.Any())
         {
             _logger.LogWarning("No derived measures to calculate, Reducer is going to sit idle.");
             return;
         }
 
+        // We need to analyze the dependencies between the derived measures to determine the correct calculation order.
+        // This is crucial to ensure that we don't try to calculate a measure before its dependencies are calculated.
         if (!_dependencyWalker.Analyze(_derivedMeasures))
         {
             _logger.LogCritical("Circular dependency detected in derived measures. Aborting Reducer startup.");
@@ -139,10 +142,9 @@ sealed class Reducer : IAsyncDisposable
 
         if (_dependencyWalker.ReverseDependencyMap.TryGetValue(changedMeasure, out var affectedMeasures))
         {
-            // Filter affected measures to only include those that are derived measures
+            // We only care about the affected measures that are also derived measures.
             var derivedAffectedMeasures = affectedMeasures.Where(name => _derivedMeasures.Any(dm => dm.Name == name)).ToList();
 
-            // Recalculate in topological order
             foreach (var measureName in _dependencyWalker.CalculationOrder)
             {
                 if (derivedAffectedMeasures.Contains(measureName))
@@ -167,28 +169,9 @@ sealed class Reducer : IAsyncDisposable
 
         try
         {
-            var getManyRequest = new Services.GetManyRequest();
-            getManyRequest.Names.AddRange(measure.Dependencies);
-            var response = await _storeClient.GetManyAsync(getManyRequest, cancellationToken: cancellationToken);
-
-            var expression = new NCalc.Expression(measure.Expression);
-            foreach (var dependency in measure.Dependencies)
-            {
-                if (response.Values.TryGetValue(dependency, out var quantityProto))
-                {
-                    expression.Parameters[dependency] = quantityProto.Number;
-                }
-                else
-                {
-                    _logger.LogWarning("Could not find value for dependency {Dependency} when recalculating {Name}.", dependency, measure.Name);
-                    return;
-                }
-            }
-
-            var result = ConvertResultToQuantity(measure, expression.Evaluate());
+            var result = await EvaluateMeasureExpression(measure, cancellationToken);
             if (result is null)
             {
-                _logger.LogError("Expression for {Name} did not evaluate to manageable quantity. Measure disabled. Result type: {ResultType}", measure.Name, result?.GetType().Name ?? "null");
                 measure.Disabled = true;
                 return;
             }
@@ -211,6 +194,38 @@ sealed class Reducer : IAsyncDisposable
         }
     }
 
+    private async Task<IQuantity?> EvaluateMeasureExpression(DerivedMeasure measure, CancellationToken cancellationToken)
+    {
+        Debug.Assert(_storeClient is not null);
+
+        var getManyRequest = new Services.GetManyRequest();
+        getManyRequest.Names.AddRange(measure.Dependencies);
+        var response = await _storeClient.GetManyAsync(getManyRequest, cancellationToken: cancellationToken);
+
+        var expression = new NCalc.Expression(measure.Expression);
+        foreach (var dependency in measure.Dependencies)
+        {
+            if (response.Values.TryGetValue(dependency, out var quantityProto))
+            {
+                expression.Parameters[dependency] = quantityProto.Number;
+            }
+            else
+            {
+                _logger.LogWarning("Could not find value for dependency {Dependency} when recalculating {Name}.", dependency, measure.Name);
+                return null;
+            }
+        }
+
+        var result = ConvertResultToQuantity(measure, expression.Evaluate());
+        if (result is null)
+        {
+            _logger.LogError("Expression for {Name} did not evaluate to manageable quantity. Measure disabled. Result type: {ResultType}", measure.Name, result?.GetType().Name ?? "null");
+            return null;
+        }
+
+        return result;
+    }
+
     private IQuantity? ConvertResultToQuantity(DerivedMeasure measure, object? result)
     {
         if (result is null)
@@ -224,16 +239,6 @@ sealed class Reducer : IAsyncDisposable
 
         return null;
     }
-
-    //private static IQuantity FromQuantityProto(Services.Quantity protoQuantity)
-    //{
-    //    // UnitsNet.Quantity.From(value, unit) is the most direct way to create an IQuantity from a value and an Enum unit.
-    //    // We need to get the correct Enum value for the unit from the string representation.
-    //    Enum unitEnum = UnitHelpers.ParseUnit(protoQuantity.QuantityType, protoQuantity.Unit);
-
-    //    // NCalc's Evaluate method returns a double for numeric values, so we use protoQuantity.Number.
-    //    return Quantity.From(protoQuantity.Number, unitEnum);
-    //}
 }
 
 
