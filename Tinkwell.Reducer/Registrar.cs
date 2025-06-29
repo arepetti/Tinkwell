@@ -8,7 +8,6 @@ public sealed class Registrar : IHostedDllRegistrar
 {
     public void ConfigureServices(IDllHost host)
     {
-        Console.WriteLine("Configuring services!");
         host.ConfigureServices((_, services) =>
         {
             services.AddSingleton(new ReducerOptions

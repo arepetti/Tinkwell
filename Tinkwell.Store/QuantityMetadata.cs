@@ -36,7 +36,6 @@ public sealed class QuantityMetadata : IStorageMetadata
                 return;
 
             _quantityType = value;
-            _resolvedQuantityType = null;
         }
     }
 
@@ -49,36 +48,32 @@ public sealed class QuantityMetadata : IStorageMetadata
                 return;
 
             _unit = value;
-            _resolvedUnit = null;
         }
     }
 
+    public double? Minimum { get; set; }
+
+    public double? Maximum { get; set; }
+
+    public IReadOnlyList<string> Tags
+    {
+        get => _tags;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value, nameof(Tags));
+            _tags = value;
+        }
+    }
+
+    public string? Category { get; set; }
+
+    public int? Precision { get; set; }
+
     string IStorageMetadata.Key => _name;
-
-    internal Type ResolveQuantityType()
-    {
-        _resolvedQuantityType ??= UnitHelpers.ParseQuantityType(QuantityType);
-
-        return _resolvedQuantityType!;
-    }
-
-    internal Enum ResolveUnit()
-    {
-        _resolvedUnit ??= UnitHelpers.ParseUnit(QuantityType, Unit);
-
-        return _resolvedUnit;
-    }
 
     private string _name = "";
     private TimeSpan? _ttl;
     private string? _unit;
     private string _quantityType = nameof(Scalar);
-    private Type? _resolvedQuantityType;
-    private Enum? _resolvedUnit;
-
-    public double? Minimum { get; set; }
-    public double? Maximum { get; set; }
-    public List<string> Tags { get; set; } = new();
-    public string? Category { get; set; }
-    public int? Precision { get; set; }
+    private IReadOnlyList<string> _tags = new List<string>();
 }

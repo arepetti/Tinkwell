@@ -37,7 +37,8 @@ service Store {
     // (but matching the criteria) when this function has been called.
     rpc SubscribeToMatching (SubscribeToMatchingRequest) returns (stream StoreChangeResponse);
 
-    // Subscribe to changes for a specific set of measures.
+    // Subscribe to changes for a specific set of measures. The measure does not need to be registered
+    // when you subscribe for changes.
     rpc SubscribeToSet (SubscribeToSetRequest) returns (stream StoreChangeResponse);
 }
 
@@ -62,16 +63,19 @@ message StoreListRequest {
     // each measure ius included,
     optional bool include_values = 1;
     // A filter to apply to the stored measures, it can be empty. If specified then only
-    // those measure whose name contains the specified text are included in the result.
+    // those measures whose name contains the specified text are included in the result.
     // Search is case-insensitive.  Wildcards such as * and ? are supported.
     // For example "JournalBearing.Temperature.*" matches all the measures that start with "JournalBearing.Temperature."
     // and "JournalBearing.*.*Oil*" matches all the measures that start with "JournalBearing." and contain "Oil" in the
     // third part of the name." ? works as a single character wildcard, for example "JournalBearing.Temperature.Oil?"
     // matches all the measures that starts with the specified string and ends with any other single character.
+    // If you want to search for all the measure that includes a specific word then use "*word*".
+    // It suports groups as in "[Bb]lue", it matches both "Blue" and "blue". You can negate groups as
+    // as in "[^Bb]lue", it matches "Glue" but not "blue" or "Blue". You can also specify ranges "[a-zA-Z]".
     optional string query = 2;
-    // Filter by tag. Only measures containing this tag will be returned.
+    // Filter by tag. Only measures containing this tag will be returned. Case insensitive.
     optional string tag = 3;
-    // Filter by category. Only measures belonging to this category will be returned.
+    // Filter by category. Only measures belonging to this category will be returned. Case insensitive.
     optional string category = 4;
 }
 
@@ -95,7 +99,7 @@ message StoreListReply {
         // Optional: A list of tags associated with this measure.
         repeated string tags = 7;
         // Optional: The category this measure belongs to.
-        optional string category = 8;
+        optional google.protobuf.StringValue category = 8;
         // Optional: The precision (number of decimal places) to round the value to.
         optional google.protobuf.Int32Value precision = 9;
     }
@@ -122,7 +126,7 @@ message StoreRegisterRequest {
     // Optional: A list of tags associated with this measure.
     repeated string tags = 7;
     // Optional: The category this measure belongs to.
-    optional string category = 8;
+    optional google.protobuf.StringValue category = 8;
     // Optional: The precision (number of decimal places) to round the value to.
     optional google.protobuf.Int32Value precision = 9;
 }
@@ -182,6 +186,8 @@ message SubscribeToMatchingRequest {
     // and "JournalBearing.*.*Oil*" matches all the measures that start with "JournalBearing." and contain "Oil" in the
     // third part of the name." ? works as a single character wildcard, for example "JournalBearing.Temperature.Oil?"
     // matches all the measures that starts with the specified string and ends with any other single character.
+    // It suports groups as in "[Bb]lue", it matches both "Blue" and "blue". You can negate groups as
+    // as in "[^Bb]lue", it matches "Glue" but not "blue" or "Blue". You can also specify ranges "[a-zA-Z]".
     string pattern = 1;
 }
 

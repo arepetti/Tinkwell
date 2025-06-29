@@ -24,8 +24,8 @@ sealed class Reducer : IAsyncDisposable
         (_storeChannel, _storeClient) = await _discovery.FindServiceAsync(Services.Store.Descriptor.FullName,
             c => new Services.Store.StoreClient(c), cancellationToken);
 
-        _logger.LogInformation("Loading derived measures from measures.twm");
-        _derivedMeasures = await _configReader.ReadFromFileAsync("measures.twm", cancellationToken);
+        _logger.LogInformation("Loading derived measures from {Path}", _options.Path);
+        _derivedMeasures = await _configReader.ReadFromFileAsync(_options.Path, cancellationToken);
 
         ExtractDependencies();
         if (!ApplyTopologicalSort())
@@ -67,9 +67,7 @@ sealed class Reducer : IAsyncDisposable
         foreach (var measure in _derivedMeasures)
         {
             var expression = new Expression(measure.Expression);
-            var visitor = new DependencyVisitor(new NCalc.ExpressionContext());
-            expression.LogicalExpression!.Accept(visitor);
-            measure.Dependencies = visitor.Dependencies.ToList();
+            measure.Dependencies = expression.GetParameterNames();
 
             _forwardDependencyMap[measure.Name] = measure.Dependencies;
 
@@ -213,19 +211,21 @@ sealed class Reducer : IAsyncDisposable
     {
         Debug.Assert(_storeClient is not null);
 
+        if (measure.Disabled)
+            return;
+
         try
         {
-            var expression = new NCalc.Expression(measure.Expression);
             var getManyRequest = new Services.GetManyRequest();
             getManyRequest.Names.AddRange(measure.Dependencies);
-
             var response = await _storeClient.GetManyAsync(getManyRequest, cancellationToken: cancellationToken);
 
+            var expression = new NCalc.Expression(measure.Expression);
             foreach (var dependency in measure.Dependencies)
             {
                 if (response.Values.TryGetValue(dependency, out var quantityProto))
                 {
-                    expression.Parameters[dependency] = FromQuantityProto(quantityProto);
+                    expression.Parameters[dependency] = quantityProto.Number;
                 }
                 else
                 {
@@ -234,43 +234,55 @@ sealed class Reducer : IAsyncDisposable
                 }
             }
 
-            var result = expression.Evaluate();
-
-            if (result is not IQuantity resultQuantity)
+            var result = ConvertResultToQuantity(measure, expression.Evaluate());
+            if (result is null)
             {
-                _logger.LogError("Expression for {Name} did not evaluate to an IQuantity. Result type: {ResultType}", measure.Name, result?.GetType().Name ?? "null");
+                _logger.LogError("Expression for {Name} did not evaluate to manageable quantity. Measure disabled. Result type: {ResultType}", measure.Name, result?.GetType().Name ?? "null");
+                measure.Disabled = true;
                 return;
             }
 
-            // Apply precision if specified
             if (measure.Precision.HasValue)
-            {
-                // resultQuantity = resultQuantity.ToUnit(resultQuantity.Unit).Round(measure.Precision.Value); // Commented out for now
-            }
+                result = UnitHelpers.Round(result, measure.Precision.Value);
 
-            _logger.LogTrace("Recalculated {Name} = {Value}", measure.Name, resultQuantity);
+            _logger.LogTrace("Recalculated {Name} = {Value}", measure.Name, result);
 
             await _storeClient.UpdateAsync(new Services.StoreUpdateRequest
             {
                 Name = measure.Name,
-                Value = resultQuantity.ToString("G", CultureInfo.InvariantCulture)
+                Value = result!.ToString("G", CultureInfo.InvariantCulture)
             }, cancellationToken: cancellationToken);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to recalculate {Name} because: {Message}", measure.Name, e.Message);
+            _logger.LogError(e, "Failed to recalculate {Name}. Measure disabled. Reason: {Message}", measure.Name, e.Message);
+            measure.Disabled = true;
         }
     }
 
-    private static IQuantity FromQuantityProto(Services.Quantity protoQuantity)
+    private IQuantity? ConvertResultToQuantity(DerivedMeasure measure, object? result)
     {
-        // UnitsNet.Quantity.From(value, unit) is the most direct way to create an IQuantity from a value and an Enum unit.
-        // We need to get the correct Enum value for the unit from the string representation.
-        Enum unitEnum = UnitHelpers.ParseUnit(protoQuantity.QuantityType, protoQuantity.Unit);
+        if (result is null)
+            return null;
 
-        // NCalc's Evaluate method returns a double for numeric values, so we use protoQuantity.Number.
-        return UnitsNet.Quantity.From(protoQuantity.Number, unitEnum);
+        if (result is IQuantity)
+            return (IQuantity)result;
+
+        if (UnitHelpers.TryGetQuantityValue(result, out var value))
+            return Quantity.From(value, measure.QuantityType, measure.Unit);
+
+        return null;
     }
+
+    //private static IQuantity FromQuantityProto(Services.Quantity protoQuantity)
+    //{
+    //    // UnitsNet.Quantity.From(value, unit) is the most direct way to create an IQuantity from a value and an Enum unit.
+    //    // We need to get the correct Enum value for the unit from the string representation.
+    //    Enum unitEnum = UnitHelpers.ParseUnit(protoQuantity.QuantityType, protoQuantity.Unit);
+
+    //    // NCalc's Evaluate method returns a double for numeric values, so we use protoQuantity.Number.
+    //    return Quantity.From(protoQuantity.Number, unitEnum);
+    //}
 }
 
 

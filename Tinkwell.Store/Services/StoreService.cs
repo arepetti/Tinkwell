@@ -28,7 +28,7 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
             {
                 try
                 {
-                    var regex = new Regex(Tinkwell.Bootstrapper.Expressions.TextHelpers.GitLikeWildcardToRegex(request.Query), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    var regex = new Regex(TextHelpers.GitLikeWildcardToRegex(request.Query), RegexOptions.Compiled | RegexOptions.IgnoreCase);
                     measures = measures.Where(x => regex.IsMatch(x.Name));
                 }
                 catch (ArgumentException e)
@@ -38,14 +38,10 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
             }
 
             if (!string.IsNullOrEmpty(request.Tag))
-            {
                 measures = measures.Where(x => x.Tags.Contains(request.Tag, StringComparer.OrdinalIgnoreCase));
-            }
 
             if (!string.IsNullOrEmpty(request.Category))
-            {
                 measures = measures.Where(x => string.Equals(x.Category, request.Category, StringComparison.OrdinalIgnoreCase));
-            }
 
             result.Items.AddRange(measures.Select(x =>
             {
@@ -89,8 +85,8 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
                 Maximum = request.Maximum,
                 Category = request.Category,
                 Precision = request.Precision,
+                Tags = request.Tags.ToArray(),
             });
-            _registry.Find(request.Name).Tags.AddRange(request.Tags); // Add tags after registration
 
             return new StoreRegisterReply();
         });
@@ -101,7 +97,7 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         return RunWithErrorHandling(() =>
         {
             var metadata = _registry.Find(request.Name);
-            _registry.Update(request.Name, UnitHelpers.Parse(metadata, request.Value));
+            _registry.Update(request.Name, UnitHelpers.Parse(metadata.QuantityType, metadata.Unit, request.Value));
             return new StoreUpdateReply();
         });
     }
@@ -134,17 +130,16 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         });
     }
 
-    public override async Task SubscribeToSet(SubscribeToSetRequest request, IServerStreamWriter<StoreChangeResponse> responseStream, ServerCallContext context)
-    {
-        var names = new HashSet<string>(request.Names);
-        await HandleSubscription(responseStream, context, names.Contains, $"set = {string.Join(", ", names)})"
-        );
-    }
-
     public override async Task SubscribeTo(SubscribeToRequest request, IServerStreamWriter<StoreChangeResponse> responseStream, ServerCallContext context)
     {
         await HandleSubscription(
-            responseStream, context,  name => name.Equals(request.Name, StringComparison.Ordinal), $"name = {request.Name}");
+            responseStream, context, name => name.Equals(request.Name, StringComparison.Ordinal), $"name = {request.Name}");
+    }
+
+    public override async Task SubscribeToSet(SubscribeToSetRequest request, IServerStreamWriter<StoreChangeResponse> responseStream, ServerCallContext context)
+    {
+        var names = new HashSet<string>(request.Names);
+        await HandleSubscription(responseStream, context, names.Contains, $"set = {string.Join(", ", names)})");
     }
 
     public override async Task SubscribeToMatching(SubscribeToMatchingRequest request, IServerStreamWriter<StoreChangeResponse> responseStream, ServerCallContext context)
@@ -156,7 +151,7 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         }
         catch (ArgumentException e)
         {
-            throw new RpcException(new Status(StatusCode.InvalidArgument, $"Invalid pattern: {e.Message}"));
+            throw new RpcException(new Status(StatusCode.InvalidArgument, $"Invalid matching pattern: {e.Message}"));
         }
         catch (Exception e)
         {
@@ -164,6 +159,9 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
             throw new RpcException(new Status(StatusCode.Internal, "An unexpected error occurred."));
         }
     }
+
+    private readonly ILogger<StoreService> _logger;
+    private readonly IRegistry _registry;
 
     private async Task HandleSubscription(
         IServerStreamWriter<StoreChangeResponse> responseStream,
@@ -222,9 +220,6 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         };
     }
 
-    private readonly ILogger<StoreService> _logger;
-    private readonly IRegistry _registry;
-
     private Task<TResult> RunWithErrorHandling<TResult>(Func<TResult> action, [CallerMemberName] string? callerName = null)
     {
         try
@@ -233,26 +228,44 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         }
         catch (ArgumentException e)
         {
-            throw new RpcException(new Status(StatusCode.InvalidArgument, e.Message));
+            throw CreateRpcException(e, callerName, isCritical: false, statusCode: StatusCode.InvalidArgument);
         }
         catch (KeyNotFoundException e)
         {
-            throw new RpcException(new Status(StatusCode.NotFound, e.Message));
+            throw CreateRpcException(e, callerName, isCritical: false, statusCode: StatusCode.NotFound);
         }
         catch (NotSupportedException e)
         {
             // Most likely thrown when trying to convert between incompatible units
-            throw new RpcException(new Status(StatusCode.InvalidArgument, e.Message));
+            throw CreateRpcException(e, callerName, isCritical: false, statusCode: StatusCode.InvalidArgument);
         }
         catch (InvalidOperationException e)
         {
-            _logger.LogError(e, "Call to {Name}() failed ({Exception}): {Reason}", callerName, e.GetType().Name, e.Message);
-            throw new RpcException(new Status(StatusCode.FailedPrecondition, e.Message));
+            throw CreateRpcException(e, callerName, isCritical: true, statusCode: StatusCode.FailedPrecondition);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Call to {Name}() failed ({Exception}): {Reason}", callerName, e.GetType().Name, e.Message);
-            throw new RpcException(new Status(StatusCode.Internal, "An unexpected error occurred."));
+            throw CreateRpcException(e, callerName, isCritical: true, statusCode: StatusCode.Internal);
         }
+    }
+
+    private RpcException CreateRpcException(Exception rootException, string? callerName, bool isCritical, StatusCode statusCode)
+    {
+        string format = "{ServiceName}.{FunctionName}() threw {ExceptionName}: {Message}";
+        if (isCritical)
+        {
+            _logger.LogError(rootException, format, nameof(StoreService), callerName, rootException.GetType().Name, rootException.Message);
+        }
+        else
+        {
+#if DEBUG
+            _logger.LogError(rootException, format, nameof(StoreService), callerName, rootException.GetType().Name, rootException.Message);
+#else
+            _logger.LogTrace(rootException, format, nameof(StoreService), callerName, rootException.GetType().Name, rootException.Message);
+#endif
+        }
+
+        string clientMessage = rootException.GetType() == typeof(Exception) ? "An unexpected error occurred." : rootException.Message;
+        return new RpcException(new Status(statusCode, clientMessage));
     }
 }

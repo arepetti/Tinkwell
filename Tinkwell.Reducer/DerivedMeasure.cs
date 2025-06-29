@@ -13,4 +13,5 @@ public class DerivedMeasure
     public string? Category { get; set; }
     public int? Precision { get; set; }
     internal List<string> Dependencies { get; set; } = new();
+    internal bool Disabled { get; set; }
 }

@@ -7,6 +7,12 @@ namespace Tinkwell.Reducer.Parser;
 
 public static class MeasureListConfigParser
 {
+    public static IEnumerable<DerivedMeasure> Parse(string text)
+    {
+        var tokens = MeasureListConfigTokenizer.Instance.Tokenize(FlattenMultilines(text));
+        return MeasureBlockParser.Many().Parse(tokens);
+    }
+
     private static TokenListParser<MeasureListConfigToken, string> Identifier =>
         Token.EqualTo(MeasureListConfigToken.Identifier).Select(t => t.ToStringValue());
 
@@ -25,7 +31,7 @@ public static class MeasureListConfigParser
     private static TokenListParser<MeasureListConfigToken, string> SingleLineQuotedValue(MeasureListConfigToken keywordToken) =>
         from _ in Token.EqualTo(keywordToken)
         from __ in Token.EqualTo(MeasureListConfigToken.Colon)
-        from value in QuotedString
+        from value in QuotedString.Select(Unquote)
         select value;
 
     private static TokenListParser<MeasureListConfigToken, double> NumberValue(MeasureListConfigToken keywordToken) =>
@@ -68,11 +74,10 @@ public static class MeasureListConfigParser
         from ___ in Token.EqualTo(MeasureListConfigToken.RBrace)
         select CreateDerivedMeasure(name, properties);
 
-    public static IEnumerable<DerivedMeasure> Parse(string text)
-    {
-        var tokens = MeasureListConfigTokenizer.Instance.Tokenize(FlattenMultilines(text));
-        return MeasureBlockParser.Many().Parse(tokens);
-    }
+    private static string Unquote(string s) =>
+        s.Length >= 2 && s.StartsWith('"') && s.EndsWith('"')
+            ? s.Substring(1, s.Length - 2)
+            : s;
 
     private static string FlattenMultilines(string input)
     {
@@ -163,6 +168,9 @@ public static class MeasureListConfigParser
     private static string FormatTypeName(string input)
     {
         var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+            return input;
+
         return string.Join("", parts.Select(p => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(p.ToLowerInvariant())));
     }
 }

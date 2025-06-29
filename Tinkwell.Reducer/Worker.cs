@@ -1,22 +1,16 @@
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace Tinkwell.Reducer;
 
-sealed class Worker : BackgroundService
+sealed class Worker(Reducer reducer) : IHostedService
 {
-    private readonly ILogger<Worker> _logger;
-    private readonly Reducer _reducer;
+    public Task StartAsync(CancellationToken cancellationToken)
+        => _reducer.StartAsync(cancellationToken);
 
-    public Worker(ILogger<Worker> logger, Reducer reducer)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger = logger;
-        _reducer = reducer;
+        await _reducer.DisposeAsync();
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation("Reducer worker running at: {time}", DateTimeOffset.Now);
-        await _reducer.StartAsync(stoppingToken);
-    }
+    private readonly Reducer _reducer = reducer;
 }
