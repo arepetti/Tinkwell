@@ -1,8 +1,8 @@
 {
-  "name": "ensamble-syntax",
-  "displayName": "Tinkwell Ensamble Syntax Highlighting",
-  "description": "Syntax highlighting for Tinkwell Ensamble configuration files",
-  "version": "0.0.1",
+  "name": "tinkwell-syntax",
+  "displayName": "Tinkwell configurations Syntax Highlighting",
+  "description": "Syntax highlighting for Tinkwell configuration files",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.70.0"
   },
@@ -12,15 +12,26 @@
       {
         "id": "tinkwell_ensamble",
         "aliases": ["TinkWell_Ensamble"],
-        "extensions": [".ensamble"],
+        "extensions": [".ensamble", ".tw"],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "tinkwell_reducer",
+        "aliases": ["TinkWell_Reducer"],
+        "extensions": [".twm"],
         "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
       {
         "language": "tinkwell_ensamble",
-        "scopeName": "source.ensamble",
-        "path": "./syntaxes/ensamble.tmLanguage.json"
+        "scopeName": "source.tw",
+        "path": "./syntaxes/tw.tmLanguage.json"
+      },
+      {
+        "language": "tinkwell_reducer",
+        "scopeName": "source.twm",
+        "path": "./syntaxes/twm.tmLanguage.json"
       }
     ]
   }

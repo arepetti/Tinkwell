@@ -1,46 +1,46 @@
-{
+﻿{
 	"name": "Tinkwell Ensamble Configuration",
-	"scopeName": "source.ensamble",
-	"fileTypes": [ "ensamble" ],
+	"scopeName": "source.tw",
+	"fileTypes": [ "tw", "ensamble" ],
 	"patterns": [
 		{
-			"name": "keyword.control.ensamble",
+			"name": "keyword.control.tw",
 			"match": "\\b(import|runner|service|argument|arguments|activation|properties|if)\\b"
 		},
 		{
-			"name": "constant.language.boolean.ensamble",
+			"name": "constant.language.boolean.tw",
 			"match": "\\b(true|false)\\b"
 		},
 		{
-			"name": "string.quoted.double.ensamble",
+			"name": "string.quoted.double.tw",
 			"begin": "\"",
 			"end": "\"",
 			"patterns": [
 				{
-					"name": "constant.character.escape.ensamble",
+					"name": "constant.character.escape.tw",
 					"match": "\\\\."
 				}
 			]
 		},
 		{
-			"name": "comment.line.double-slash.ensamble",
+			"name": "comment.line.double-slash.tw",
 			"begin": "//",
 			"end": "$"
 		},
 		{
-			"name": "punctuation.section.block.begin.ensamble",
+			"name": "punctuation.section.block.begin.tw",
 			"match": "\\{"
 		},
 		{
-			"name": "punctuation.section.block.end.ensamble",
+			"name": "punctuation.section.block.end.tw",
 			"match": "\\}"
 		},
 		{
-			"name": "punctuation.separator.key-value.ensamble",
+			"name": "punctuation.separator.key-value.tw",
 			"match": ":"
 		},
 		{
-			"name": "variable.other.identifier.ensamble",
+			"name": "variable.other.identifier.tw",
 			"match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
 		},
 		{
@@ -54,5 +54,5 @@
 			"end": "\\%\\}"
 		}
 	],
-	"uuid": "aed7b732-ensamble-liquid-blocks"
+	"uuid": "aed7b732-tw-liquid-blocks"
 }

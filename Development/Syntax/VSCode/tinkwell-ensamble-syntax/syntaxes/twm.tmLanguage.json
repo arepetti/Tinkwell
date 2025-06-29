@@ -1,0 +1,48 @@
+﻿{
+	"name": "Tinkwell Reducer Configuration",
+	"scopeName": "source.twm",
+	"fileTypes": [ "twm" ],
+	"patterns": [
+		{
+			"name": "keyword.control.twm",
+			"match": "\\b(import|measure|type|unit|expression|description|minimum|maximum|tags|category|precision|define|if)\\b"
+		},
+		{
+			"name": "constant.language.boolean.twm",
+			"match": "\\b(true|false)\\b"
+		},
+		{
+			"name": "string.quoted.double.twm",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.twm",
+					"match": "\\\\."
+				}
+			]
+		},
+		{
+			"name": "comment.line.double-slash.twm",
+			"begin": "//",
+			"end": "$"
+		},
+		{
+			"name": "punctuation.section.block.begin.twm",
+			"match": "\\{"
+		},
+		{
+			"name": "punctuation.section.block.end.twm",
+			"match": "\\}"
+		},
+		{
+			"name": "punctuation.separator.key-value.twm",
+			"match": ":"
+		},
+		{
+			"name": "variable.other.identifier.twm",
+			"match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+		}
+	],
+	"uuid": "aed7b732-twm-blocks"
+}

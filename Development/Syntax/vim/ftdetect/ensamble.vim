@@ -1,1 +1,0 @@
-au BufRead,BufNewFile *.ensamble set filetype=ensamble

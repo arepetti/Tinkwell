@@ -1,4 +1,4 @@
-" Ensamble syntax highlighting
+" Tinkwell Ensamble syntax highlighting
 
 if exists("b:current_syntax")
   finish
@@ -20,4 +20,4 @@ highlight link ensambleBrace Delimiter
 highlight link ensambleColon Operator
 highlight link ensambleIdentifier Identifier
 
-let b:current_syntax = "ensamble"
+let b:current_syntax = "tinkwell_ensamble"
