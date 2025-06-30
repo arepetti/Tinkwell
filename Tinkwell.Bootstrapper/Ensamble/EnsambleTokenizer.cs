@@ -50,14 +50,14 @@ public static class EnsambleTokenizer
 
             .Match(DoubleQuotedString, EnsambleToken.String)
 
-            .Match(Keyword("import"), EnsambleToken.Import)
-            .Match(Keyword("runner"), EnsambleToken.Runner)
-            .Match(Keyword("service"), EnsambleToken.Service)
-            .Match(Keyword("if"), EnsambleToken.If)
-            .Match(Keyword("arguments"), EnsambleToken.Arguments)
-            .Match(Keyword("properties"), EnsambleToken.Properties)
-            .Match(Keyword("true"), EnsambleToken.True)
-            .Match(Keyword("false"), EnsambleToken.False)
+            .Match(Keyword(EnsambleKeywords.Import), EnsambleToken.Import)
+            .Match(Keyword(EnsambleKeywords.Runner), EnsambleToken.Runner)
+            .Match(Keyword(EnsambleKeywords.Service), EnsambleToken.Service)
+            .Match(Keyword(EnsambleKeywords.If), EnsambleToken.If)
+            .Match(Keyword(EnsambleKeywords.Arguments), EnsambleToken.Arguments)
+            .Match(Keyword(EnsambleKeywords.Properties), EnsambleToken.Properties)
+            .Match(Keyword(EnsambleKeywords.True), EnsambleToken.True)
+            .Match(Keyword(EnsambleKeywords.False), EnsambleToken.False)
 
             .Match(Identifier, EnsambleToken.Identifier)
             .Match(Character.EqualTo('='), EnsambleToken.Equals)

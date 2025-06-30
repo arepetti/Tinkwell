@@ -68,7 +68,7 @@ sealed class Reducer : IAsyncDisposable
     private readonly DiscoveryHelper _discovery;
     private readonly MeasureListConfigReader _configReader;
     private readonly ReducerOptions _options;
-    private readonly DependencyWalker _dependencyWalker;
+    private readonly DependencyWalker<MeasureDefinition> _dependencyWalker;
     private GrpcChannel? _storeChannel;
     private Services.Store.StoreClient? _storeClient;
     private IEnumerable<MeasureDefinition> _derivedMeasures = [];

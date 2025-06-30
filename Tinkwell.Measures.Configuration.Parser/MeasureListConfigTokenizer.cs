@@ -25,7 +25,11 @@ public enum MeasureListConfigToken
     TagsKeyword,
     CategoryKeyword,
     PrecisionKeyword,
-    ImportKeyword
+    ImportKeyword,
+    SignalKeyword,
+    WhenKeyword,
+    ThenKeyword,
+    Boolean
 }
 
 static class MeasureListConfigTokenizer
@@ -45,19 +49,25 @@ static class MeasureListConfigTokenizer
         .Match(Character.EqualTo('}'), MeasureListConfigToken.RBrace)
         .Match(Character.EqualTo(':'), MeasureListConfigToken.Colon)
         .Match(Character.EqualTo('\\'), MeasureListConfigToken.Backslash)
-        .Match(Keyword("measure"), MeasureListConfigToken.MeasureKeyword)
-        .Match(Keyword("type"), MeasureListConfigToken.TypeKeyword)
-        .Match(Keyword("unit"), MeasureListConfigToken.UnitKeyword)
-        .Match(Keyword("expression"), MeasureListConfigToken.ExpressionKeyword)
-        .Match(Keyword("description"), MeasureListConfigToken.DescriptionKeyword)
-        .Match(Keyword("minimum"), MeasureListConfigToken.MinimumKeyword)
-        .Match(Keyword("maximum"), MeasureListConfigToken.MaximumKeyword)
-        .Match(Keyword("tags"), MeasureListConfigToken.TagsKeyword)
-        .Match(Keyword("category"), MeasureListConfigToken.CategoryKeyword)
-        .Match(Keyword("precision"), MeasureListConfigToken.PrecisionKeyword)
-        .Match(Keyword("import"), MeasureListConfigToken.ImportKeyword)
+        .Match(Keyword(Keywords.Measure), MeasureListConfigToken.MeasureKeyword)
+        .Match(Keyword(Keywords.Type), MeasureListConfigToken.TypeKeyword)
+        .Match(Keyword(Keywords.Unit), MeasureListConfigToken.UnitKeyword)
+        .Match(Keyword(Keywords.Expression), MeasureListConfigToken.ExpressionKeyword)
+        .Match(Keyword(Keywords.Description), MeasureListConfigToken.DescriptionKeyword)
+        .Match(Keyword(Keywords.Minimum), MeasureListConfigToken.MinimumKeyword)
+        .Match(Keyword(Keywords.Maximum), MeasureListConfigToken.MaximumKeyword)
+        .Match(Keyword(Keywords.Tags), MeasureListConfigToken.TagsKeyword)
+        .Match(Keyword(Keywords.Category), MeasureListConfigToken.CategoryKeyword)
+        .Match(Keyword(Keywords.Precision), MeasureListConfigToken.PrecisionKeyword)
+        .Match(Keyword(Keywords.Import), MeasureListConfigToken.ImportKeyword)
+        .Match(Keyword(Keywords.Signal), MeasureListConfigToken.SignalKeyword)
+        .Match(Keyword(Keywords.When), MeasureListConfigToken.WhenKeyword)
+        .Match(Keyword(Keywords.Then), MeasureListConfigToken.ThenKeyword)
+        .Match(Keyword(Keywords.True), MeasureListConfigToken.Boolean)
+        .Match(Keyword(Keywords.False), MeasureListConfigToken.Boolean)
         .Match(Numerics.DecimalDouble, MeasureListConfigToken.Number)
         .Match(QuotedString.CStyle, MeasureListConfigToken.QuotedString)
         .Match(Identifier.CStyle, MeasureListConfigToken.Identifier)
         .Build();
 }
+

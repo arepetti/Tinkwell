@@ -12,4 +12,5 @@ public interface IMeasureDefinition
     public List<string> Tags { get; set; }
     public string? Category { get; set; }
     public int? Precision { get; set; }
+    public IList<SignalDefinition> Signals { get; set; }
 }

@@ -4,4 +4,22 @@ measure power {
 	type: "Power"
 	unit: "Watt"
 	expression: "voltage * current"
+
+    signal high_load {
+      when:      "power > 80"
+      then {
+        severity: "critical"
+      }
+    }
+
+    signal low_load {
+      when:      "power < 10"
+    }
+}
+
+signal low_battery {
+  when:      "voltage < 24 and current < 10"
+  then {
+    severity: "warning"
+  }
 }

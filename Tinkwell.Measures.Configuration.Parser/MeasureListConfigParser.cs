@@ -1,20 +1,14 @@
 using Superpower;
 using Superpower.Parsers;
 using System.Globalization;
-using System.Text;
 
 namespace Tinkwell.Measures.Configuration.Parser;
-
-public sealed class ImportDirective
-{
-    public required string FilePath { get; set; }
-}
 
 public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new()
 {
     public static IEnumerable<object> Parse(string text)
     {
-        var tokens = MeasureListConfigTokenizer.Instance.Tokenize(FlattenMultilines(text));
+        var tokens = MeasureListConfigTokenizer.Instance.Tokenize(Preprocessor.Transform(text));
         return ConfigEntryParser.Many().Parse(tokens);
     }
 
@@ -29,6 +23,9 @@ public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new
 
     private static TokenListParser<MeasureListConfigToken, int> Integer =>
         Token.EqualTo(MeasureListConfigToken.Number).Select(t => int.Parse(t.ToStringValue(), CultureInfo.InvariantCulture));
+
+    private static TokenListParser<MeasureListConfigToken, bool> Boolean =>
+        Token.EqualTo(MeasureListConfigToken.Boolean).Select(t => bool.Parse(t.ToStringValue()));
 
     private static TokenListParser<MeasureListConfigToken, string> IdentifierOrQuotedString =>
         Identifier.Or(QuotedString);
@@ -53,31 +50,63 @@ public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new
 
     private static TokenListParser<MeasureListConfigToken, (string Key, object Value)> PropertyParser =>
         (from type in SingleLineQuotedValue(MeasureListConfigToken.TypeKeyword)
-         select ("type", (object)FormatTypeName(type)))
+         select (Keywords.Type, (object)FormatTypeName(type)))
         .Or(from unit in SingleLineQuotedValue(MeasureListConfigToken.UnitKeyword)
-            select ("unit", (object)FormatTypeName(unit)))
+            select (Keywords.Unit, (object)FormatTypeName(unit)))
         .Or(from expr in SingleLineQuotedValue(MeasureListConfigToken.ExpressionKeyword)
-            select ("expression", (object)expr))
+            select (Keywords.Expression, (object)expr))
         .Or(from desc in SingleLineQuotedValue(MeasureListConfigToken.DescriptionKeyword)
-            select ("description", (object)desc))
+            select (Keywords.Description, (object)desc))
         .Or(from min in NumberValue(MeasureListConfigToken.MinimumKeyword)
-            select ("minimum", (object)min))
+            select (Keywords.Minimum, (object)min))
         .Or(from max in NumberValue(MeasureListConfigToken.MaximumKeyword)
-            select ("maximum", (object)max))
+            select (Keywords.Maximum, (object)max))
         .Or(from tags in SingleLineQuotedValue(MeasureListConfigToken.TagsKeyword)
-            select ("tags", (object)tags.Split(',').Select(s => s.Trim()).ToList()))
+            select (Keywords.Tags, (object)tags.Split(',').Select(s => s.Trim()).ToList()))
         .Or(from category in SingleLineQuotedValue(MeasureListConfigToken.CategoryKeyword)
-            select ("category", (object)category))
+            select (Keywords.Category, (object)category))
         .Or(from prec in IntegerValue(MeasureListConfigToken.PrecisionKeyword)
-            select ("precision", (object)prec));
+            select (Keywords.Precision, (object)prec));
+
+    private static TokenListParser<MeasureListConfigToken, object> PayloadValueParser =>
+        QuotedString.Select(s => (object)Unquote(s))
+        .Or(Number.Select(n => (object)n))
+        .Or(Boolean.Select(b => (object)b));
+
+    private static TokenListParser<MeasureListConfigToken, (string Key, object Value)> PayloadEntryParser =>
+        from key in IdentifierOrQuotedString
+        from colon in Token.EqualTo(MeasureListConfigToken.Colon)
+        from value in PayloadValueParser
+        select (key, value);
+
+    private static TokenListParser<MeasureListConfigToken, Dictionary<string, object>> PayloadParser =>
+        from lbrace in Token.EqualTo(MeasureListConfigToken.LBrace)
+        from entries in PayloadEntryParser.Many()
+        from rbrace in Token.EqualTo(MeasureListConfigToken.RBrace)
+        select entries.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+    private static TokenListParser<MeasureListConfigToken, SignalDefinition> SignalBlockParser =>
+        from _ in Token.EqualTo(MeasureListConfigToken.SignalKeyword)
+        from name in IdentifierOrQuotedString
+        from __ in Token.EqualTo(MeasureListConfigToken.LBrace)
+        from when in SingleLineQuotedValue(MeasureListConfigToken.WhenKeyword)
+        from then in (from _ in Token.EqualTo(MeasureListConfigToken.ThenKeyword)
+                      from topic in IdentifierOrQuotedString!.OptionalOrDefault()
+                      from payload in PayloadParser!.OptionalOrDefault()
+                      select new { topic, payload }).OptionalOrDefault()
+        from ___ in Token.EqualTo(MeasureListConfigToken.RBrace)
+        select CreateSignalDefinition(name, when, then?.topic, then?.payload);
 
     private static TokenListParser<MeasureListConfigToken, T> MeasureBlockParser =>
         from _ in Token.EqualTo(MeasureListConfigToken.MeasureKeyword)
         from name in IdentifierOrQuotedString
         from __ in Token.EqualTo(MeasureListConfigToken.LBrace)
-        from properties in PropertyParser.Many()
+        from properties in (
+            PropertyParser.Select(p => (p.Key, p.Value))
+            .Or(SignalBlockParser.Select(sig => (Keywords.Signal, (object)sig)))
+        ).Many()
         from ___ in Token.EqualTo(MeasureListConfigToken.RBrace)
-        select CreateMeasureDefinition(name, properties);
+        select CreateMeasureDefinition(name, properties.ToArray());
 
     private static TokenListParser<MeasureListConfigToken, ImportDirective> ImportDirectiveParser =>
         from _ in Token.EqualTo(MeasureListConfigToken.ImportKeyword)
@@ -86,49 +115,22 @@ public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new
 
     private static TokenListParser<MeasureListConfigToken, object> ConfigEntryParser =>
         MeasureBlockParser.Select(m => (object)m)
-        .Or(ImportDirectiveParser.Select(i => (object)i));
+        .Or(ImportDirectiveParser.Select(i => (object)i))
+        .Or(SignalBlockParser.Select(s => (object)s));
 
     private static string Unquote(string s) =>
         s.Length >= 2 && s.StartsWith('"') && s.EndsWith('"')
             ? s.Substring(1, s.Length - 2)
             : s;
 
-    private static string FlattenMultilines(string input)
-    {
-        var result = new List<string>();
-        var buffer = new StringBuilder();
-
-        using var reader = new StringReader(input);
-        string? line;
-
-        while ((line = reader.ReadLine()) != null)
+    private static SignalDefinition CreateSignalDefinition(string name, string when, string? topic, Dictionary<string, object>? payload) =>
+        new SignalDefinition
         {
-            line = line.Trim();
-            if (line.EndsWith('\\') && !(buffer.Length == 0 && line.StartsWith("//")))
-            {
-                buffer.Append(line.TrimEnd('\\').Trim() + " ");
-                continue;
-            }
-            else
-            {
-                if (buffer.Length > 0)
-                {
-                    buffer.Append(line);
-                    result.Add(buffer.ToString());
-                    buffer.Clear();
-                }
-                else
-                {
-                    result.Add(line);
-                }
-            }
-        }
-
-        if (buffer.Length > 0)
-            result.Add(buffer.ToString());
-
-        return string.Join("\n", result);
-    }
+            Name = name,
+            When = when,
+            Topic = topic,
+            Payload = payload ?? new()
+        };
 
     private static T CreateMeasureDefinition(string name, (string Key, object Value)[] properties)
     {
@@ -137,39 +139,43 @@ public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new
             Name = name,
             QuantityType = "Scalar",
             Unit = "",
-            Expression = ""
+            Expression = "",
+            Signals = new List<SignalDefinition>()
         };
 
         foreach (var prop in properties)
         {
             switch (prop.Key.ToLowerInvariant())
             {
-                case "type":
+                case Keywords.Type:
                     measure.QuantityType = (string)prop.Value;
                     break;
-                case "unit":
+                case Keywords.Unit:
                     measure.Unit = (string)prop.Value;
                     break;
-                case "expression":
+                case Keywords.Expression:
                     measure.Expression = (string)prop.Value;
                     break;
-                case "description":
+                case Keywords.Description:
                     measure.Description = (string)prop.Value;
                     break;
-                case "minimum":
+                case Keywords.Minimum:
                     measure.Minimum = (double)prop.Value;
                     break;
-                case "maximum":
+                case Keywords.Maximum:
                     measure.Maximum = (double)prop.Value;
                     break;
-                case "tags":
+                case Keywords.Tags:
                     measure.Tags.AddRange((List<string>)prop.Value);
                     break;
-                case "category":
+                case Keywords.Category:
                     measure.Category = (string)prop.Value;
                     break;
-                case "precision":
+                case Keywords.Precision:
                     measure.Precision = (int)prop.Value;
+                    break;
+                case Keywords.Signal:
+                    measure.Signals.Add((SignalDefinition)prop.Value);
                     break;
             }
         }

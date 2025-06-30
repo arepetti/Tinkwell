@@ -88,10 +88,10 @@ sealed class EnsambleParser
         select rest.Prepend(new KeyValuePair<string, string>("mode", first)).ToDictionary(p => p.Key, p => p.Value);
 
     private static readonly TokenListParser<EnsambleToken, KeyValuePair<string, object>> ActivationProperty =
-        from key in Token.EqualTo(EnsambleToken.Identifier).Where(t => t.ToStringValue() == "activation")
+        from key in Token.EqualTo(EnsambleToken.Identifier).Where(t => t.ToStringValue() == EnsambleKeywords.Activation)
         from _ in Token.EqualTo(EnsambleToken.Colon)
         from mode in ParseActivationValue
-        select new KeyValuePair<string, object>("activation", mode);
+        select new KeyValuePair<string, object>(EnsambleKeywords.Activation, mode);
 
     private static readonly TokenListParser<EnsambleToken, (string? Name, string Path)> RunnerNameAndPath =
         from first in Identifier.Or(UnquotedString)
@@ -107,7 +107,7 @@ sealed class EnsambleParser
         from __ in Token.EqualTo(EnsambleToken.LBrace)
         from inner in
             PropertiesBlock.Select(p => (object)p)
-            .Or(ArgumentsBlock.Select(a => (object)new KeyValuePair<string, string>("arguments", a)))
+            .Or(ArgumentsBlock.Select(a => (object)new KeyValuePair<string, string>(EnsambleKeywords.Arguments, a)))
             .Or(ActivationProperty.Select(a => (object)a))
             .Or(ServiceBlock.Select(svc => (object)svc))
             .Many()
@@ -118,9 +118,9 @@ sealed class EnsambleParser
             Path = nameAndPath.Path,
             Condition = condition,
             Arguments = inner.OfType<KeyValuePair<string, string>>()
-                             .FirstOrDefault(kv => kv.Key == "arguments").Value,
+                             .FirstOrDefault(kv => kv.Key == EnsambleKeywords.Arguments).Value,
             Activation = inner.OfType<KeyValuePair<string, object>>()
-                              .Where(kv => kv.Key == "activation")
+                              .Where(kv => kv.Key == EnsambleKeywords.Activation)
                               .Select(kv => kv.Value)
                               .OfType<Dictionary<string, string>>()
                               .FirstOrDefault() ?? new(),
