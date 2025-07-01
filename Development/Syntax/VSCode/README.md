@@ -45,5 +45,5 @@ Using the UI:
 Alternatively, from the command line:
 
 ```bash
-code --install-extension path/to/ensamble-syntax-0.0.2.vsix
+code --install-extension path/to/ensamble-syntax-0.0.3.vsix
 ```

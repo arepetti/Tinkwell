@@ -2,7 +2,7 @@
   "name": "tinkwell-syntax",
   "displayName": "Tinkwell configurations Syntax Highlighting",
   "description": "Syntax highlighting for Tinkwell configuration files",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.70.0"
   },

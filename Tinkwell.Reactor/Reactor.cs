@@ -106,7 +106,7 @@ sealed class Reactor : IAsyncDisposable
         foreach (var signalName in signalsToCalculate)
         {
             var measure = _signals.First(m => m.Name == signalName);
-            await CheckConditionAsync(measure, cancellationToken);
+            await CheckConditionAsync(measure, tryWait: false, cancellationToken);
         }
     }
 
@@ -114,29 +114,51 @@ sealed class Reactor : IAsyncDisposable
     {
         _logger.LogDebug("Checking for all conditions already met");
         foreach (var signal in _signals)
-            await CheckConditionAsync(signal, cancellationToken);
+            await CheckConditionAsync(signal, tryWait: true, cancellationToken);
     }
 
-    private async Task CheckConditionAsync(Signal signal, CancellationToken cancellationToken)
+    private async Task CheckConditionAsync(Signal signal, bool tryWait, CancellationToken cancellationToken)
     {
         if (signal.Disabled || cancellationToken.IsCancellationRequested)
             return;
 
-        try
+        for (int i = 0; i < 3; ++i)
         {
-            var active = await EvaluateConditionAsync(signal, cancellationToken);
-            _logger.LogTrace("Recalculated {Name} = {Value}", signal.Name, active);
-            if (active)
-                await PublishEventAsync(signal, cancellationToken);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to recalculate {Name}. Measure disabled. Reason: {Message}", signal.Name, e.Message);
-            signal.Disabled = true;
+            try
+            {
+                var active = await EvaluateConditionAsync(signal, cancellationToken);
+                _logger.LogTrace("Recalculated {Name} = {Value}", signal.Name, active);
+
+                if (active.HasValue && active.Value)
+                    await PublishEventAsync(signal, cancellationToken);
+
+                return;
+            }
+            catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
+            {
+                // When bootstrapping another runner may misbehave and claim it's ready before it finished
+                // to register all its measures. Not a big deal, we just wait.
+                if (tryWait)
+                {
+                    _logger.LogWarning("Waiting for the sytem to complete the initialization process.");
+                    await Task.Delay(1000, cancellationToken);
+                    continue;
+                }
+
+                _logger.LogError(e, "Dependencies of {Name} not available. Measure disabled. Reason: {Message}", signal.Name, e.Message);
+                signal.Disabled = true;
+                return;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to recalculate {Name}. Measure disabled. Reason: {Message}", signal.Name, e.Message);
+                signal.Disabled = true;
+                return;
+            }
         }
     }
 
-    private async Task<bool> EvaluateConditionAsync(Signal signal, CancellationToken cancellationToken)
+    private async Task<bool?> EvaluateConditionAsync(Signal signal, CancellationToken cancellationToken)
     {
         Debug.Assert(_store is not null);
 
@@ -164,11 +186,8 @@ sealed class Reactor : IAsyncDisposable
                 if (response.Values.TryGetValue(owningMeasure, out var owningQuantityProto))
                     expression.Parameters["value"] = owningQuantityProto.Number;
             }
-            else
-            {
-                _logger.LogWarning("Could not find value for dependency {Dependency} when recalculating signal {Name}.", dependency, signal.Name);
-                return false;
-            }
+
+            return null;
         }
 
         return Convert.ToBoolean(expression.Evaluate(), CultureInfo.InvariantCulture);

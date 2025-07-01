@@ -72,6 +72,18 @@ runner another_native_firmware "./bin/another_firmware" {
 }
 ```
 
+The above syntax is a bit verbose but it illustrates how an _ensamble_ is composed. For the most common cases you can enjoy some syntactic sugar:
+
+
+```text
+compose service orchestrator "Tinkwell.Orchestrator.dll"
+compose agent watchdog "Tinkwell.Watchdog.dll"
+compose service store "Tinkwell.Store.dll"
+compose service events "Tinkwell.EventsGateway.dll"
+compose agent reducer "Tinkwell.Reducer.dll" { path: "./config/measures.twm" }
+compose agent reactor "Tinkwell.Reactor.dll" { path: "./config/measures.twm" }
+```
+
 If you have derived measures then you could define them like so:
 
 ```text

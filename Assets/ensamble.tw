@@ -1,33 +1,6 @@
-runner discovery "Tinkwell.Bootstrapper.GrpcHost" {
-	service runner orchestrator "Tinkwell.Orchestrator.dll" {}
-	service runner "Tinkwell.HealthCheck.dll" {}
-}
-
-runner store "Tinkwell.Bootstrapper.GrpcHost" {
-	service runner "Tinkwell.Store.dll" {}
-	service runner "Tinkwell.HealthCheck.dll" {}
-}
-
-runner events "Tinkwell.Bootstrapper.GrpcHost" {
-	service runner "Tinkwell.EventsGateway.dll" {}
-	service runner "Tinkwell.HealthCheck.dll" {}
-}
-
-runner watchdog "Tinkwell.Bootstrapper.DllHost" {
-	service runner "Tinkwell.Watchdog.dll" {}
-}
-
-runner "Tinkwell.Bootstrapper.DllHost" {
-	service runner reducer "Tinkwell.Reducer.dll" {
-		properties {
-			path: "./config/measures.twm"
-		}
-	}
-	service runner reactor "Tinkwell.Reactor.dll" {
-		properties {
-			path: "./config/measures.twm"
-		}
-	}
-	service runner "Tinkwell.HealthCheck.dll" {}
-}
-
+compose service orchestrator "Tinkwell.Orchestrator.dll"
+compose agent watchdog "Tinkwell.Watchdog.dll"
+compose service store "Tinkwell.Store.dll"
+compose service events "Tinkwell.EventsGateway.dll"
+compose agent reducer "Tinkwell.Reducer.dll" { path: "./config/measures.twm" }
+compose agent reactor "Tinkwell.Reactor.dll" { path: "./config/measures.twm" }

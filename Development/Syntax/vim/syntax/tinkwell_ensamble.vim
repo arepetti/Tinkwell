@@ -4,7 +4,7 @@ if exists("b:current_syntax")
   finish
 endif
 
-syntax keyword ensambleKeyword import runner service argument arguments activation properties if
+syntax keyword ensambleKeyword import compose agent runner service argument arguments activation properties if
 syntax keyword ensambleBoolean true false
 syntax match ensambleString /"\(\\.\|[^"]\)*"/
 syntax match ensambleComment "//.*$"

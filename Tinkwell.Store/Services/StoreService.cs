@@ -266,7 +266,7 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         else
         {
 #if DEBUG
-            _logger.LogError(rootException, format, nameof(StoreService), callerName, rootException.GetType().Name, rootException.Message);
+            _logger.LogWarning(rootException, format, nameof(StoreService), callerName, rootException.GetType().Name, rootException.Message);
 #else
             _logger.LogTrace(rootException, format, nameof(StoreService), callerName, rootException.GetType().Name, rootException.Message);
 #endif

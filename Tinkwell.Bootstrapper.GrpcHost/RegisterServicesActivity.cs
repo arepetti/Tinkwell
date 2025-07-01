@@ -41,7 +41,7 @@ sealed class RegisterServicesActivity : IActivity
             string.Join(',', _services!.Select(x => Trim(x.Name))));
 
         static string Trim(string text)
-            => text.Length > 8 ? text.Substring(0, 12) + "..." : text;
+            => text.Length > 20 ? text.Substring(0, 20) + "..." : text;
     }
 
     public async Task ConfigureApplication(WebApplication app, CancellationToken cancellationToken)

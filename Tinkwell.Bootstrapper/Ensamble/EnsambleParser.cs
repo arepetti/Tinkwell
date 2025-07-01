@@ -7,7 +7,7 @@ sealed class EnsambleParser
 {
     public (IEnumerable<string> Imports, IEnumerable<RunnerDefinition> Runners) ParseSource(string input)
     {
-        var tokens = EnsambleTokenizer.Instance.Tokenize(input);
+        var tokens = EnsambleTokenizer.Instance.Tokenize(EnsamblePreprocessor.Transform(input));
 
         var result = File(tokens);
 

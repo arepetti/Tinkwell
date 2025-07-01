@@ -5,7 +5,7 @@
 	"patterns": [
 		{
 			"name": "keyword.control.tw",
-			"match": "\\b(import|runner|service|argument|arguments|activation|properties|if)\\b"
+			"match": "\\b(compose|agent|import|runner|service|argument|arguments|activation|properties|if)\\b"
 		},
 		{
 			"name": "constant.language.boolean.tw",

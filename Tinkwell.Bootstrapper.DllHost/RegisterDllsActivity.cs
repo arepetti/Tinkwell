@@ -45,7 +45,7 @@ sealed class RegisterDllsActivity : IActivity
             string.Join(',', _dlls!.Select(x => Trim(x.Name))));
 
         static string Trim(string text)
-            => text.Length > 8 ? text.Substring(0, 12) + "..." : text;
+            => text.Length > 20 ? text.Substring(0, 20) + "..." : text;
     }
 
     private readonly ILogger _logger;
