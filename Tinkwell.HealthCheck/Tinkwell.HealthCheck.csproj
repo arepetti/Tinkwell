@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Protos\" />
+    <Compile Remove="Protos\**" />
+    <EmbeddedResource Remove="Protos\**" />
+    <None Remove="Protos\**" />
   </ItemGroup>
 	<PropertyGroup>
 		<OutputPath>$(SolutionDir)build\</OutputPath>
@@ -29,11 +31,5 @@
 	<ItemGroup>
     <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
   </ItemGroup>
-
-	<ItemGroup>
-	  <Protobuf Include="..\Protos\tinkwell.health_check.proto">
-	    <Link>Protos\tinkwell.health_check.proto</Link>
-	  </Protobuf>
-	</ItemGroup>
 
 </Project>
