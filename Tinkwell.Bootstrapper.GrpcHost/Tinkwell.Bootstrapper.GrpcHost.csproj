@@ -19,16 +19,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
 	  <ProjectReference Include="..\Tinkwell.HealthCheck\Tinkwell.HealthCheck.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Protos\" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Protobuf Include="..\Protos\tinkwell.discovery.proto" GrpcServices="Both">
-	    <Link>Protos\tinkwell.discovery.proto</Link>
-	  </Protobuf>
+	  <ProjectReference Include="..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
 	</ItemGroup>
 
 </Project>

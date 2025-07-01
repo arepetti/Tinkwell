@@ -10,10 +10,10 @@ namespace Tinkwell.Reducer;
 
 sealed class Reducer : IAsyncDisposable
 {
-    public Reducer(ILogger<Reducer> logger, DiscoveryHelper discovery, MeasureListConfigReader configReader, ReducerOptions options)
+    public Reducer(ILogger<Reducer> logger, ServiceLocator locator, MeasureListConfigReader configReader, ReducerOptions options)
     {
         _logger = logger;
-        _discovery = discovery;
+        _locator = locator;
         _configReader = configReader;
         _options = options;
         _dependencyWalker = new();
@@ -21,9 +21,7 @@ sealed class Reducer : IAsyncDisposable
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        // The first step is to discover the Store service, which is our single source of truth for all measure values
-        _store = await _discovery.FindServiceAsync(Services.Store.Descriptor.FullName,
-            c => new Services.Store.StoreClient(c), cancellationToken);
+        _store = await _locator.FindStoreAsync(cancellationToken);
 
         _logger.LogDebug("Loading derived measures from {Path}", _options.Path);
         _derivedMeasures = await _configReader.ReadFromFileAsync(
@@ -56,15 +54,14 @@ sealed class Reducer : IAsyncDisposable
     {
         await _worker.StopAsync(CancellationToken.None);
 
-        if (_discovery is not null)
-            await _discovery.DisposeAsync();
+            await _locator.DisposeAsync();
 
         if (_store is not null)
             await _store.DisposeAsync();
     }
 
     private readonly ILogger<Reducer> _logger;
-    private readonly DiscoveryHelper _discovery;
+    private readonly ServiceLocator _locator;
     private readonly MeasureListConfigReader _configReader;
     private readonly ReducerOptions _options;
     private readonly DependencyWalker<MeasureDefinition> _dependencyWalker;

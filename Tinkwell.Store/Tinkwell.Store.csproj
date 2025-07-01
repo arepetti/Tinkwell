@@ -14,23 +14,17 @@
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 	<ItemGroup>
-	  <Compile Include="..\Shared\UnitHelpers.cs" Link="UnitHelpers.cs" />
+	  <Compile Remove="Protos\**" />
+	  <EmbeddedResource Remove="Protos\**" />
+	  <None Remove="Protos\**" />
 	</ItemGroup>
 	<ItemGroup>
-    <Folder Include="Protos\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="..\Protos\tinkwell.store.proto" Link="Protos\tinkwell.store.proto" Access="Public" />
-  </ItemGroup>
+	  <Compile Include="..\Shared\UnitHelpers.cs" Link="UnitHelpers.cs" />
+	</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.31.1" />
     <PackageReference Include="Grpc.Core" Version="2.46.6" />
-    <PackageReference Include="Grpc.Tools" Version="2.72.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.6" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
     <PackageReference Include="UnitsNet" Version="5.74.0" />
@@ -38,6 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
+    <ProjectReference Include="..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
   </ItemGroup>
 
 </Project>

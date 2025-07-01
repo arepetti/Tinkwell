@@ -17,7 +17,7 @@ public sealed class Registrar : IHostedDllRegistrar
             services.AddHostedService<Worker>();
             services.AddSingleton<Reducer>();
             services.AddTransient<MeasureListConfigReader>();
-            services.AddTransient<DiscoveryHelper>();
+            services.AddTransient<ServiceLocator>();
         });
     }
 }
