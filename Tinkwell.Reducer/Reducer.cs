@@ -47,7 +47,7 @@ sealed class Reducer : IAsyncDisposable
         await CalculateInitialValuesAsync(cancellationToken);
 
         await _worker.StartAsync(SubscribeToChangesAsync, cancellationToken);
-        _logger.LogInformation("Reducer started successfully, now watching for changes");
+        _logger.LogDebug("Reducer started successfully, now watching for changes");
     }
 
     public async ValueTask DisposeAsync()

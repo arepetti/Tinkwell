@@ -9,20 +9,30 @@ using Tinkwell.Bootstrapper.Ipc.Extensions;
 
 namespace Tinkwell.Bootstrapper.DllHost;
 
-sealed class Worker : IHostedService
+sealed class StartupNotifier : IHostedService
 {
-    public Worker(IHost host, ILogger<Worker> logger, IConfiguration configuration, INamedPipeClient pipeClient)
+    public StartupNotifier(IHostApplicationLifetime lifetime, ILogger<StartupNotifier> logger, IConfiguration configuration, INamedPipeClient pipeClient)
     {
-        _host = host;
+        _lifetime = lifetime;
         _logger = logger;
         _configuration = configuration;
         _pipeClient = pipeClient;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("DllHost '{HostName}' started successfully", HostingInformation.RunnerName);
-        await _pipeClient.SendCommandToSupervisorAndDisconnectAsync(_configuration, $"signal \"{HostingInformation.RunnerName}\"");
+        _logger.LogDebug("Starting DllHost '{HostName}'.", HostingInformation.RunnerName);
+        _lifetime.ApplicationStarted.Register(() =>
+        {
+            _logger.LogInformation("DllHost '{HostName}' started successfully", HostingInformation.RunnerName);
+
+            string command = $"signal \"{HostingInformation.RunnerName}\"";
+            _pipeClient.SendCommandToSupervisorAndDisconnectAsync(_configuration, command)
+                .GetAwaiter()
+                .GetResult();
+        });
+
+        return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -31,9 +41,9 @@ sealed class Worker : IHostedService
         return Task.CompletedTask;
     }
 
-    private readonly IHost _host;
+    private readonly IHostApplicationLifetime _lifetime;
     private readonly IConfiguration _configuration;
-    private readonly ILogger<Worker> _logger;
+    private readonly ILogger _logger;
     private readonly INamedPipeClient _pipeClient;
 }
 
@@ -48,7 +58,7 @@ static class WorkerExtensions
                 .AddTransient<INamedPipeClient, NamedPipeClient>()
                 .AddTransient<IExpressionEvaluator, ExpressionEvaluator>()
                 .AddTransient<IEnsambleConditionEvaluator, EnsambleConditionEvaluator>()
-                .AddHostedService<Worker>();
+                .AddHostedService<StartupNotifier>();
         });
     }
 }

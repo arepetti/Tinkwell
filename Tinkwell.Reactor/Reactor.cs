@@ -39,7 +39,7 @@ sealed class Reactor : IAsyncDisposable
             await CheckAllConditionsAsync(cancellationToken);
 
         await _worker.StartAsync(SubscribeToChangesAsync);
-        _logger.LogInformation("Reactor started successfully, now watching for changes");
+        _logger.LogDebug("Reactor started successfully, now watching for changes");
     }
 
     public async ValueTask DisposeAsync()
@@ -55,6 +55,9 @@ sealed class Reactor : IAsyncDisposable
         if (_eventsGateway is not null)
             await _eventsGateway.DisposeAsync();
     }
+
+    private const int NumberOfRetriesOnError = 3;
+    private const int DelayBeforeRetryingOnError = 1000;
 
     private readonly ILogger<Reactor> _logger;
     private readonly ServiceLocator _locator;
@@ -122,7 +125,10 @@ sealed class Reactor : IAsyncDisposable
         if (signal.Disabled || cancellationToken.IsCancellationRequested)
             return;
 
-        for (int i = 0; i < 3; ++i)
+        // When bootstrapping another runner may misbehave and claim it's ready before it finished
+        // to register all its measures. Not a big deal, we just wait and retry a few times (but only
+        // when bootstrapping!).
+        for (int i = 0; i < NumberOfRetriesOnError; ++i)
         {
             try
             {
@@ -136,12 +142,10 @@ sealed class Reactor : IAsyncDisposable
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
-                // When bootstrapping another runner may misbehave and claim it's ready before it finished
-                // to register all its measures. Not a big deal, we just wait.
                 if (tryWait)
                 {
                     _logger.LogWarning("Waiting for the sytem to complete the initialization process.");
-                    await Task.Delay(1000, cancellationToken);
+                    await Task.Delay(DelayBeforeRetryingOnError, cancellationToken);
                     continue;
                 }
 

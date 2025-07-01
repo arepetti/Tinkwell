@@ -1,4 +1,5 @@
 ﻿
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper;
@@ -74,6 +75,8 @@ sealed class Registry(ILogger<Registry> logger, IEnsambleFileReader reader, IChi
             process.Start();
     }
 
+    private const int WarningIfOperationOnProcessIsLongerThanMilliseconds = 10000;
+
     private readonly ILogger<Registry> _logger = logger;
     private readonly IEnsambleFileReader _reader = reader;
     private readonly IChildProcessBuilder _processBuilder = processBuilder;
@@ -87,14 +90,28 @@ sealed class Registry(ILogger<Registry> logger, IEnsambleFileReader reader, IChi
             try
             {
                 _logger.LogTrace("Performing '{ActionName}' on {ItemName}", actionName, item.Definition.Name);
+
+                Stopwatch stopwatch = new();
+                stopwatch.Start();
+
                 action(item);
+
+                stopwatch.Stop();
+                _logger.LogDebug("'{ActionName}' on {ItemName} took {ElapsedMilliseconds} ms",
+                    actionName, item.Definition.Name, stopwatch.ElapsedMilliseconds);
+
+                if (stopwatch.ElapsedMilliseconds > WarningIfOperationOnProcessIsLongerThanMilliseconds)
+                {
+                    _logger.LogWarning("'{ActionName}' on {ItemName} took too long to complete ({ElapsedMilliseconds} ms)",
+                        actionName, item.Definition.Name, stopwatch.ElapsedMilliseconds);
+                }
             }
             catch (BootstrapperException e)
             {
                 _logger.LogError(e, "Error performing '{ActionName} on {ItemName}", actionName, item.Definition.Name);
             }
         }
-        _logger.LogInformation("Applied '{ActionName}' on {Count} child processes", actionName, _items.Count());
+        _logger.LogDebug("Applied '{ActionName}' on {Count} child processes", actionName, _items.Count());
     }
 
     private void ForEach(string actionName, Func<IChildProcess, Task> action)
