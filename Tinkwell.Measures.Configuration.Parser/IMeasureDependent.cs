@@ -1,6 +1,6 @@
 namespace Tinkwell.Measures.Configuration.Parser;
 
-public interface IDependentMeasure
+public interface IMeasureDependent
 {
     string Name { get; }
     string Expression { get; }

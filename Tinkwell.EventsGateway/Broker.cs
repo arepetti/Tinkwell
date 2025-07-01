@@ -1,8 +1,11 @@
 using System.Collections.Concurrent;
+using Grpc.Core.Logging;
+using Microsoft.Extensions.Logging;
+using Tinkwell.Bootstrapper;
 
 namespace Tinkwell.EventsGateway;
 
-sealed class Broker : IBroker
+sealed class Broker(ILogger<Broker> logger) : IBroker
 {
     public event EventHandler<EnqueuedEventArgs>? Enqueued;
 
@@ -11,39 +14,27 @@ sealed class Broker : IBroker
         _queue.Add(data);
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        if (_worker is not null || cancellationToken.IsCancellationRequested)
-            return Task.CompletedTask;
+        if (_worker.IsRunning || cancellationToken.IsCancellationRequested)
+            return;
 
-        _cts = new CancellationTokenSource();
-        _worker = Task.Factory.StartNew(() =>
+        await _worker.StartAsync(cancellationToken =>
         {
-            try
-            {
-                foreach (var data in _queue.GetConsumingEnumerable(_cts.Token))
-                    Enqueued?.Invoke(this, new EnqueuedEventArgs(data));
-            }
-            catch (OperationCanceledException) 
-            {
-            }
-        }, TaskCreationOptions.LongRunning);
-    
-        return Task.CompletedTask;
+            foreach (var data in _queue.GetConsumingEnumerable(cancellationToken))
+                Enqueued?.Invoke(this, new EnqueuedEventArgs(data));
+        });
+
+        _logger.LogInformation("Events Gateway Broker started successfully.");
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        if (_worker is null)
-            return;
-
         _queue.CompleteAdding();
-        await _cts!.CancelAsync();
-        await _worker!.WaitAsync(cancellationToken);
-        _worker = null;
+        await _worker.StopAsync(cancellationToken);
     }
 
+    private readonly ILogger<Broker> _logger = logger;
     private readonly BlockingCollection<EventData> _queue = new();
-    private CancellationTokenSource? _cts;
-    private Task? _worker;
+    private readonly CancellableLongRunningTask _worker = new();
 }

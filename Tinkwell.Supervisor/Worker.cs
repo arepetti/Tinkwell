@@ -22,7 +22,7 @@ sealed class Worker : IHostedService
         _commandServer = commandServer;
 
         _ensambleFilePath = fileSystem.ResolveFullPath(
-            configuration.GetValue<string?>("Ensamble:Path") ?? "./system.ensamble");
+            configuration.GetValue<string?>("Ensamble:Path") ?? "./ensamble.tw");
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)

@@ -11,14 +11,14 @@ service EventsGateway {
     // Publish an event to the message broker.
     // Returns a correlation_id that can be used to track the event (if a correlation ID has been
     // provided then it's the same one).
-    rpc Publish(PublishRequest) returns (PublishResponse);
+    rpc Publish(PublishEventsRequest) returns (PublishEventsResponse);
     // Subscribe to the event specified in the request.
-    rpc SubscribeTo(SubscribeToRequest) returns (stream SubscribeResponse);
+    rpc SubscribeTo(SubscribeToEventsRequest) returns (stream SubscribeEventsResponse);
     // Subscribe to all the events matching the criteria specified in the request.
-    rpc SubscribeToMatching(SubscribeToMatchingRequest) returns (stream SubscribeResponse);
+    rpc SubscribeToMatching(SubscribeToMatchingEventsRequest) returns (stream SubscribeEventsResponse);
 }
 
-// Verbs for SVO events�describing what has happened.
+// Verbs for SVO events, describing what has happened.
 enum Verb {
     // A new resource or entity was created
     CREATED       = 0;
@@ -69,7 +69,7 @@ enum Verb {
 }
 
 // The request message for publishing an event.
-message PublishRequest {
+message PublishEventsRequest {
     // A short, unique identifier for this event type.
     // E.g. "AlarmTriggered", "UserSignedUp"
     string topic = 1;
@@ -96,7 +96,7 @@ message PublishRequest {
 }
 
 // The response message for publishing an event.
-message PublishResponse {
+message PublishEventsResponse {
     // Unique ID for the published event.
     string id = 1;
     // The correlation ID of the published event. This is the same as the one provided in the request
@@ -105,13 +105,13 @@ message PublishResponse {
 }
 
 // Request for subscribing to an event.
-message SubscribeToRequest {
+message SubscribeToEventsRequest {
     // Topic of the event for which you want to receive notifications.
     string topic = 1;
 }
 
 // Request for subscribing to all the events that match the filter.
-message SubscribeToMatchingRequest {
+message SubscribeToMatchingEventsRequest {
     // If specified then you're going to receive only events matching this topic. The match is case sensitive.
     // Wildcards such as * and ? are supported.
     // For example "Alarm*" matches all the events that start with "Alarm".
@@ -130,7 +130,7 @@ message SubscribeToMatchingRequest {
     optional string object = 4;
 }
 
-message SubscribeResponse {
+message SubscribeEventsResponse {
     // An unique UUID for this event.
     string id = 1;
     // A short, unique identifier for this event type.

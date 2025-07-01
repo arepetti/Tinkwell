@@ -1,8 +1,8 @@
 using Grpc.Core;
-using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
+using Tinkwell.Bootstrapper;
 using Tinkwell.Measures.Configuration.Parser;
 using UnitsNet;
 
@@ -22,11 +22,11 @@ sealed class Reducer : IAsyncDisposable
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         // The first step is to discover the Store service, which is our single source of truth for all measure values
-        (_storeChannel, _storeClient) = await _discovery.FindServiceAsync(Services.Store.Descriptor.FullName,
+        _store = await _discovery.FindServiceAsync(Services.Store.Descriptor.FullName,
             c => new Services.Store.StoreClient(c), cancellationToken);
 
         _logger.LogDebug("Loading derived measures from {Path}", _options.Path);
-        _derivedMeasures = await _configReader.ReadFromFileAsync<MeasureDefinition>(
+        _derivedMeasures = await _configReader.ReadFromFileAsync(
             _options.Path, x => !string.IsNullOrWhiteSpace(x.Expression), cancellationToken);
 
         // If there are no measures to calculate we do not subscribe to anything and just terminate here
@@ -48,20 +48,19 @@ sealed class Reducer : IAsyncDisposable
         await RegisterDerivedMeasuresAsync(cancellationToken);
         await CalculateInitialValuesAsync(cancellationToken);
 
-        _logger.LogInformation("Reducer started successfully, now subscribing for changes");
-        await SubscribeToChangesAsync(cancellationToken);
+        await _worker.StartAsync(SubscribeToChangesAsync, cancellationToken);
+        _logger.LogInformation("Reducer started successfully, and watching for changes");
     }
 
     public async ValueTask DisposeAsync()
     {
+        await _worker.StopAsync(CancellationToken.None);
+
         if (_discovery is not null)
             await _discovery.DisposeAsync();
 
-        if (_storeChannel is not null)
-        {
-            await _storeChannel.ShutdownAsync();
-            _storeChannel.Dispose();
-        }
+        if (_store is not null)
+            await _store.DisposeAsync();
     }
 
     private readonly ILogger<Reducer> _logger;
@@ -69,13 +68,13 @@ sealed class Reducer : IAsyncDisposable
     private readonly MeasureListConfigReader _configReader;
     private readonly ReducerOptions _options;
     private readonly DependencyWalker<MeasureDefinition> _dependencyWalker;
-    private GrpcChannel? _storeChannel;
-    private Services.Store.StoreClient? _storeClient;
+    private readonly CancellableLongRunningTask _worker = new();
+    private GrpcService<Services.Store.StoreClient>? _store;
     private IEnumerable<MeasureDefinition> _derivedMeasures = [];
 
     private async Task RegisterDerivedMeasuresAsync(CancellationToken cancellationToken)
     {
-        Debug.Assert(_storeClient is not null);
+        Debug.Assert(_store is not null);
 
         // TODO: add support for Store.RegisterMany() so that we can batch
         // this process instead of calling Store.Register() too many times.
@@ -83,7 +82,7 @@ sealed class Reducer : IAsyncDisposable
         {
             var measure = _derivedMeasures.First(m => m.Name == measureName);
             _logger.LogDebug("Registering derived measure {Name}", measure.Name);
-            await _storeClient.RegisterAsync(new Services.StoreRegisterRequest
+            await _store.Client.RegisterAsync(new Services.StoreRegisterRequest
             {
                 Name = measure.Name,
                 QuantityType = measure.QuantityType,
@@ -107,7 +106,7 @@ sealed class Reducer : IAsyncDisposable
 
     private async Task SubscribeToChangesAsync(CancellationToken cancellationToken)
     {
-        Debug.Assert(_storeClient is not null);
+        Debug.Assert(_store is not null);
 
         var uniqueDependencies = _dependencyWalker.ForwardDependencyMap.Values.SelectMany(x => x).Distinct().ToList();
         if (uniqueDependencies.Count == 0)
@@ -117,7 +116,7 @@ sealed class Reducer : IAsyncDisposable
         var request = new Services.SubscribeToSetRequest();
         request.Names.AddRange(uniqueDependencies);
 
-        using var call = _storeClient.SubscribeToSet(request, cancellationToken: cancellationToken);
+        using var call = _store.Client.SubscribeToSet(request, cancellationToken: cancellationToken);
         try
         {
             await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
@@ -141,6 +140,10 @@ sealed class Reducer : IAsyncDisposable
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
+        // TODO: we should really really REALLY publish these changes in batch: collect all the recalculated
+        // measures and then publish them all at once, instead of one by one. We'll need to
+        // add a Store.UpdateMany() method. We should also probably have a simpler method where the value
+        // is not a string but a number (assumed to be with the correct unit of measure).
         if (_dependencyWalker.ReverseDependencyMap.TryGetValue(changedMeasure, out var affectedMeasures))
         {
             // We only care about the affected measures that are also derived measures.
@@ -163,7 +166,7 @@ sealed class Reducer : IAsyncDisposable
 
     private async Task RecalculateMeasureAsync(MeasureDefinition measure, CancellationToken cancellationToken)
     {
-        Debug.Assert(_storeClient is not null);
+        Debug.Assert(_store is not null);
 
         if (measure.Disabled)
             return;
@@ -182,7 +185,7 @@ sealed class Reducer : IAsyncDisposable
 
             _logger.LogTrace("Recalculated {Name} = {Value}", measure.Name, result);
 
-            await _storeClient.UpdateAsync(new Services.StoreUpdateRequest
+            await _store.Client.UpdateAsync(new Services.StoreUpdateRequest
             {
                 Name = measure.Name,
                 Value = result!.ToString("G", CultureInfo.InvariantCulture)
@@ -197,11 +200,11 @@ sealed class Reducer : IAsyncDisposable
 
     private async Task<IQuantity?> EvaluateMeasureExpression(MeasureDefinition measure, CancellationToken cancellationToken)
     {
-        Debug.Assert(_storeClient is not null);
+        Debug.Assert(_store is not null);
 
         var getManyRequest = new Services.GetManyRequest();
         getManyRequest.Names.AddRange(measure.Dependencies);
-        var response = await _storeClient.GetManyAsync(getManyRequest, cancellationToken: cancellationToken);
+        var response = await _store.Client.GetManyAsync(getManyRequest, cancellationToken: cancellationToken);
 
         var expression = new NCalc.Expression(measure.Expression);
         foreach (var dependency in measure.Dependencies)

@@ -72,7 +72,7 @@ runner another_native_firmware "./bin/another_firmware" {
 }
 ```
 
-If you have derived measures then you could defined like so:
+If you have derived measures then you could define them like so:
 
 ```text
 // This is just a constant, we can use it to simulate changes forcing an update using PostMan
@@ -93,6 +93,24 @@ measure power {
 	type: "Power"
 	unit: "Watt"
 	expression: "voltage * current"
+
+    signal high_load {
+      when: "power > 80"
+      with {
+        severity: "critical"
+      }
+    }
+
+    signal low_load {
+      when: "power < 10"
+    }
+}
+
+signal low_battery {
+  when: "voltage < 24 and current < 10"
+  with {
+    severity: "warning"
+  }
 }
 ```
 

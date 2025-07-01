@@ -14,13 +14,13 @@ public static class HostingInformation
         if (_discoveryServiceAddress is null)
         {
             client ??= new NamedPipeClient();
-            for (int i=0; i < 3; ++i)
+            for (int i=0; i < NumberOfAttemptsOnError; ++i)
             {
                 _discoveryServiceAddress = await QueryDiscoveryAddressAsync(configuration, client);
                 if (_discoveryServiceAddress is not null)
                     break;
 
-                await Task.Delay(1000);
+                await Task.Delay(DelayBeforeRetryingOnError);
             }    
 
             if (_discoveryServiceAddress is null)
@@ -30,12 +30,15 @@ public static class HostingInformation
         return _discoveryServiceAddress!;
     }
 
+    private const int NumberOfAttemptsOnError = 3;
+    private const int DelayBeforeRetryingOnError = 1000;
+
     private static string? _discoveryServiceAddress;
 
     private static async Task<string?> QueryDiscoveryAddressAsync(IConfiguration configuration, INamedPipeClient client)
     {
         var address = await client.SendCommandToSupervisorAndDisconnectAsync(
-            configuration, $"roles query {WellKnownNames.DiscoveryServiceRoleName}");
+            configuration, $"roles query \"{WellKnownNames.DiscoveryServiceRoleName}\"");
 
         if (address is not null && address.StartsWith("Error: "))
             return null;

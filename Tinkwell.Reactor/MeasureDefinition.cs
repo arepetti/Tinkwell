@@ -1,8 +1,8 @@
 using Tinkwell.Measures.Configuration.Parser;
 
-namespace Tinkwell.Reducer;
+namespace Tinkwell.Reactor;
 
-sealed class MeasureDefinition : IMeasureDefinition<SignalDefinition>, IMeasureDependent
+sealed class MeasureDefinition : IMeasureDefinition<SignalDefinition>
 {
     public string Name { get; set; } = "";
     public string QuantityType { get; set; } = "";
@@ -15,9 +15,4 @@ sealed class MeasureDefinition : IMeasureDefinition<SignalDefinition>, IMeasureD
     public string? Category { get; set; }
     public int? Precision { get; set; }
     public IList<SignalDefinition> Signals { get; set; } = [];
-
-    internal bool Disabled { get; set; }
-    public IList<string> Dependencies { get; set; } = [];
 }
-
-

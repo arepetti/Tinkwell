@@ -16,11 +16,18 @@ runner events "Tinkwell.Bootstrapper.GrpcHost" {
 runner watchdog "Tinkwell.Bootstrapper.DllHost" {
 	service runner "Tinkwell.Watchdog.dll" {}
 }
-runner reducer "Tinkwell.Bootstrapper.DllHost" {
-	service runner "Tinkwell.Reducer.dll" {
+
+runner "Tinkwell.Bootstrapper.DllHost" {
+	service runner reducer "Tinkwell.Reducer.dll" {
 		properties {
-			path: "./measures.twm"
+			path: "./config/measures.twm"
 		}
 	}
+	service runner reactor "Tinkwell.Reactor.dll" {
+		properties {
+			path: "./config/measures.twm"
+		}
+	}
+	service runner "Tinkwell.HealthCheck.dll" {}
 }
 

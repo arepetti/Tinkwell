@@ -4,7 +4,9 @@ using System.Globalization;
 
 namespace Tinkwell.Measures.Configuration.Parser;
 
-public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new()
+public static class MeasureListConfigParser<TMeasure, TSignal>
+    where TSignal : ISignalDefinition, new()
+    where TMeasure : IMeasureDefinition<TSignal>, new()
 {
     public static IEnumerable<object> Parse(string text)
     {
@@ -85,19 +87,19 @@ public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new
         from rbrace in Token.EqualTo(MeasureListConfigToken.RBrace)
         select entries.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-    private static TokenListParser<MeasureListConfigToken, SignalDefinition> SignalBlockParser =>
+    private static TokenListParser<MeasureListConfigToken, TSignal> SignalBlockParser =>
         from _ in Token.EqualTo(MeasureListConfigToken.SignalKeyword)
         from name in IdentifierOrQuotedString
         from __ in Token.EqualTo(MeasureListConfigToken.LBrace)
         from when in SingleLineQuotedValue(MeasureListConfigToken.WhenKeyword)
-        from then in (from _ in Token.EqualTo(MeasureListConfigToken.ThenKeyword)
+        from with in (from _ in Token.EqualTo(MeasureListConfigToken.WithKeyword)
                       from topic in IdentifierOrQuotedString!.OptionalOrDefault()
                       from payload in PayloadParser!.OptionalOrDefault()
                       select new { topic, payload }).OptionalOrDefault()
         from ___ in Token.EqualTo(MeasureListConfigToken.RBrace)
-        select CreateSignalDefinition(name, when, then?.topic, then?.payload);
+        select CreateSignalDefinition(name, when, with?.topic, with?.payload);
 
-    private static TokenListParser<MeasureListConfigToken, T> MeasureBlockParser =>
+    private static TokenListParser<MeasureListConfigToken, TMeasure> MeasureBlockParser =>
         from _ in Token.EqualTo(MeasureListConfigToken.MeasureKeyword)
         from name in IdentifierOrQuotedString
         from __ in Token.EqualTo(MeasureListConfigToken.LBrace)
@@ -119,12 +121,10 @@ public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new
         .Or(SignalBlockParser.Select(s => (object)s));
 
     private static string Unquote(string s) =>
-        s.Length >= 2 && s.StartsWith('"') && s.EndsWith('"')
-            ? s.Substring(1, s.Length - 2)
-            : s;
+        s.Length >= 2 && s.StartsWith('"') && s.EndsWith('"') ? s[1..^1] : s;
 
-    private static SignalDefinition CreateSignalDefinition(string name, string when, string? topic, Dictionary<string, object>? payload) =>
-        new SignalDefinition
+    private static TSignal CreateSignalDefinition(string name, string when, string? topic, Dictionary<string, object>? payload) =>
+        new TSignal
         {
             Name = name,
             When = when,
@@ -132,15 +132,15 @@ public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new
             Payload = payload ?? new()
         };
 
-    private static T CreateMeasureDefinition(string name, (string Key, object Value)[] properties)
+    private static TMeasure CreateMeasureDefinition(string name, (string Key, object Value)[] properties)
     {
-        var measure = new T
+        var measure = new TMeasure
         {
             Name = name,
             QuantityType = "Scalar",
             Unit = "",
             Expression = "",
-            Signals = new List<SignalDefinition>()
+            Signals = new List<TSignal>()
         };
 
         foreach (var prop in properties)
@@ -175,7 +175,7 @@ public static class MeasureListConfigParser<T> where T : IMeasureDefinition, new
                     measure.Precision = (int)prop.Value;
                     break;
                 case Keywords.Signal:
-                    measure.Signals.Add((SignalDefinition)prop.Value);
+                    measure.Signals.Add((TSignal)prop.Value);
                     break;
             }
         }

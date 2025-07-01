@@ -4,6 +4,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>Tinkwell.Reactor</RootNamespace>
+    <AssemblyName>Tinkwell.Reactor</AssemblyName>
   </PropertyGroup>
 	<PropertyGroup>
 		<OutputPath>$(SolutionDir)build\</OutputPath>
@@ -11,16 +13,11 @@
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
-	  <Compile Include="..\Shared\DiscoveryHelper.cs" Link="DiscoveryHelper.cs" />
 	  <Compile Include="..\Shared\UnitHelpers.cs" Link="UnitHelpers.cs" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Google.Protobuf" Version="3.31.1" />
 		<PackageReference Include="Grpc.Net.Client" Version="2.64.0" />
-		<PackageReference Include="Grpc.Tools" Version="2.72.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
 		<PackageReference Include="NCalcSync" Version="5.4.2" />
 		<PackageReference Include="UnitsNet" Version="5.74.0" />
@@ -30,13 +27,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Protobuf Include="..\Protos\tinkwell.discovery.proto" GrpcServices="Client" Access="Internal">
-	    <Link>Protos\tinkwell.discovery.proto</Link>
-	  </Protobuf>
-	  <Protobuf Include="..\Protos\tinkwell.store.proto" GrpcServices="Client" Access="Internal">
-	    <Link>Protos\tinkwell.store.proto</Link>
-	  </Protobuf>
+	  <ProjectReference Include="..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
 	</ItemGroup>
 </Project>
+

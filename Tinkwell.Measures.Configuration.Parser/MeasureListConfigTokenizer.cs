@@ -28,7 +28,7 @@ public enum MeasureListConfigToken
     ImportKeyword,
     SignalKeyword,
     WhenKeyword,
-    ThenKeyword,
+    WithKeyword,
     Boolean
 }
 
@@ -62,7 +62,7 @@ static class MeasureListConfigTokenizer
         .Match(Keyword(Keywords.Import), MeasureListConfigToken.ImportKeyword)
         .Match(Keyword(Keywords.Signal), MeasureListConfigToken.SignalKeyword)
         .Match(Keyword(Keywords.When), MeasureListConfigToken.WhenKeyword)
-        .Match(Keyword(Keywords.Then), MeasureListConfigToken.ThenKeyword)
+        .Match(Keyword(Keywords.With), MeasureListConfigToken.WithKeyword)
         .Match(Keyword(Keywords.True), MeasureListConfigToken.Boolean)
         .Match(Keyword(Keywords.False), MeasureListConfigToken.Boolean)
         .Match(Numerics.DecimalDouble, MeasureListConfigToken.Number)

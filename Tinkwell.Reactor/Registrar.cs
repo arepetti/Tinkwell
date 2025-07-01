@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Tinkwell.Bootstrapper;
 
-namespace Tinkwell.Reducer;
+namespace Tinkwell.Reactor;
 
 public sealed class Registrar : IHostedDllRegistrar
 {
@@ -9,15 +9,16 @@ public sealed class Registrar : IHostedDllRegistrar
     {
         host.ConfigureServices((_, services) =>
         {
-            services.AddSingleton(new ReducerOptions
+            services.AddSingleton(new ReactorOptions
             {
                 Path = host.GetPropertyString("path", "measures.twm")!,
+                CheckOnStartup = host.GetPropertyBoolean("check_on_startup", true)
             });
 
             services.AddHostedService<Worker>();
-            services.AddSingleton<Reducer>();
-            services.AddTransient<MeasureListConfigReader>();
-            services.AddTransient<DiscoveryHelper>();
+            services.AddSingleton<Reactor>();
+            services.AddTransient<SignalListConfigReader>();
+            services.AddTransient<ServiceLocator>();
         });
     }
 }

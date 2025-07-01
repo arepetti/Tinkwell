@@ -15,7 +15,7 @@ static class Keywords
     public const string Import = "import";
     public const string Signal = "signal";
     public const string When = "when";
-    public const string Then = "then";
+    public const string With = "with";
     public const string True = "true";
     public const string False = "false";
 }

@@ -1,6 +1,7 @@
 namespace Tinkwell.Measures.Configuration.Parser;
 
-public interface IMeasureDefinition
+public interface IMeasureDefinition<TSignalDefinition>
+    where TSignalDefinition : ISignalDefinition, new()
 {
     public string Name { get; set; }
     public string QuantityType { get; set; }
@@ -12,5 +13,5 @@ public interface IMeasureDefinition
     public List<string> Tags { get; set; }
     public string? Category { get; set; }
     public int? Precision { get; set; }
-    public IList<SignalDefinition> Signals { get; set; }
+    public IList<TSignalDefinition> Signals { get; set; }
 }

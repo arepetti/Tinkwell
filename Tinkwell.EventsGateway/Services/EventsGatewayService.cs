@@ -13,10 +13,11 @@ sealed class EventsGatewayService : Tinkwell.Services.EventsGateway.EventsGatewa
         _broker = broker;
     }
 
-    public override Task<PublishResponse> Publish(PublishRequest request, ServerCallContext context)
+    public override Task<PublishEventsResponse> Publish(PublishEventsRequest request, ServerCallContext context)
     {
-        var correlationId = request.CorrelationId ?? Guid.NewGuid().ToString();
         var eventId = Guid.NewGuid().ToString();
+        var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId)
+            ? Guid.NewGuid().ToString() : request.CorrelationId;
 
         var eventData = new EventData
         {
@@ -32,16 +33,16 @@ sealed class EventsGatewayService : Tinkwell.Services.EventsGateway.EventsGatewa
 
         _broker.Publish(eventData);
 
-        return Task.FromResult(new PublishResponse { Id = eventId, CorrelationId = correlationId });
+        return Task.FromResult(new PublishEventsResponse { Id = eventId, CorrelationId = correlationId });
     }
 
-    public override async Task SubscribeTo(SubscribeToRequest request, IServerStreamWriter<SubscribeResponse> responseStream, ServerCallContext context)
+    public override async Task SubscribeTo(SubscribeToEventsRequest request, IServerStreamWriter<SubscribeEventsResponse> responseStream, ServerCallContext context)
     {
         await HandleSubscription(
             responseStream, context, data => data.Topic.Equals(request.Topic, StringComparison.Ordinal), $"topic = {request.Topic}");
     }
 
-    public override async Task SubscribeToMatching(SubscribeToMatchingRequest request, IServerStreamWriter<SubscribeResponse> responseStream, ServerCallContext context)
+    public override async Task SubscribeToMatching(SubscribeToMatchingEventsRequest request, IServerStreamWriter<SubscribeEventsResponse> responseStream, ServerCallContext context)
     {
         try
         {
@@ -80,7 +81,7 @@ sealed class EventsGatewayService : Tinkwell.Services.EventsGateway.EventsGatewa
     private readonly RegexCache _regexCache = new();
 
     private async Task HandleSubscription(
-        IServerStreamWriter<SubscribeResponse> responseStream,
+        IServerStreamWriter<SubscribeEventsResponse> responseStream,
         ServerCallContext context,
         Func<EventData, bool> filter,
         string subscriptionIdentifier)
@@ -97,7 +98,7 @@ sealed class EventsGatewayService : Tinkwell.Services.EventsGateway.EventsGatewa
 
                 try
                 {
-                    var response = new SubscribeResponse
+                    var response = new SubscribeEventsResponse
                     {
                         Id = args.Data.Id,
                         Topic = args.Data.Topic,

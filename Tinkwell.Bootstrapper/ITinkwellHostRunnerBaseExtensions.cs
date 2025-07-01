@@ -36,4 +36,25 @@ public static class ITinkwellHostRunnerBaseExtensions
 
         return defaultValue;
     }
+
+    public static bool GetPropertyBoolean(this ITinkwellHostRunnerBase host, string name, bool defaultValue)
+    {
+        if (host.Properties.TryGetValue(name, out var obj))
+        {
+            try
+            {
+                return Convert.ToBoolean(obj, CultureInfo.InvariantCulture);
+            }
+            catch (FormatException)
+            {
+                return defaultValue;
+            }
+            catch (InvalidCastException)
+            {
+                return defaultValue;
+            }
+        }
+
+        return defaultValue;
+    }
 }

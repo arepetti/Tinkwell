@@ -20,12 +20,8 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
 	</ItemGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\Assets\Assets.csproj" />
 		<ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-		<None Update="system.ensamble">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
 	</ItemGroup>
 
 </Project>

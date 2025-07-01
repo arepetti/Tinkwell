@@ -3,7 +3,7 @@ using NCalc;
 
 namespace Tinkwell.Measures.Configuration.Parser;
 
-public sealed class DependencyWalker<T> where T : IDependentMeasure
+public class DependencyWalker<T> where T : IMeasureDependent
 {
     // Gets the forward dependency map, where the key is a measure and the value is a list of its direct dependencies.
     public IReadOnlyDictionary<string, IList<string>> ForwardDependencyMap => _forwardDependencyMap;
@@ -27,6 +27,9 @@ public sealed class DependencyWalker<T> where T : IDependentMeasure
         return ApplyTopologicalSort();
     }
 
+    protected virtual IEnumerable<string> ResolveDependencies(T item)
+        => new Expression(item.Expression).GetParameterNames();
+
     private readonly Dictionary<string, IList<string>> _forwardDependencyMap = new();
     private readonly Dictionary<string, IList<string>> _reverseDependencyMap = new();
     private List<string> _calculationOrder = new();
@@ -38,9 +41,9 @@ public sealed class DependencyWalker<T> where T : IDependentMeasure
         {
             // NCalc is used to parse the expression and find all external parameters:
             // they're all the (forward) dependencies of this expression!
-            var expression = new Expression(measure.Expression);
+            var dependencies = ResolveDependencies(measure);
             measure.Dependencies.Clear();
-            foreach (var dependency in expression.GetParameterNames())
+            foreach (var dependency in dependencies)
                 measure.Dependencies.Add(dependency);
 
             _forwardDependencyMap[measure.Name] = measure.Dependencies;

@@ -9,6 +9,19 @@
 
 namespace Tinkwell;
 
+public record GrpcService<T>(global::Grpc.Net.Client.GrpcChannel Channel, T Client) 
+    : global::System.IDisposable, global::System.IAsyncDisposable
+{
+    public void Dispose()
+        => DisposeAsync().GetAwaiter().GetResult();
+
+    public async global::System.Threading.Tasks.ValueTask DisposeAsync()
+    {
+        await Channel.ShutdownAsync();
+        Channel.Dispose();
+    }
+}
+
 internal sealed class DiscoveryHelper : IAsyncDisposable, IDisposable
 {
     public DiscoveryHelper(global::Microsoft.Extensions.Configuration.IConfiguration configuration, global::Tinkwell.Bootstrapper.Ipc.INamedPipeClient pipeClient)
@@ -27,14 +40,14 @@ internal sealed class DiscoveryHelper : IAsyncDisposable, IDisposable
         return _discovery = new global::Tinkwell.Services.Discovery.DiscoveryClient(_discoveryChannel);
     }
 
-    public async Task<(global::Grpc.Net.Client.GrpcChannel Channel, T Service)> FindServiceAsync<T>(string fullName, Func<global::Grpc.Net.Client.GrpcChannel, T> factory, global::System.Threading.CancellationToken cancellationToken = default)
+    public async Task<GrpcService<T>> FindServiceAsync<T>(string fullName, Func<global::Grpc.Net.Client.GrpcChannel, T> factory, global::System.Threading.CancellationToken cancellationToken = default)
     {
         var discovery = await GetDiscoveryAsync(cancellationToken);
         var request = new global::Tinkwell.Services.DiscoveryFindRequest { Name = fullName };
         var addressInfo = await discovery.FindAsync(request, cancellationToken: cancellationToken);
         var channel = global::Grpc.Net.Client.GrpcChannel.ForAddress(addressInfo.Host);
 
-        return (channel, factory(channel));
+        return new global::Tinkwell.GrpcService<T>(channel, factory(channel));
     }
 
     public void Dispose()
