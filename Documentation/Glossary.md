@@ -7,7 +7,7 @@ A synonym for [firmlet](#firmlet), when it does not expose a gRPC service (but c
 The set of files that define the system's behavior, including the [Ensemble](#ensemble) file and the configurations for [derived measures](#derived-measure).
 
 #### Derived Measure
-A [measure](#measure) whose value is calculated from other measures. The [Reducer](#reducer) is responsible for computing its value. Every measure is associated with its unit of measure.
+A [measure](#measure) whose value is calculated from other measures. The [Reducer](#reducer) is responsible for computing its value. Every measure is associated with its [unit of measure](./Units.md). Derived measures are defined in their own configuration file (see [Derived Measures Configuration](./Derived%20measures.md)).
 
 #### Discovery (Service)
 A [service](#service) implementing the `Tinkwell.Discovery` contract, which exposes commands to search for and manage other services. There can be only one per [system](#system). The default host for services assumes this role automatically if such a service is not already registered in the system.
@@ -31,7 +31,7 @@ A generic term for a piece of logic or a [service](#service). It may coincide wi
 A [host](#host) that loads [services](#service) packaged as libraries. It allows multiple services to share a single web server or to run in separate processes. When loaded within the same process, services can also share DI services.
 
 #### Health check (Service)
-A [service](#service) implementing `Tinkwell.HealthCheck` with basic checks to continually monitor the state of the [host](#host) it's running in.####
+A [service](#service) implementing `Tinkwell.HealthCheck` with basic checks to continually monitor the state of the [host](#host) it's running in.
 
 #### Host
 A special [runner](#runner) without logic of its own, used to load one or more [firmlets](#firmlet). Hosts are used to reduce the boilerplate imposed on a runner by the [Supervisor](#supervisor) and to optimize for performance (for example, to host multiple gRPC services in the same web server).

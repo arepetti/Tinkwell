@@ -17,5 +17,13 @@
 	  <PackageReference Include="NCalcSync" Version="5.4.2" />
 	  <PackageReference Include="Superpower" Version="3.1.0" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Update="compose_agent.template">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="compose_service.template">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
 
 </Project>

@@ -5,30 +5,35 @@ The Ensemble DSL defines how services are composed and hosted within a system. E
 ## Syntax
 
 ```text
-[import <import_path>]
+[import "<import path>"]
 ...
 
-runner [<name>] <path> [if <condition>] {
-    [arguments: <arguments>]
-    [ properties {
+runner ["<name>"] "<path>" [if "<condition>"] {
+    [arguments: "<arguments>"]
+    [properties {
         [keep_alive: true|false]
         <option>: <value>
         ...
-    } ]
-    [ service runner [<name> <path>] [if <condition>] {
-        [ properties {
+    }]
+    [service runner ["<name>" "<path>"] [if "<condition">] {
+        [properties {
             <option>: <value>
             ...
-        } ]
-    } ]
+        }]
+    }]
     ...
 }
+...
+
+compose <kind> "<name>" "<path>" [{
+    <key>: <value>
+}]
 ...
 ```
 
 Where:
 
-#### `<import_path>`
+#### `<import path>`
 
 The `import` directive must always be at the beginning of the file, before `runner` definitions. Declaration order matters when there are dependencies between [runners](./Glossary.md#runner); imported definitions are bootstrapped before others.
 
@@ -72,12 +77,12 @@ Additional properties passed to the runner. Their content depends on the specifi
 #### `service runner`
 Used when the outer `runner` is a host for one or more `firmlets` (the inner `service runner` definitions). Note that not every runner is a host. Firmlets loaded within the same host share the same process and can even share DI services. Sharing a process offers performance benefits (especially for gRPC services) but scales poorly and should be used with caution to prevent a buggy firmlet from disrupting others.
 
-## Syntactic Sugar
+### Preprocessor
 
-To simplify configuration in common scenarios, the `compose` directive can be used to host a library in one of the predefined Tinkwell hosts:
+To simplify configuration and avoid boilerplate, you can use the `compose` directive which replaces a few commonly used parameters with a template:
 
 ```text
-compose <kind> <path> [ {
+compose <kind> "<name>" "<path>" [{
     <key>: <value>
 }]
 ```
@@ -86,9 +91,9 @@ Where:
 
 #### `<kind>`
 
-Indicates the type of host: `service` (to host a service) or `agent` (to host an agent).
+Indicates the type of host: `service` (to host a service) or `agent` (to host an agent). You can define your own _kind_ creating a custom template (see [Customization](#customization)).
 
-### Example
+### Examples
 
 This configuration:
 
@@ -122,3 +127,31 @@ runner reactor "Tinkwell.Bootstrapper.DllHost" {
     }
 }
 ```
+
+#### Customization
+
+You can define your own reusable templates:
+
+* Pick a name, not already in use, for `<kind>`. For example `wasm`.
+* Create a file, distributed with the application, named `"compose_wasm.template"`.
+* Edit the file with the text replacement you want. You will have these available parameters:
+    * `{{ name }}`: replaced with `<name>` (without quotes, even if used).
+    * `{{ path }}`: replaced with `<path>` (without quotes).
+    * `{{ properties }}`: replaced with all the `<key>` and `<value>` pairs, including `{` and `}`. If not specified then it's `{}`.
+    * `{{ host.grpc }}`: replaced with the name of the default runner to host [services](./Glossary.md#service) packaged as libraries.
+    * `{{ host.dll }}`: replaced with the name of the default runner to host [agents](./Glossary.md#agent) packaged as libraries.
+    * `{{ firmlet.health_check }}`: replaced with the name of the assembly implementing the [Health Check service](./Glossary.md#health-check-service).
+    * `{{ address.supervisor }}`: replaced with the named pipe used to communicate directly with the [Supervisor](./Glossary.md#supervisor) without using the [Orchestrator](./Glossary.md#orchestrator-service).
+    
+For example, this is the template used for `service`:
+
+```text
+runner "{{ name }}" "{{ host.grpc }}" {
+  service runner "__{{ name }}___health_check__" "{{ firmlet.health_check }}" {}
+  service runner "__{{ name }}___firmlet__" "{{ path }}" {
+    properties {{ properties }}
+  }
+}
+```
+
+Keep in mind that the preprocessor performs a simple text substitution!
