@@ -1,5 +1,3 @@
-using Tinkwell.Bootstrapper.Ensamble;
-
 namespace Tinkwell.Bootstrapper.GrpcHost;
 
 [Flags]

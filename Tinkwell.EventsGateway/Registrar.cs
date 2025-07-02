@@ -13,7 +13,7 @@ public class Registrar : IHostedGrpcServerRegistrar
 
     public void ConfigureServices(IGrpcServerHost host)
     {
-        host.Services.AddSingleton<IBroker, Broker>();
+        host.Services.AddSingleton<IBroker, Worker>();
         host.Services.AddHostedService(sp => sp.GetRequiredService<IBroker>());
     }
 }

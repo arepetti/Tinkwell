@@ -1,5 +1,4 @@
 using Grpc.Core;
-using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.GrpcHost;
 using Tinkwell.Services;
 

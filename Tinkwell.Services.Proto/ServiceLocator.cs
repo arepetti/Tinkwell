@@ -15,11 +15,10 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
 
     public async Task<Services.Discovery.DiscoveryClient> FindDiscoveryAsync(CancellationToken cancellationToken)
     {
-        if (_disposed)
-            throw new ObjectDisposedException(nameof(ServiceLocator));
+        ObjectDisposedException.ThrowIf(_disposed, this);
 
         if (_discovery is not null)
-            return _discovery;
+            return _discovery.Client;
 
         var address = await HostingInformation.ResolveDiscoveryServiceAddressAsync(_configuration, _pipeClient);
         if (string.IsNullOrWhiteSpace(address))
@@ -28,14 +27,15 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
                                                 $"Please ensure that the Supervisor is running and accessible.");
         }
 
-        _discoveryChannel = GrpcChannel.ForAddress(address);
-        return _discovery = new Services.Discovery.DiscoveryClient(_discoveryChannel);
+        var channel = GrpcChannel.ForAddress(address);
+        _discovery = new GrpcService<Services.Discovery.DiscoveryClient>(channel, new Services.Discovery.DiscoveryClient(channel));
+
+        return _discovery.Client;
     }
 
     public async Task<GrpcService<T>> FindServiceAsync<T>(string name, Func<GrpcChannel, T> factory, CancellationToken cancellationToken = default)
     {
-        if (_disposed)
-            throw new ObjectDisposedException(nameof(ServiceLocator));
+        ObjectDisposedException.ThrowIf(_disposed, this);
 
         var discovery = await FindDiscoveryAsync(cancellationToken);
         var request = new Services.DiscoveryFindRequest { Name = name };
@@ -69,8 +69,7 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
 
     private readonly IConfiguration _configuration;
     private readonly INamedPipeClient _pipeClient;
-    private GrpcChannel? _discoveryChannel;
-    private Services.Discovery.DiscoveryClient? _discovery;
+    private GrpcService<Services.Discovery.DiscoveryClient>? _discovery;
     private bool _disposed;
 
     private async ValueTask DisposeAsync(bool disposing)
@@ -82,11 +81,10 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
         {
             if (disposing)
             {
-                if (_discoveryChannel is not null)
+                if (_discovery is not null)
                 {
-                    await _discoveryChannel.ShutdownAsync();
-                    _discoveryChannel.Dispose();
-                    _discoveryChannel = null;
+                    await _discovery.Channel.ShutdownAsync();
+                    _discovery.Channel.Dispose();
                     _discovery = null;
                 }
             }

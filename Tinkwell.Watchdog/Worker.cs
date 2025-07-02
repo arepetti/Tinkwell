@@ -6,7 +6,6 @@ using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Ipc.Extensions;
 using Tinkwell.Services;
@@ -17,38 +16,36 @@ sealed class Worker(
     IConfiguration configuration,
     MonitoringOptions options,
     INamedPipeClient pipeClient,
-    ILogger<Worker> logger) : BackgroundService, IAsyncDisposable
+    ILogger<Worker> logger,
+    ServiceLocator locator) : BackgroundService, IAsyncDisposable
 {
     public async ValueTask DisposeAsync()
     {
         // Shutdown all channels gracefully (waiting for ongoing operations to complete).
         var shutdownTasks = new List<Task>();
 
-        if (_discoveryChannel is not null)
-            shutdownTasks.Add(_discoveryChannel.ShutdownAsync());
-
-        if (_storeChannel is not null)
-            shutdownTasks.Add(_storeChannel.ShutdownAsync());
+        if (_store?.Channel is not null)
+            shutdownTasks.Add(_store.Channel.ShutdownAsync());
 
         foreach (var channel in _channelCache.Values)
             shutdownTasks.Add(channel.ShutdownAsync());
 
         await Task.WhenAll(shutdownTasks);
 
-        // Dispose all the resources
-        _discoveryChannel?.Dispose();
-        _storeChannel?.Dispose();
+        _store?.Channel?.Dispose();
 
         foreach (var channel in _channelCache.Values)
             channel.Dispose();
+
+        await _locator.DisposeAsync();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
         {
-            var discoveryHostAddress = await HostingInformation.ResolveDiscoveryServiceAddressAsync(_configuration, _pipeClient);
-            _discoveryChannel = GrpcChannel.ForAddress(discoveryHostAddress);
+            _discovery = await _locator.FindDiscoveryAsync(stoppingToken);
+            _store = await _locator.FindStoreAsync(stoppingToken);
 
             using var timer = new PeriodicTimer(_options.Interval);
             while (await timer.WaitForNextTickAsync(stoppingToken))
@@ -79,17 +76,17 @@ sealed class Worker(
     private readonly MonitoringOptions _options = options;
     private readonly INamedPipeClient _pipeClient = pipeClient;
     private readonly ILogger<Worker> _logger = logger;
+    private readonly ServiceLocator _locator = locator;
     private readonly ConcurrentDictionary<string, GrpcChannel> _channelCache = new();
     private readonly ConcurrentDictionary<string, string> _nameMap = new();
-    private GrpcChannel? _discoveryChannel;
-    private GrpcChannel? _storeChannel;
+    private Discovery.DiscoveryClient? _discovery;
+    private GrpcService<Store.StoreClient>? _store;
 
     private async Task CollectHealthDataAsync(CancellationToken cancellationToken)
     {
-        Debug.Assert(_discoveryChannel is not null);
+        Debug.Assert(_discovery is not null);
 
-        var (discovery, store) = await CreateClientsAsync(cancellationToken);
-        var discoveryResponse = await discovery.FindAllAsync(new() { FamilyName = HealthCheck.Descriptor.Name }, cancellationToken: cancellationToken);
+        var discoveryResponse = await _discovery.FindAllAsync(new() { FamilyName = HealthCheck.Descriptor.Name }, cancellationToken: cancellationToken);
         foreach (var host in discoveryResponse.Hosts)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -99,7 +96,7 @@ sealed class Worker(
             {
                 var healthCheckService = new HealthCheck.HealthCheckClient(GetOrCreateChannel(host));
                 var healthResponse = await healthCheckService.CheckAsync(new(), cancellationToken: cancellationToken);
-                await StoreMeasureAsync(store, healthResponse.Name, healthResponse.Status, cancellationToken);
+                await StoreMeasureAsync(healthResponse.Name, healthResponse.Status, cancellationToken);
             }
             catch (RpcException exception)
             {
@@ -111,12 +108,7 @@ sealed class Worker(
                 {
                     var runnerName = await ResolveRunnerNameFromAddressAsync(host, cancellationToken);
                     if (!string.IsNullOrWhiteSpace(runnerName))
-                    {
-                        await StoreMeasureAsync(store,
-                            runnerName,
-                            HealthCheckResponse.Types.ServingStatus.NotServing,
-                            cancellationToken);
-                    }
+                        await StoreMeasureAsync(runnerName, HealthCheckResponse.Types.ServingStatus.NotServing, cancellationToken);
                 }
             }
         }
@@ -132,40 +124,25 @@ sealed class Worker(
                exception.StatusCode == StatusCode.Internal;
     }
 
-    private async Task<(Discovery.DiscoveryClient discovery, Store.StoreClient store)> CreateClientsAsync(CancellationToken cancellationToken)
+    private async Task StoreMeasureAsync(string runnerName, HealthCheckResponse.Types.ServingStatus status, CancellationToken cancellationToken)
     {
-        var discovery = new Discovery.DiscoveryClient(_discoveryChannel);
-
-        if (_storeChannel is null)
-        {
-            var storeHost = await discovery.FindAsync(new DiscoveryFindRequest { Name = Store.Descriptor.FullName }, cancellationToken: cancellationToken);
-            _storeChannel = GrpcChannel.ForAddress(storeHost.Host);
-        }
-
-        var store = new Store.StoreClient(_storeChannel);
-
-        return (discovery, store);
-    }
-
-    private async Task StoreMeasureAsync(
-        Store.StoreClient store,
-        string runnerName,
-        HealthCheckResponse.Types.ServingStatus status,
-        CancellationToken cancellationToken)
-    {
-        var measureName = await GetOrRegisterMeasureNameAsync(store, runnerName, cancellationToken);
+        Debug.Assert(_store is not null);
+        
+        var measureName = await GetOrRegisterMeasureNameAsync(runnerName, cancellationToken);
         var value = Convert.ToString((int)status, CultureInfo.InvariantCulture) ?? "";
-        await store.UpdateAsync(new() { Name = measureName, Value = value }, cancellationToken: cancellationToken);
+        await _store.Client.UpdateAsync(new() { Name = measureName, Value = value }, cancellationToken: cancellationToken);
     }
 
-    private async Task<string> GetOrRegisterMeasureNameAsync(Store.StoreClient store, string runnerName, CancellationToken cancellationToken)
+    private async Task<string> GetOrRegisterMeasureNameAsync(string runnerName, CancellationToken cancellationToken)
     {
+        Debug.Assert(_store is not null);
+
         // _nameMap contains the name of the measure associated with each runner
         if (_nameMap.TryGetValue(runnerName, out var measureName))
             return measureName;
 
         var newMeasureName = _options.NamePattern.Replace("{{ name }}", runnerName);
-        await store.RegisterAsync(new()
+        await _store.Client.RegisterAsync(new()
         {
             Name = newMeasureName,
             QuantityType = "Scalar",

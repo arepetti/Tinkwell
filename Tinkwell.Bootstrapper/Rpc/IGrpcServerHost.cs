@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Tinkwell.Bootstrapper.Ensamble;
 
 namespace Tinkwell.Bootstrapper;
 

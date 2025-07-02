@@ -4,18 +4,12 @@ using System.Globalization;
 using System.Reflection;
 using Grpc.Core;
 using Grpc.Net.Client;
-using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Services;
 
 namespace Tinkwell.Bootstrapper.GrpcHost;
 
-sealed class Registry : IRegistry
+sealed class Registry(IConfiguration configuration) : IRegistry
 {
-    public Registry(IConfiguration configuration)
-    {
-        _configuration = configuration;
-    }
-
     public string? LocalAddress { get; set; }
 
     public string? MasterAddress { get; set; }
@@ -109,10 +103,11 @@ sealed class Registry : IRegistry
         return Find(name, RegistrySearchMode.Default) is not null;
     }
 
-    private readonly IConfiguration _configuration;
+    private readonly IConfiguration _configuration = configuration;
     private readonly ConcurrentBag<ServiceDefinition> _services = new();
     private GrpcChannel? _grpcChannel;
 
+    // Resolve the full name qualified gRPC name of a gRPC server class.
     private static string GetServiceFullName(Type serviceType)
     {
         var serviceBaseType = serviceType.BaseType;
@@ -145,6 +140,8 @@ sealed class Registry : IRegistry
         }
     }
 
+    // String matching with options. Determines whether "value" is a match for the search string textToSearch,
+    // given the search options specified in "mode".
     private static bool Match(string? value, string? textToSearch, RegistrySearchMode mode)
     {
         // Note this: null does not match another null, it means that the value is unspecified!
@@ -160,6 +157,8 @@ sealed class Registry : IRegistry
         return string.Equals(value, textToSearch, comparison);
     }
 
+    // Tries to register the specified service to the master Discovery. No action is performed if
+    // this is the master instance.
     private void TryRegisterWithMaster(ServiceDefinition definition)
     {
         if (string.IsNullOrWhiteSpace(MasterAddress))

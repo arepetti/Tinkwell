@@ -13,5 +13,3 @@ public record GrpcService<T>(GrpcChannel Channel, T Client) : IDisposable, IAsyn
         Channel.Dispose();
     }
 }
-
-

@@ -1,17 +1,20 @@
-﻿using System.IO.Pipes;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO.Pipes;
 using System.Text;
 
 namespace Tinkwell.Bootstrapper.Ipc;
 
 public sealed class NamedPipeClient : INamedPipeClient
 {
-    public bool IsConnected => _client is not null && _client.IsConnected;
+    [MemberNotNullWhen(true, nameof(_client), nameof(_reader), nameof(_writer))]
+    public bool IsConnected
+        => _client is not null && _client.IsConnected;
 
     public StreamReader Reader
     {
         get
         {
-            if (_reader is null)
+            if (!IsConnected)
                 throw new InvalidOperationException("Reader is not initialized. Call Connect() first.");
 
             return _reader;
@@ -22,7 +25,7 @@ public sealed class NamedPipeClient : INamedPipeClient
     {
         get
         {
-            if (_writer is null)
+            if (!IsConnected)
                 throw new InvalidOperationException("Writer is not initialized. Call Connect() first.");
 
             return _writer;
@@ -34,7 +37,7 @@ public sealed class NamedPipeClient : INamedPipeClient
         if (_disposed)
             throw new ObjectDisposedException(nameof(NamedPipeClient));
 
-        if (_client is not null)
+        if (IsConnected)
             return;
 
         _client = new NamedPipeClientStream(serverName, pipeName, PipeDirection.InOut);
@@ -76,7 +79,7 @@ public sealed class NamedPipeClient : INamedPipeClient
         if (_disposed)
             throw new ObjectDisposedException(nameof(NamedPipeClient));
 
-        if (_client is null || !_client.IsConnected)
+        if (!IsConnected)
             throw new InvalidOperationException("Client is not connected. Call Connect() first.");
 
         _writer!.WriteLine(command);
@@ -87,7 +90,7 @@ public sealed class NamedPipeClient : INamedPipeClient
         if (_disposed)
             throw new ObjectDisposedException(nameof(NamedPipeClient));
 
-        if (_client is null || !_client.IsConnected)
+        if (!IsConnected)
             throw new InvalidOperationException("Client is not connected. Call Connect() first.");
 
         return _writer!.WriteLineAsync(command.AsMemory(), cancellationToken);
@@ -139,11 +142,7 @@ public sealed class NamedPipeClient : INamedPipeClient
         try
         {
             if (disposing)
-            {
-                _writer?.Dispose();
-                _reader?.Dispose();
-                _client?.Dispose();
-            }
+                Disconnect();
 
         }
         finally

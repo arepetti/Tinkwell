@@ -27,9 +27,7 @@ sealed class StartupNotifier : IHostedService
             _logger.LogInformation("DllHost '{HostName}' started successfully", HostingInformation.RunnerName);
 
             string command = $"signal \"{HostingInformation.RunnerName}\"";
-            _pipeClient.SendCommandToSupervisorAndDisconnectAsync(_configuration, command)
-                .GetAwaiter()
-                .GetResult();
+            _pipeClient.SendCommandToSupervisorAndDisconnect(_configuration, command);
         });
 
         return Task.CompletedTask;

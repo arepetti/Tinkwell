@@ -75,7 +75,8 @@ sealed class RegisterDllsActivity : IActivity
         // (= not inside ConfigureServices() because it's deferred) an IServiceProvider. To workaround
         // this we create a throw-away host in Extensions.DelegateConfigureServices() to DI this activity
         // but we can't use it safely outside of here because it's disposed (including the services you obtained)
-        // right after this task completes.
+        // right after this task completes. We could ignore registrars without a default constructors
+        // but then they'd be ignored without any error and would be confusing.
         IHostedDllRegistrar CreateInstance(Type type)
             => (IHostedDllRegistrar)Activator.CreateInstance(type)!;
     }
@@ -98,9 +99,9 @@ sealed class RegisterDllsActivity : IActivity
 
     sealed class HostProxy(IHostBuilder builder) : IDllHost
     {
-        public string RunnerName { get; internal set; } = null!;
+        public required string RunnerName { get; internal init; }
 
-        public IDictionary<string, object> Properties { get; internal set; } = null!;
+        public required IDictionary<string, object> Properties { get; internal init; }
 
         public IHostBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
             => _builder.ConfigureContainer(configureDelegate);
