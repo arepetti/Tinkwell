@@ -54,7 +54,7 @@ quantity_groups = {
         "AbsorbedDoseOfIonizingRadiation", "DoseAreaProduct", "Illuminance",
         "Irradiance", "Irradiation", "Luminance", "Luminosity", "LuminousFlux",
         "LuminousIntensity", "RadiationEquivalentDose", "RadiationEquivalentDoseRate",
-        "RadiationExposure", "Radioactivity", "VitaminA"
+        "RadiationExposure", "Radioactivity"
     ],
     "Chemical & Material": [
         "Molality", "Molarity", "PorousMediumPermeability", "Turbidity", "MassConcentration", "VolumeConcentration"
@@ -64,21 +64,25 @@ quantity_groups = {
     ]
 }
 
-# Define file paths relative to the script's execution directory
+# We read the units from the UnitsNet repository
+# and dynamically categorize quantities that are not explicitly defined in the quantity_groups.
 UNITS_JSON_URL = 'https://raw.githubusercontent.com/angularsen/UnitsNet/master/Common/UnitEnumValues.g.json'
 UNIT_DEFINITION_BASE_URL = 'https://raw.githubusercontent.com/angularsen/UnitsNet/master/Common/UnitDefinitions/'
 LOCAL_UNITS_JSON_PATH = 'Units.json' 
 OUTPUT_MD_PATH = 'Units.md' 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-SCRIPT_NAME = 'enrich_units_doc.py'
+SCRIPT_NAME = 'generate_units_doc.py'
+
+print(f"Generating \033[36m{OUTPUT_MD_PATH}\033[0m with the list of supported units of measure")
+print(f"Source of truth: \033[36m{UNITS_JSON_URL}\033[0m")
+print(f"Source of truth: \033[36m{UNIT_DEFINITION_BASE_URL}\033[0m\n\n")
 
 # Download Units.json
-print(f"Downloading {UNITS_JSON_URL} to {LOCAL_UNITS_JSON_PATH}...")
+print(f"Downloading and processing the list...")
 response = requests.get(UNITS_JSON_URL)
 response.raise_for_status()
 with open(LOCAL_UNITS_JSON_PATH, 'w', encoding='utf-8') as f:
     f.write(response.text)
-print("Download complete.")
 
 # Read the local Units.json file
 with open(LOCAL_UNITS_JSON_PATH, 'r', encoding='utf-8') as f:
@@ -105,10 +109,12 @@ if uncategorized_quantities:
     quantity_groups["Other"].extend(sorted(uncategorized_quantities))
 
 # Generate the Markdown content
+print(f"Starting to generate \033[36m{OUTPUT_MD_PATH}\033[0m...")
 with open(OUTPUT_MD_PATH, 'w', encoding='utf-8') as f:
-    f.write('# UnitsNet Supported Units\n\n')
-    f.write('This document lists all the quantity types and their corresponding units of measurement supported by the UnitsNet library.\n\n')
-
+    f.write('# Supported Units\n\n')
+    f.write('This document lists all the quantity types and their corresponding units of measurement. It is generated from UnitsNet package JSON data.\n\n')
+    
+    print("Rendering table of contents...")
     f.write('## Table of Contents\n\n')
     for group_name in quantity_groups.keys():
         f.write(f'- [{group_name}](#{slugify(group_name)})\n')
@@ -117,19 +123,27 @@ with open(OUTPUT_MD_PATH, 'w', encoding='utf-8') as f:
     f.write('\n')
 
     for group_name, quantities_in_group in quantity_groups.items():
+        print(f"Rendering group \033[36m{group_name}\033[0m...")
         f.write(f'## {group_name}\n\n')
         for quantity_name in sorted(quantities_in_group):
             try:
-                url = f'{UNIT_DEFINITION_BASE_URL}{quantity_name}.json'
-                response = requests.get(url)
-                response.raise_for_status() 
-                unit_def = json.loads(response.content.decode('utf-8-sig'))
+                try:
+                    url = f'{UNIT_DEFINITION_BASE_URL}{quantity_name}.json'
+                    print(f"Downloading units data from \033[36mhttps://raw.githubusercontent.com/.../{quantity_name}.json\033[0m...")
+                    response = requests.get(url)
+                    response.raise_for_status()
+                    unit_def = json.loads(response.content.decode('utf-8-sig'))
+                except requests.RequestException as e:
+                    print(f"\033[33mFailed ({e.__class__.__name__}) to gather additional information for \033[36m{quantity_name}\033[0m")
+                    unit_def = {
+                        "Units": {}
+                    }
 
                 f.write(f'### {split_pascal_case(quantity_name)}\n`{quantity_name}`\n\n')
                 if unit_def.get('XmlDocSummary'):
                     f.write(f'{unit_def["XmlDocSummary"]}\n\n')
                 if unit_def.get('BaseUnit'):
-                    f.write(f'**Base Unit**: {unit_def["BaseUnit"]}\n\n')
+                    f.write(f'**Default Unit**: {unit_def["BaseUnit"]}\n\n')
 
                 f.write('**Units**:\n\n')
                 for unit in unit_def['Units']:
@@ -147,15 +161,15 @@ with open(OUTPUT_MD_PATH, 'w', encoding='utf-8') as f:
 
                     f.write(f'- {split_pascal_case(unit_name)} (`{unit_name}`)')
                     if abbr_str:
-                        f.write(f'. Units: {abbr_str}')
+                        f.write(f'.\n\n  Abbreviation(s): {abbr_str}')
                     if unit.get('XmlDocSummary'):
-                        f.write(f': {unit["XmlDocSummary"]}')
+                        f.write(f'\n\n  {unit["XmlDocSummary"]}')
                     f.write('\n')
                 f.write('\n')
             except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
-                print(f"Could not process {quantity_name}: {e}")
+                print(f"\033[33mCould not process \033[36m{quantity_name}\033[0m: {e}")
 
-print(f"Successfully generated {OUTPUT_MD_PATH}")
+print(f"\033[32mSuccessfully generated \033[36m{OUTPUT_MD_PATH}\033[0m")
 
 # Instructions for use:
 # 1. Make sure you have Python installed.
