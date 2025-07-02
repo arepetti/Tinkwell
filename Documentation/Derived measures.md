@@ -1,193 +1,134 @@
-# Tinkwell Reducer Configuration Syntax
+# Derived Measures Configuration
 
-This document describes the syntax used to define **derived measures** in Tinkwell Reducer's configuration files.
+This document describes the syntax for defining **derived measures** in Tinkwell's configuration files. These files, typically with a `.twm` extension, are used by the [Reducer](#reducer) to calculate new measures from existing ones.
 
 ## Syntax Overview
 
-### String Values
+A derived measure is defined using a `measure` block, which contains a set of key-value pairs.
 
-All textual values in the configuration must be wrapped in double quotes (`"`). These include fields like `type`, `unit`, `expression`, `description`, and `category`.
+### Basic Structure
 
-#### Basic Strings
-
-Basic quoted string values look like this:
-
-```text
-unit: "Watt"
-type: "ElectricalPower"
-category: "Energy Monitoring"
-```
-
-#### Escaping Characters
-
-To include special characters like double quotes or backslashes inside a string, use escape sequences:
-
-| Character     | Escape Syntax | Example                                   |
-|---------------|----------------|------------------------------------------|
-| Double quote  | `\"`           | `"Voltage is measured in \"Volts\""`     |
-| Backslash     | `\\`           | `"Path is C:\\Program Files\\App"`       |
-| Newline       | `\n`           | `"First line.\nSecond line."`            |
-| Tab           | `\t`           | `"Column A:\tValue"`                     |
-
-These follow **C-style** string escape rules and are parsed accordingly.
-
-#### Multiline Strings
-
-Use a backslash (`\`) at the end of the line to indicate that the string continues on the next line. This works for values like `description` and `expression`:
-
-```text
-description: "Calculates power consumption. \
-              Useful in energy audits."
-
-expression: "[Zone1] + [Zone2] + \
-             [Zone3]"
-```
-
-Each backslash should be placed **at the very end of the line** with no trailing characters after it. The continuation line may be indented for readability.
-
-## Basic Structure
-
-```text
+```tinkwell
+// Forward-declare measures defined elsewhere
 import "path/to/another_file.twm"
 
+// Define a new derived measure
 measure "Measure.Name" {
     key: value
     ...
 }
 ```
 
-The measure name could be enclosed in double quotes. The name of the measure can be any alphanumeric value (plus `-_.` and spaces) but if it's a standard C identifier then you do not need to quote it.
-Lines starting with `//` are considered comments and ignored.
+-   **`import`**: The `import` directive, which must appear at the top of the file, allows you to reference measures defined in other files. This is useful for organizing complex configurations.
+-   **`measure`**: Each `measure` block defines a new derived measure. The name can be a [simple identifier](./Glossary.md#simple-identifier) or a string enclosed in double quotes.
+-   **Comments**: Lines starting with `//` are treated as comments and are ignored.
 
-## Reference
+### String Values
 
-### `type` _(optional*)_
+All textual values, such as `type`, `unit`, and `description`, must be enclosed in double quotes (`"`).
 
-Specifies the quantity type.
+#### Multiline Strings
 
-```text
-type: ElectricalPower
-```
-It must be a valid _quantity type_ identifier:
+For long strings, like `description` and `expression`, you can use a backslash (`\`) at the end of a line to continue the string on the next line:
 
-```text
- measure "Power" {
-    type: "ElectricalPower"
-    unit: "Watt"
-    expression: "Voltage * Current"
-}
+```tinkwell
+description: "This is a long description \
+              that spans multiple lines."
+
+expression: "[Zone1.Temperature] + \
+             [Zone2.Temperature]"
 ```
 
-Default: `Scalar`.
+## Attributes Reference
 
-\* Can be omitted for forward-declaration of a measure defined elsewhere in the system or when declaring a _scalar_ measure.
+### `name` (required)
 
----
+The unique identifier for the measure. It can be a [simple identifier](./Glossary.md#simple-identifier) or a quoted string.
 
-### `unit` _(optional*)_
+```tinkwell
+measure "Electrical.Power" { ... }
+```
 
-Defines the unit of measurement.
+### `expression` (required)
 
-```text
+A mathematical [expression](./Expressions.md) that calculates the value of the derived measure. It can reference other measures, which must be defined or imported before use.
+
+```tinkwell
+expression: "[Voltage] * [Current]"
+```
+
+### `type` (optional)
+
+Specifies the quantity type (e.g., `ElectricalPower`, `Temperature`). If omitted, it defaults to `Scalar`.
+
+```tinkwell
+type: "ElectricalPower"
+```
+
+### `unit` (optional)
+
+Defines the unit of measurement (e.g., `Watt`, `DegreeCelsius`). It must be a valid unit for the specified `type`. Defaults to an empty string.
+
+```tinkwell
 unit: "Watt"
 ```
 
-It must be a valid unit of measure for the type of quantity specified in `type`. Default: empty string
+### `description` (optional)
 
-\* Can be omitted for forward-declaration of a measure defined elsewhere in the system or when declaring a _scalar_ measure (in that case also `type` is optional).
+A free-text description of the measure. Supports multiline strings.
 
----
-
-### `expression` _(required*)_
-
-A mathematical expression which returns the calculated value of the derived measure.
-
-```text
-expression: "Voltage * Current"
+```tinkwell
+description: "Calculates the total power consumption."
 ```
 
-If the expression is long you can split it over multiple lines with `\`:
+### `minimum` and `maximum` (optional)
 
-```text
-expression: "[Zone1.Temperature] + \
-            [Zone2.Temperature] + \
-            [Zone3.Temperature]"
-```
+Numeric boundaries for the measure's value. If a calculated value falls outside this range, a runtime error will occur.
 
-You can use any measure in the system, they **must be already defined when this configuration file is loaded**.
-If the name of a measure is alphanumeric (and it does not start with a number) then you do not need to enclose it with square brackets.
-
-\* If omitted then the measure is ignored and considered a forward-declaration of a measure defined elsewhere in the system.
-
----
-
-### `description` *(optional)*
-
-Free text. Supports multi-line continuation.
-
-```text
-description: "Calculates total energy. \
-             Used for dashboard summaries."
-```
-
----
-
-### `minimum`, `maximum` *(optional)*
-
-Numeric boundaries for the derived value.
-
-```text
+```tinkwell
 minimum: 0.0
 maximum: 10000.0
 ```
-You can specify only `minimum` or only `maximum`. When a boundaries is specified then attempting to store a value outside the allowed range will cause a run-time error.
 
----
+### `tags` (optional)
 
-### `tags` *(optional)*
+A comma-separated list of keywords for organizing and searching for measures.
 
-Comma-separated list of keywords.
-
-```text
+```tinkwell
 tags: "energy, power, analytics"
 ```
 
-Useful to organise your measures, you can run searches (using `List()` from `Tinkwell.Store` service) filtered by tag.
+### `category` (optional)
 
----
+A classification label for grouping related measures.
 
-### `category` *(optional)*
-
-A classification label.
-
-```text
+```tinkwell
 category: "Energy Management"
 ```
 
-Useful to organise your measures, you can run searches (using `List()` from `Tinkwell.Store` service) filtered by category.
+### `precision` (optional)
 
----
+Specifies the number of decimal places to round the calculated value to. This affects the stored value, not just its presentation.
 
-### `precision` *(optional)*
-
-Specifies how many decimal places to round to.
-
-```text
+```tinkwell
 precision: 2
 ```
 
-Note that this rounding is not for presentation purposes, if specified then the value stored has this number of decimals. If omitted then the number is not rounded and it's stored in double precision.
+## Complete Example
 
-## Full Example
+```tinkwell
+// File: /config/derived_measures.twm
 
-```text
-// This is a new derived measure, "Electrical.Power" is its name
+// Import base measures from another file
+import "./base_sensors.twm"
+
+// Calculate electrical power
 measure "Electrical.Power" {
     type: "ElectricalPower"
     unit: "Watt"
-    expression: "Voltage * Current"
-    description: "Calculates the electrical power from voltage and current. \
-                This measure is fundamental for energy monitoring."
+    expression: "[Voltage] * [Current]"
+    description: "Calculates electrical power from voltage and current. \
+                This is fundamental for energy monitoring."
     minimum: 0.0
     maximum: 5000.0
     tags: "electrical, power, energy, calculation"
@@ -195,6 +136,7 @@ measure "Electrical.Power" {
     precision: 2
 }
 
+// Calculate average temperature
 measure "HVAC.AverageTemperature" {
     type: "Temperature"
     unit: "DegreeCelsius"
@@ -205,15 +147,15 @@ measure "HVAC.AverageTemperature" {
     maximum: 25.0
     tags: "hvac, temperature, average, climate"
     category: "Building Automation"
-    precision: 1 
+    precision: 1
 }
 
+// Convert uptime to a more readable format
 measure "System.UptimeHours" {
     type: "Duration"
     unit: "Hour"
     expression: "[System.UptimeSeconds] / 3600"
-    description: "Converts system uptime from seconds to hours. \
-                Provides a more readable format for long-term operation."
+    description: "Converts system uptime from seconds to hours."
     tags: "system, uptime, monitoring"
     category: "IT Infrastructure"
     precision: 0

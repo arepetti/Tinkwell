@@ -14,7 +14,6 @@ sealed class Server : ICommandServer
         _pipeServer = pipeServerFactory.Create();
         _endpoints = new Endpoints(configuration);
 
-        _enabled = configuration.GetValue("Supervisor:CommandServer:Enabled", true);
         _pipeName = configuration.GetValue("Supervisor:CommandServer:PipeName",
             WellKnownNames.SupervisorCommandServerPipeName);
         _maxConcurrentConnections = configuration.GetValue("Supervisor:CommandServer:MaxConcurrentConnections", 4);
@@ -24,9 +23,6 @@ sealed class Server : ICommandServer
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        if (!_enabled)
-            return Task.CompletedTask;
-
         _logger.LogDebug("Starting command server on pipe '{PipeName}'", _pipeName);
         _pipeServer.MaxConcurrentConnections = _maxConcurrentConnections;
         _pipeServer.Process += ReadAndProcessPipeData;
@@ -90,7 +86,6 @@ sealed class Server : ICommandServer
     private readonly INamedPipeServer _pipeServer;
     private readonly string _pipeName;
     private readonly int _maxConcurrentConnections;
-    private readonly bool _enabled;
     private readonly Endpoints _endpoints;
     private readonly ConcurrentDictionary<string, string> _roles = new();
 }

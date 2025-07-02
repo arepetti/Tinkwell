@@ -32,13 +32,13 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
         return _discovery = new Services.Discovery.DiscoveryClient(_discoveryChannel);
     }
 
-    public async Task<GrpcService<T>> FindServiceAsync<T>(string fullName, Func<GrpcChannel, T> factory, CancellationToken cancellationToken = default)
+    public async Task<GrpcService<T>> FindServiceAsync<T>(string name, Func<GrpcChannel, T> factory, CancellationToken cancellationToken = default)
     {
         if (_disposed)
             throw new ObjectDisposedException(nameof(ServiceLocator));
 
         var discovery = await FindDiscoveryAsync(cancellationToken);
-        var request = new Services.DiscoveryFindRequest { Name = fullName };
+        var request = new Services.DiscoveryFindRequest { Name = name };
         var addressInfo = await discovery.FindAsync(request, cancellationToken: cancellationToken);
         var channel = GrpcChannel.ForAddress(addressInfo.Host);
 
@@ -46,7 +46,14 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
     }
 
     public async Task<GrpcService<Services.Store.StoreClient>> FindStoreAsync(CancellationToken cancellationToken = default)
-        => await FindServiceAsync(Services.Store.Descriptor.FullName, c => new Services.Store.StoreClient(c), cancellationToken);
+    {
+        // Note that we are intentionally using Descriptor.Name instead of Descriptor.FullName. This is because it's possible,
+        // in theory and with some configuration, to have multiple stores in the system. Using Descriptor.Name allows us to
+        // search for the service using its Family Name (which is the same as the service name) instead of the full
+        // name (which must be unique). It's not supported out-of-the box but, at least, those using this library
+        // won't need to be updated if we decide to add multiple stores in the future.
+        return await FindServiceAsync(Services.Store.Descriptor.Name, c => new Services.Store.StoreClient(c), cancellationToken);
+    }
 
     public async Task<GrpcService<Services.EventsGateway.EventsGatewayClient>> FindEventsGatewayAsync(CancellationToken cancellationToken = default)
         => await FindServiceAsync(Services.EventsGateway.Descriptor.FullName, c => new Services.EventsGateway.EventsGatewayClient(c), cancellationToken);

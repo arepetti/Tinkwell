@@ -34,8 +34,8 @@ public static class INamedPipeClientExtensions
 
     private static void Connect(this INamedPipeClient client, IConfiguration configuration)
     {
-        string serverName = configuration.GetValue("Supervisor::CommandServer:ServerName", ".");
-        string pipeName = configuration.GetValue("Supervisor::CommandServer:PipeName",
+        string serverName = configuration.GetValue("Supervisor:CommandServer:ServerName", ".");
+        string pipeName = configuration.GetValue("Supervisor:CommandServer:PipeName",
             WellKnownNames.SupervisorCommandServerPipeName);
 
         client.Connect(serverName, pipeName);

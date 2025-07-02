@@ -37,6 +37,7 @@ public sealed class EnsambleFileReader : IEnsambleFileReader
 
     private async Task<IEnumerable<RunnerDefinition>> ReadWithoutErrorHandlingAsync(string basePath, string path, CancellationToken cancellationToken)
     {
+        List<RunnerDefinition> result = new();
         var (runners, imports) = await ParseFileAsync(path, cancellationToken);
 
         while (imports.TryDequeue(out var import))
@@ -44,10 +45,10 @@ public sealed class EnsambleFileReader : IEnsambleFileReader
             if (cancellationToken.IsCancellationRequested)
                 break;
 
-            runners.AddRange(await ReadWithoutErrorHandlingAsync(basePath, import!, cancellationToken));
+            result.AddRange(await ReadWithoutErrorHandlingAsync(basePath, import!, cancellationToken));
         }
-
-        return runners;
+        result.AddRange(runners);
+        return result;
     }
 
     private async Task<(List<RunnerDefinition>, Queue<string>)> ParseFileAsync(string path, CancellationToken cancellationToken)

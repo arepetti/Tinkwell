@@ -9,7 +9,8 @@ public sealed class Registrar : IHostedGrpcServerRegistrar
 {
     public void ConfigureRoutes(IGrpcServerHost host)
     {
-        host.MapGrpcService<StoreService>(new ServiceDefinition { Aliases = [ Tinkwell.Services.Store.Descriptor.Name] });
+        string name = Tinkwell.Services.Store.Descriptor.Name;
+        host.MapGrpcService<StoreService>(new ServiceDefinition { FamilyName = name, Aliases = [name] });
     }
 
     public void ConfigureServices(IGrpcServerHost host)

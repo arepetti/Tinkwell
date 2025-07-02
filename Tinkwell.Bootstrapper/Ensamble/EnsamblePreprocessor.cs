@@ -29,11 +29,11 @@ static class EnsamblePreprocessor
 
             if (kind == "service")
             {
-                return string.Format("\nrunner \"{0}\" \"{1}\" {{\n service runner \"_{0}___firmlet_\" \"{2}\" {{\n  properties {3}\n }}\n service runner \"_{0}___healthcheck_\" \"{4}\" {{}}\n}}\n",
+                return string.Format("\nrunner \"{0}\" \"{1}\" {{\n service runner \"__{0}___firmlet_\" \"{2}\" {{\n  properties {3}\n }}\n service runner \"__{0}___healthcheck_\" \"{4}\" {{}}\n}}\n",
                     name, host, path, block, WellKnownNames.DefaaultHealthCheckService);
             }
            
-            return string.Format("\nrunner \"{0}\" \"{1}\" {{\n service runner \"_{0}___firmlet_\" \"{2}\" {{\n  properties {3}\n }}\n}}\n",
+            return string.Format("\nrunner \"{0}\" \"{1}\" {{\n service runner \"__{0}___firmlet_\" \"{2}\" {{\n  properties {3}\n }}\n}}\n",
                 name, host, path, block);
         });
     }
