@@ -9,7 +9,6 @@
     <Import_RootNamespace>Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)DiscoveryHelper.cs" />
     <None Include="$(MSBuildThisFileDirectory)UnitHelpers.cs" />
   </ItemGroup>
 </Project>

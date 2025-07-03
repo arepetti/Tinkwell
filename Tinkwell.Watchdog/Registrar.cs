@@ -14,6 +14,7 @@ public sealed class Registrar : IHostedDllRegistrar
                 Interval = TimeSpan.FromSeconds(Math.Clamp(host.GetPropertyInt32("interval", 10), 5, int.MaxValue)),
                 NamePattern = host.GetPropertyString("name_pattern", "__HealthCheck__{{ name }}__")!,
             });
+            services.AddTransient<ServiceLocator>();
             services.AddHostedService<Worker>();
         });
     }

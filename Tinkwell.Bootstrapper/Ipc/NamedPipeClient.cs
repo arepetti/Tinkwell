@@ -48,6 +48,22 @@ public sealed class NamedPipeClient : INamedPipeClient
         _writer.AutoFlush = true;
     }
 
+    public async Task ConnectAsync(string serverName, string pipeName, TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(nameof(NamedPipeClient));
+
+        if (IsConnected)
+            return;
+
+        _client = new NamedPipeClientStream(serverName, pipeName, PipeDirection.InOut);
+        await _client.ConnectAsync(timeout, cancellationToken);
+
+        _writer = new StreamWriter(_client, Encoding.UTF8);
+        _reader = new StreamReader(_client, Encoding.UTF8);
+        _writer.AutoFlush = true;
+    }
+
     public void Connect(string pipeName)
         => Connect(".", pipeName);
 

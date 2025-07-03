@@ -3,7 +3,7 @@ using Tinkwell.Bootstrapper.Ensamble;
 
 namespace Tinkwell.Supervisor;
 
-static class RunnerDefinitionExtensions
+public static class RunnerDefinitionExtensions
 {
     public static bool ShouldKeepAlive(this RunnerDefinition definition, bool defaultValue = true)
         => GetOptionValue(definition, "keep_alive", defaultValue);
