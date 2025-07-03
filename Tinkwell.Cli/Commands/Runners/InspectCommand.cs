@@ -16,7 +16,7 @@ sealed class InspectCommand : AsyncCommand<InspectCommand.Settings>
         [Description("Name of the runner.")]
         public string Name { get; set; } = "";
 
-        [CommandOption("-v|--verbose <LEVEL>")]
+        [CommandOption("-v|--verbose")]
         [Description("Show a detailed output.")]
         public bool Verbose { get; set; }
     }

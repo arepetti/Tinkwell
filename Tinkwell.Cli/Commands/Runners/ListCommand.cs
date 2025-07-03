@@ -5,7 +5,6 @@ using Spectre.Console.Cli;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.Ipc;
-using static Tinkwell.Cli.Commands.Runners.Profiler;
 
 namespace Tinkwell.Cli.Commands.Runners;
 
@@ -19,7 +18,7 @@ sealed class ListCommand : AsyncCommand<ListCommand.Settings>
         [Description("The filter for the name of the root runners to include. You can use wildcards.")]
         public string Filter { get; set; } = "";
 
-        [CommandOption("-v|--verbose <LEVEL>")]
+        [CommandOption("-v|--verbose")]
         [Description("Show a detailed output.")]
         public bool Verbose { get; set; }
 

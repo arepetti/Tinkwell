@@ -40,6 +40,21 @@ sealed class PropertyValuesTable
         return this;
     }
 
+    public PropertyValuesTable AddVipEntry(string key, object? value, int indentation = 0)
+    {
+        string prefix = new string(' ', indentation * 2);
+        string str = value is not null ? Convert.ToString(value) ?? "" : "";
+
+        string nameColor = indentation == 0 ? "yellow" : "silver";
+
+        if (string.IsNullOrWhiteSpace(str))
+            _table.AddRow($"[{nameColor}]{key.EscapeMarkup()}[/]", $"[italic grey]None[/]");
+        else
+            _table.AddRow($"[{nameColor}]{prefix}{key.EscapeMarkup()}[/]", $"[magenta]{str.EscapeMarkup()}[/]");
+
+        return this;
+    }
+
     public PropertyValuesTable AddGroupTitle(string title)
     {
         _table.AddRow($"[yellow]{title.EscapeMarkup()}[/]");

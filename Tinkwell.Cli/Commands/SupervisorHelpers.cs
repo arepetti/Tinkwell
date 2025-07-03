@@ -7,7 +7,7 @@ namespace Tinkwell.Cli.Commands;
 
 static class SupervisorHelpers
 {
-    public static async Task<(int ExitCode, string[] Runners)> QueryRunnersAsync(NamedPipeClient client)
+    public static async Task<(int ExitCode, string[] Runners)> FindAllRunners(NamedPipeClient client)
     {
         var reply = await client.SendCommandAndWaitReplyAsync("runners list") ?? "";
 
@@ -20,9 +20,10 @@ static class SupervisorHelpers
         return (ExitCode.Ok, reply.Split(','));
     }
 
+    // name => address
     public static async Task<(int ExitCode, string Address)> QueryAddressAsync(NamedPipeClient client, string name)
     {
-        var runners = await QueryRunnersAsync(client);
+        var runners = await FindAllRunners(client);
 
         var runner = runners.Runners.FirstOrDefault(x => x.Equals(name, StringComparison.Ordinal));
         if (runner is null)
@@ -38,9 +39,10 @@ static class SupervisorHelpers
         return (ExitCode.Ok, address);
     }
 
-    public static async Task<(int ExitCode, string FullName)> FindByNameAsync(NamedPipeClient client, string search)
+    // partial name => name
+    public static async Task<(int ExitCode, string FullName)> FindNameByGlobNameAsync(NamedPipeClient client, string search)
     {
-        var runners = await QueryRunnersAsync(client);
+        var runners = await FindAllRunners(client);
 
         var regex = new Regex(TextHelpers.GitLikeWildcardToRegex(search), RegexOptions.IgnoreCase);
         var runner = runners.Runners.SingleOrDefault(regex.IsMatch);
@@ -50,18 +52,20 @@ static class SupervisorHelpers
         return (ExitCode.Ok, runner);
     }
 
-    public static async Task<(int ExitCode, string Value)> FindByRoleAsync(NamedPipeClient client, string role)
+    // role => name
+    public static async Task<(int ExitCode, string Value)> FindNameByRoleAsync(NamedPipeClient client, string role)
     {
         string address = await client.SendCommandAndWaitReplyAsync($"roles query \"{role}\"") ?? "";
         if (address.StartsWith("Error:"))
             return (ExitCode.NoResults, "");
 
-        return await FindByHostAsync(client, address);
+        return await FindNameByHostAsync(client, address);
     }
 
-    public static async Task<(int ExitCode, string Value)> FindByHostAsync(NamedPipeClient client, string address)
+    // host => name
+    public static async Task<(int ExitCode, string Value)> FindNameByHostAsync(NamedPipeClient client, string address)
     {
-        var pool = await QueryRunnersAsync(client);
+        var pool = await FindAllRunners(client);
         if (pool.ExitCode != ExitCode.Ok)
             return (ExitCode.NoResults, "");
 

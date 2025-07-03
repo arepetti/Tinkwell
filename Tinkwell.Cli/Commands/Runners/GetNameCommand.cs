@@ -49,11 +49,11 @@ sealed class GetNameCommand : AsyncCommand<GetNameCommand.Settings>
 
                     ctx.Status("Querying...");
                     if (!string.IsNullOrWhiteSpace(settings.AltName ?? settings.Name))
-                        return await SupervisorHelpers.FindByNameAsync(client, settings.AltName ?? settings.Name);
+                        return await SupervisorHelpers.FindNameByGlobNameAsync(client, settings.AltName ?? settings.Name);
                     else if (!string.IsNullOrWhiteSpace(settings.Role))
-                        return await SupervisorHelpers.FindByRoleAsync(client, settings.Role);
+                        return await SupervisorHelpers.FindNameByRoleAsync(client, settings.Role);
 
-                    return await SupervisorHelpers.FindByHostAsync(client, settings.Host);
+                    return await SupervisorHelpers.FindNameByHostAsync(client, settings.Host);
                 });
 
             if (exitCode == ExitCode.Ok)

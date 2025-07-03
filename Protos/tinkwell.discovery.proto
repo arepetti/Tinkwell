@@ -13,7 +13,7 @@ service Discovery {
     rpc Find (DiscoveryFindRequest) returns (DiscoveryFindReply);
 
     // Finds the service with the specified family name. Note that this differs
-    // from a simple Find() because it searches using only the family name and it could returned
+    // from a simple Find() because it searches using only the family name and it could return
     // multiple results (if more services with the same family name are registered).
     // It also differs from List() because the search is not extended to any other field, only
     // the family name is evaluated. Do not use this to pick a single service to use, use Find() instead because

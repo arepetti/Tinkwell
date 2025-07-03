@@ -17,10 +17,13 @@
 	<ItemGroup>
 		<PackageReference Include="Spectre.Console" Version="0.50.0" />
 		<PackageReference Include="Spectre.Console.Cli" Version="0.50.0" />
+		<PackageReference Include="Google.Protobuf" Version="3.31.1" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.64.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
+		<ProjectReference Include="..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
 	</ItemGroup>
 
 </Project>

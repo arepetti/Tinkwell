@@ -55,7 +55,7 @@ An [agent](#agent) that creates [derived measures](#derived-measure) from a conf
 A process started by the [Supervisor](#supervisor). It's often used interchangeably with _process_. It's usually (but not necessarily) an executable.
 
 #### Service
-A [firmlet](#firmlet) exposing one or more gRPC services.
+A [firmlet](#firmlet) exposing one or more gRPC services. Each service is identified and discovered using its name but services can add multiple aliases (as long as they're unique in the system) and a _family name_. A family name is important because names must be unique but sometimes you need to find all the services implementing a particular contract, that's when you use the family name: those services registers a common discoverable _family name_ and keep their _name_ unique.  
 
 #### Signal
 An event emitted by the [Reactor](#reactor) when one of the configured conditions is met.

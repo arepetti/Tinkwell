@@ -13,6 +13,7 @@ public sealed class Registrar : IHostedGrpcServerRegistrar
         {
             Name = $"{Tinkwell.Services.HealthCheck.Descriptor.FullName}.({host.RunnerName})",
             FamilyName = Tinkwell.Services.HealthCheck.Descriptor.Name,
+            FriendlyName = "HealthCheck service for " + HostingInformation.RunnerName
         });
     }
 
