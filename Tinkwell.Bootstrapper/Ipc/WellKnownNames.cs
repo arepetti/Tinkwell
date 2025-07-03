@@ -2,7 +2,7 @@
 
 public static class WellKnownNames
 {
-    public static readonly string DiscoveryServiceRoleName = "tinkwell-discovery-service";
+    public static readonly string DiscoveryServiceRoleName = "discovery";
     public static readonly string SupervisorCommandServerPipeName = "tinkwell-supervisor-command-server";
 
     public static readonly string RunnerNameEnvironmentVariable = "TINKWELL_RUNNER_NAME";

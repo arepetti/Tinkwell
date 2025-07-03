@@ -31,7 +31,7 @@ A generic term for a piece of logic or a [service](#service). It may coincide wi
 A [host](#host) that loads [services](#service) packaged as libraries. It allows multiple services to share a single web server or to run in separate processes. When loaded within the same process, services can also share DI services.
 
 #### Health check (Service)
-A [service](#service) implementing `Tinkwell.HealthCheck` with basic checks to continually monitor the state of the [host](#host) it's running in.
+A [service](#service) implementing `Tinkwell.HealthCheck` with basic checks to continually monitor the state of the [host](#host) it's running in. See [Health Monitoring](./Health%20monitoring.md) for details.
 
 #### Host
 A special [runner](#runner) without logic of its own, used to load one or more [firmlets](#firmlet). Hosts are used to reduce the boilerplate imposed on a runner by the [Supervisor](#supervisor) and to optimize for performance (for example, to host multiple gRPC services in the same web server).

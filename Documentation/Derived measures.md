@@ -56,7 +56,10 @@ The path of the file to import, relative to the directory where the current file
 
 The unique identifier for the measure. It can be a [simple identifier](./Glossary.md#simple-identifier) or a quoted string. When the name is quoted you can use alphanumeric characters (including numbers at the beginning), spaces, underscore and dots. Other symbols are not allowed even when quoted.
 
-There are no reserved keywords but — to avoid unexpected behaviours when using the reducer — the use of these names is highly discouraged: `let`, `when`, `then`, `value`, `emit` and all names starting with two underscores `__`. 
+There are no reserved keywords but — to avoid unexpected behaviours when using the reducer — the use of these names is highly discouraged: `let`, `when`, `then`, `value`, `emit`. Moreover it must adhere to these rules:
+* It cannot start with two underscores.
+* It cannot contain `[`, `]`, `{`, `}`, `\`, `*` and `?`. 
+* It cannot start with `+`, `-` or `/`.
 
 #### `<expression>`
 

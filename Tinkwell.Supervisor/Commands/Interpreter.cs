@@ -126,6 +126,14 @@ sealed class Interpreter
                 });
             });
 
+            runnersCmd.Command("pids", listCmd =>
+            {
+                listCmd.OnExecute(() =>
+                {
+                    writer.WriteLine($"*#{Environment.ProcessId}," + string.Join(',', _runnerRegistry.FindAllByQuery(null).Select(x => $"{x.Definition.Name}#{x.Id}")));
+                });
+            });
+
             AddCommandOnRunner(runnersCmd, "start", x => x.Start());
             AddCommandOnRunner(runnersCmd, "stop", x => x.Stop());
             AddCommandOnRunner(runnersCmd, "restart", x => x.Restart());

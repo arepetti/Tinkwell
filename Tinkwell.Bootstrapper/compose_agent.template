@@ -1,5 +1,5 @@
 runner "{{ name }}" "{{ host.dll }}" {
-    service runner "__{{ name }}___firmlet__" "{{ path }}" {
+    service runner "__{{ name }}__firmlet" "{{ path }}" {
         properties {{ properties }}
     }
 }
