@@ -1,7 +1,7 @@
 using Spectre.Console;
 using Tinkwell.Services;
 
-namespace Tinkwell.Cli.Commands.Services;
+namespace Tinkwell.Cli.Commands.Contracts;
 
 static class Reporter
 {
@@ -17,7 +17,7 @@ static class Reporter
     {
         var table = new Table();
         table.Border = TableBorder.Simple;
-        table.AddColumns("Name/Family name", "Host");
+        table.AddColumns("[cyan]Name[/]/[darkcyan]Family name[/]", "[yellow]Host[/]");
 
         foreach (var service in services)
         {
@@ -28,7 +28,7 @@ static class Reporter
             string color = displayFamilyName ? "darkcyan" : "cyan";
             table.AddRow(
                 $"[{color}]{name.EscapeMarkup()}[/]",
-                $"[magenta]{service.Host.EscapeMarkup()}[/]"
+                service.Host.EscapeMarkup()
             );
         }
 
@@ -48,7 +48,7 @@ static class Reporter
                 .AddEntry("Friendly name", service.FriendlyName)
                 .AddEntry("Family name", service.FamilyName)
                 .AddEntry("Aliases", string.Join(',', service.Aliases))
-                .AddVipEntry("Host", service.Host)
+                .AddEntry("Host", service.Host)
                 .AddEntry("Endpoint", service.Url)
                 .AddRow();
         }

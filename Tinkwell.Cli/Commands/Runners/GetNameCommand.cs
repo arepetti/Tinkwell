@@ -57,7 +57,7 @@ sealed class GetNameCommand : AsyncCommand<GetNameCommand.Settings>
                 });
 
             if (exitCode == ExitCode.Ok)
-                AnsiConsole.MarkupLineInterpolated($"[cyan]{name}[/]");
+                AnsiConsole.WriteLine(name);
             else if (exitCode == ExitCode.NoResults)
                 Consoles.Error.MarkupLineInterpolated($"[orange1]No results[/].");
 

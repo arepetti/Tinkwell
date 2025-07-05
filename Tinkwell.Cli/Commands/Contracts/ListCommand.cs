@@ -1,23 +1,26 @@
 using System.ComponentModel;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using Tinkwell.Services;
 
-namespace Tinkwell.Cli.Commands.Services;
+namespace Tinkwell.Cli.Commands.Contracts;
 
-[CommandFor("list", parent: typeof(ServicesCommand))]
+[CommandFor("list", parent: typeof(ContractsCommand))]
 [Description("List all the registered services.")]
 sealed class ListCommand : AsyncCommand<ListCommand.Settings>
 {
-    public sealed class Settings : ServicesCommand.Settings
+    public sealed class Settings : ContractsCommand.Settings
     {
         [CommandArgument(0, "[SEARCH]")]
-        [Description("An optional case-insensitive partial match to return only the matching services.")]
+        [Description("An optional case-insensitive partial match to return only the matching services (by name).")]
         public string Search { get; set; } = "";
 
         [CommandOption("-v|--verbose")]
         [Description("Show a detailed output.")]
         public bool Verbose { get; set; }
+
+        [CommandOption("-h|--host")]
+        [Description("Filter the list to include only services exported at the specified address.")]
+        public string Host { get; set; } = "";
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
@@ -26,7 +29,7 @@ sealed class ListCommand : AsyncCommand<ListCommand.Settings>
             .Spinner(Spinner.Known.Default)
             .StartAsync("Querying...", async ctx =>
             {
-                var request = new DiscoveryListRequest();
+                var request = new Tinkwell.Services.DiscoveryListRequest();
                 if (!string.IsNullOrWhiteSpace(settings.Search))
                     request.Query = settings.Search;
 
@@ -34,7 +37,11 @@ sealed class ListCommand : AsyncCommand<ListCommand.Settings>
                 return await discovery.Client.ListAsync(request);
             });
 
-        Reporter.PrintToConsole(response.Services, settings.Verbose);
+        var services = response.Services.ToArray();
+        if (!string.IsNullOrWhiteSpace(settings.Host))
+            services = services.Where(x => string.Equals(x.Host, settings.Host, StringComparison.OrdinalIgnoreCase)).ToArray();
+
+        Reporter.PrintToConsole(services, settings.Verbose);
 
         return ExitCode.Ok;
     }

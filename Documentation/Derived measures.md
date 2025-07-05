@@ -41,7 +41,7 @@ expression: "[Zone1.Temperature] + \
              [Zone2.Temperature]"
 ```
 
-### Attributes Reference
+### Reference
 
 #### `import`
 The `import` directive, which must appear at the top of the file, allows you to reference measures defined in other files. This is useful for organizing complex configurations.
@@ -56,10 +56,11 @@ The path of the file to import, relative to the directory where the current file
 
 The unique identifier for the measure. It can be a [simple identifier](./Glossary.md#simple-identifier) or a quoted string. When the name is quoted you can use alphanumeric characters (including numbers at the beginning), spaces, underscore and dots. Other symbols are not allowed even when quoted.
 
-There are no reserved keywords but — to avoid unexpected behaviours when using the reducer — the use of these names is highly discouraged: `let`, `when`, `then`, `value`, `emit`. Moreover it must adhere to these rules:
-* It cannot start with two underscores.
-* It cannot contain `[`, `]`, `{`, `}`, `\`, `*` and `?`. 
-* It cannot start with `+`, `-` or `/`.
+There are no reserved keywords but — to avoid unexpected behaviours when using the reducer — the use of these names is highly discouraged: `let`, `when`, `then`, `value`, `emit`. Moreover, it must adhere to these rules (even if quoted):
+* It cannot contain `[`, `]`, `{`, `}`, `\`, `*`, `:`, `;`, `"` `'`, `=`, `!` and `?`. 
+* It cannot start with `+`, `-` or `/` or with two underscores.
+
+When in doubt it's better to stick with a simple identifier.
 
 #### `<expression>`
 

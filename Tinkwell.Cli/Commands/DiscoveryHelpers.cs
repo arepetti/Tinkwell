@@ -1,4 +1,5 @@
 using Grpc.Net.Client;
+using Spectre.Console;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Services;
 
@@ -6,14 +7,21 @@ namespace Tinkwell.Cli.Commands;
 
 static class DiscoveryHelpers
 {
-    public static async Task<GrpcService<Discovery.DiscoveryClient>> FindDiscoveryServiceAsync(CommonSettings settings)
+    public static async Task<GrpcService<Tinkwell.Services.Discovery.DiscoveryClient>> FindDiscoveryServiceAsync(CommonSettings settings)
     {
         var channel = GrpcChannel.ForAddress(await ResolveDiscoveryServiceAddressAsync(settings));
-        var service = new Discovery.DiscoveryClient(channel);
+        var service = new Tinkwell.Services.Discovery.DiscoveryClient(channel);
         return new(channel, service);
     }
 
-    private static async Task<string> ResolveDiscoveryServiceAddressAsync(CommonSettings settings)
+    public static async Task<GrpcService<Store.StoreClient>> FindStoreServiceAsync(CommonSettings settings)
+    {
+        var channel = GrpcChannel.ForAddress(await FindServiceAddressAsync(settings, Store.Descriptor.FullName));
+        var service = new Store.StoreClient(channel);
+        return new(channel, service);
+    }
+
+    public static async Task<string> ResolveDiscoveryServiceAddressAsync(CommonSettings settings)
     {
         using var client = new NamedPipeClient();
         await client.ConnectAsync(settings.Machine, settings.Pipe, TimeSpan.FromSeconds(settings.Timeout));
@@ -34,4 +42,10 @@ static class DiscoveryHelpers
         }
     }
 
+    private static async Task<string> FindServiceAddressAsync(CommonSettings settings, string name)
+    {
+        await using var discovery = await FindDiscoveryServiceAsync(settings);
+        var response = await discovery.Client.FindAsync(new() { Name = name });
+        return response.Host;
+    }
 }

@@ -33,7 +33,7 @@ sealed class GetHostCommand : AsyncCommand<GetHostCommand.Settings>
                 });
 
             if (exitCode == ExitCode.Ok)
-                AnsiConsole.MarkupLineInterpolated($"[cyan]{address}[/]");
+                AnsiConsole.WriteLine(address);
 
             return exitCode;
         }

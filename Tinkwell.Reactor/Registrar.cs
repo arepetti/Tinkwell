@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Tinkwell.Bootstrapper;
+using Tinkwell.Measures.Configuration.Parser;
 
 namespace Tinkwell.Reactor;
 
@@ -17,7 +18,7 @@ public sealed class Registrar : IHostedDllRegistrar
 
             services.AddHostedService<Worker>();
             services.AddSingleton<Reactor>();
-            services.AddTransient<SignalListConfigReader>();
+            services.AddTransient<TwmFileReader>();
             services.AddTransient<ServiceLocator>();
         });
     }

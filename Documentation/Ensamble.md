@@ -53,8 +53,10 @@ When importing `watchdog.tw` from `plumbing.tw`, the path is relative to the dir
 
 #### `<name>`
 A memorable name for the [runner](./Glossary.md#runner) or [firmlet](./Glossary.md#firmlet). If it's a [simple identifier](./Glossary.md#simple-identifier) (e.g., `my_runner`), it doesn't need to be enclosed in double quotes; otherwise, they are required (e.g., `"my runner"`). If omitted, the [Supervisor](./Glossary.md#supervisor) assigns a UUID. If specified, it must be unique across the [system](./Glossary.md#system) (no two runners/firmlets can have the same name) and it must follows the following rules (even when quoted):
-* It cannot start with two underscores.
-* It cannot contain `[`, `]`, `{`, `}`, `\`, `:`, `*` and `?`. 
+* It cannot contain `[`, `]`, `{`, `}`, `\`, `*`, `:`, `;`, `"` `'`, `=`, `!` and `?`. 
+* It cannot start with `+`, `-` or `/` or with two underscores.
+
+When in doubt it's better to stick with a simple identifier.
 
 #### `<path>`
 The path (full or relative to the working directory) of the executable or library to load. On Windows, the `.exe` extension is optional.

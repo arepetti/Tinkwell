@@ -1,11 +1,11 @@
 using System.ComponentModel;
 using Spectre.Console.Cli;
 
-namespace Tinkwell.Cli.Commands.Services;
+namespace Tinkwell.Cli.Commands.Measures;
 
-[CommandFor("services")]
-[Description("Query registered services.")]
-sealed class ServicesCommand : Command<ServicesCommand.Settings>
+[CommandFor("measures")]
+[Description("Manage and inspect measures and conditions.")]
+sealed class MeasuresCommand : Command<MeasuresCommand.Settings>
 {
     public class Settings : CommonSettings
     {

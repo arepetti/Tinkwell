@@ -7,8 +7,6 @@ package Tinkwell;
 import "google/protobuf/duration.proto";
 import "google/protobuf/wrappers.proto";
 
-// TODO: add somewhere the full list of supported units (quantity type, name, abbreviation).
-
 // Service to store values from various inputs (typically with their unit of measure).
 service Store {
     // List all the measures currently stored.

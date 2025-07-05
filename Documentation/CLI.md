@@ -1,17 +1,14 @@
 # Command Line Interface
 
-The CLI interface lets you monitor and debug your Tinkwell application. All the commands are accessible with the `tw` command.
+The CLI interface lets you  **monitor** and **debug** your Tinkwell application and **integrate** with external application/scripts not written for .NET.
 
-**Commands to interact with the Supervisor**
+All the sub-commands are accessible with the `tw` command.
 
-[`tw supervisor`](#tw-supervisor)
-[`tw runners`](#tw-runners)
+| Supervisor                            | Services                              | Measures
+|---------------------------------------|---------------------------------------|---------------------------------------|
+| [`tw supervisor`](#tw-supervisor)     | [`tw contracts`](#tw-contracts)       | [`tw measures`](#tw-measures)         |
+| [`tw runners`](#tw-runners)           |                                       |                                       |
 
-**Commands to manage services**
-
-[`tw services`](#tw-services)
-
----
 ---
 
 ## Common Arguments
@@ -67,7 +64,6 @@ Some patterns intentionally won't match certain runners:
 | `[^r]*`          | Won’t match anything starting with `r`        |
 
 ---
----
 
 ##  `tw supervisor`
 
@@ -79,6 +75,7 @@ Interact with the [Supervisor](./Glossary.md#supervisor) using a low level inter
 tw supervisor send <COMMAND> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
 tw supervisor signal <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
 tw supervisor restart <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
+tw supervisor claim-port <RUNNER MACHINE> <RUNNER NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
 ```
 
 ### DESCRIPTION
@@ -102,13 +99,26 @@ tw supervisor restart <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--
 ```
 Restart the process associated with the runner with the specified name. Note that not all runners are restartable and this might cause the whole application to fail. Use it only as a last resort.
 
+```console
+tw supervisor claim-port <RUNNER MACHINE> <RUNNER NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
+```
+Claim an HTTP(S) port for the runner with the specified name `<RUNNER NAME>` running on the machine `<RUNNER MACHINE>`. You do not normally need this command unless you're using `tw` to integrate your own script/application with Tinkwell and you're not using (or you can't use) the provided .NET libraries. Like all commands in `tw supervisor` this command needs confirmation then include `-y` if you're calling it from a script/another application.
+The returned value is an integer containing the first available port number to use.
+
 ### ARGUMENTS
+
+**`<RUNNER MACHINE>`**
+
+Name of the machine where the runner calling `tw supervisor claim-port` is running. It could be a computer name (like `"my-computer"`) or an IP address.
+
+**`<RUNNER NAME>`**
+
+Name of the runner claiming the port. You can obtain this (if your process/script has been launched by the Supervisor) in the environment variable `TINKWELL_RUNNER_NAME`.
 
 **`--confirmed`** **`-y`**
 
 All the sub-commands of `tw supervisor` asks for confirmation, use this flag to skip it and proceed without asking.
 
----
 ---
 
 ##  `tw runners`
@@ -118,10 +128,11 @@ Inspect and manage [runners](./Glossary.md#runners).
 ### SYNOPSIS
 
 ```console
-tw runners list [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--filter=<filter>] [--verbose|-v] [--columns]
+tw runners list [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v] [--columns]
 tw runners inspect <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
 tw runners get-host <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
 tw runners get-name [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--name=<filter>] [--role=<role>] [--host=<address>]
+tw runners profile [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
 ```
 
 ### DESCRIPTION
@@ -133,7 +144,7 @@ Use `tw runners` when you want to debug, monitor and manage your runners.
 ```console
 tw runners list [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--filter=<filter>] [--verbose|-v] [--columns]
 ```
-List all the runners currently active in the [system](./Glossary.md#system).
+List all the runners currently active in the [system](./Glossary.md#system). Note that if a filter is specified then it's matched against the _name_ of the runners and it does not affect the [firmlets](./Glossary.md#firmlet) (which are always returned in full when `--verbose` is specified).
 
 ```console
 tw runners inspect <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
@@ -148,7 +159,12 @@ Resolve the host name (for example `"https://my-machine:5000"`) of the specified
 ```console
 tw runners get-name [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--name=<filter>] [--role=<role>] [--host=<address>]
 ```
-Resolve the full name of a runner starting from a partial match (when using `--name`, see also `[name]`), its role (with `--role`) or address (with `--host`).
+Resolve the full name of a runner starting from a partial match (when using `--name`, see also `[filter]`), its role (with `--role`) or address (with `--host`). `[filter]` is the preferred alternative to `--name` when using `tw runners get-name`. If they're both specified then `[filter]` has the precedence. If more than one runner matches the expression then an error is returned.
+
+```console
+tw runners profile [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
+```
+Inspect resources consumed by all the Tinkwell processes.
 
 ### ARGUMENTS
 
@@ -156,15 +172,11 @@ Resolve the full name of a runner starting from a partial match (when using `--n
 
 The name of the runner to inspect (for `tw runners inspect`) or for which you want to resolve the host address (for `tw runners get-host`).
 
-**`[name]`**
+**`[filter]`**
 
-Filter to resolve the name for the runner with a name that matches the specified [expression](#text-matching). This is an alternative to `--name` when using `tw runners get-name`. If they're both specified then this has the precedence. Use this search when you don't know the exact name of a runner but you know _more or less_ how it looks like. If more than one runner matches the expression then an error is returned.
+Filter to limit the search to runners with a name that matches the specified [expression](#text-matching).
 
-**`--filter=<filter>`**
-
-Filter to include only the top level runners that match the specified [expression](#text-matching). Note that this filter only applies to the _name_ of the runners and it does not affect the [firmlets](./Glossary.md#firmlet) (which are always returned in full when `--verbose` is specified).
-
-**`--verbose`** **`--v`**
+**`--verbose`** **`-v`**
 
 Produce a detailed description of each runner (including - if any - its host and firmlets).
 
@@ -172,13 +184,13 @@ Produce a detailed description of each runner (including - if any - its host and
 
 Default output (when `--verbose` is not specified) lists all the runners line-by-line. Use this option to organize them in columns.
 
-**`--name`** **`-n`**
+**`--name`**
 
 Equivalent to `[name]`.
 
-**`--role`** **`-r`**
+**`--role`**
 
-A system role. This is usually required during the initialization phase when each firmlet has to determine the address of the Discovery service (which can then be used to resolve all the other services). Use this option when you need, for example, to determine which host has taken the role of Discovery Service.
+A system role. This is usually required during the initialization phase when each firmlet has to determine the address of the Discovery service (which can then be used to resolve all the other services).
 
 For example to query for the name of the discovery service:
 
@@ -186,45 +198,51 @@ For example to query for the name of the discovery service:
 tw runners get-name --role=discovery
 ```
 
-If, for example, you obtain the name `"orchestrator"`, you could then use `tw runners list --filter=orchestrator --verbose` to search for its host address to create an instance of the Discovery Service client. Or, if running a script, directly `tw runners get-host orchestrator`.
+If, for example, you obtain the name `"orchestrator"`, you could then use `tw runners list --filter=orchestrator --verbose` to search for its host address (or directly `tw runners get-host orchestrator`). However, to **resolve the Discovery Service address** (and only that one) there is a simpler method: `tw contracts resolve-discovery-address`.
 
-**`--host`** **`-h`**
+**`--host`**
 
 An address (like `"https://my-machine:5000"`) of a gRPC service of which you want to know the container's name.
 
 ---
----
 
-##  `tw services`
+##  `tw contracts`
 
 Inspects [services](./Glossary.md#service).
 
 ### SYNOPSIS
 
 ```console
-tw services list [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
-tw services find <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
+tw contracts list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--verbose|-v]
+tw contracts find <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
+tw contracts resolve-discovery-address [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
 ```
 
 ### DESCRIPTION
 
-Use `tw services` when you want to inspect the services registered in the [system](./Glossary.md#system).
+Use `tw contracts` when you want to inspect the services registered in the [system](./Glossary.md#system).
 
 ### COMMANDS
 
 ```console
-tw services list [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
+tw contracts list [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--verbose|-v]
 ```
 List all the registered services.
 
 ```console
-tw services find <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
+tw contracts find <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
 ```
 Find the address of the service with the specified name (or family name or alias).
 
+```console
+tw contracts resolve-discovery-address [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
+```
+Resolve the address of the Discovery Service. You can use this if you're integrating your own runner and you want to obtain
+the Discovery Service (which you can then use to discover all the other services). Calling this method is the prefferred way for external code (not hosted inside one of the default hosts).
+
 ### ARGUMENTS
 
-**`[filter]`**
+**`[search]`**
 
 Filter to limit the list of [services](./Glossary.md#service). If specified only those services containing the specified text will be returned. The search is case insensitive and matches values in _name_, _family name_ and _aliases_.
 
@@ -233,10 +251,108 @@ Filter to limit the list of [services](./Glossary.md#service). If specified only
 Name of the service to find. It's an exact match then it's case sensitive. It searches first in _name_ and _aliases_ and then, if there isn't a match, in _family name_. If there is more than one match (because the family name is not unique) then the most appropriate
 instance is returned (with the same logic used to return it to the runners).
 
-**`--verbose`** **`--v`**
+**`[--host=<host>]`**
+
+Filter the returned list to the serviced exposed at the specified address.
+
+**`--verbose`** **`-v`**
 
 Produce a detailed description of each service.
 
 ---
+
+##  `tw measures`
+
+Manage [measures](./Glossary.md#measure).
+
+### SYNOPSIS
+
+```console
+tw measures list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--values] [--verbose|-v]
+tw measures read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures write <name> <value> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures create <name> <type> <unit> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures subscribe <name>... [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures lint <path> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--exclude=<rule id>]
+```
+
+### DESCRIPTION
+
+Use `tw measures` when you want to inspect the measures registered in the [system](./Glossary.md#system) or when you want to create, read or write their values.
+
+### COMMANDS
+
+```console
+tw contracts list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--values] [--verbose|-v]
+```
+List all the registered measures, optionally displaying their current value if `--values` is specified. Use `--verbose` to obtain all the fields associated with every measure`.
+
+```console
+tw contracts read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+```
+Read the current value of the measure with the specified name. Note that it does not include the unit of measure (which is the one specified when the measure has been registered). If you do not know the unit then use `tw measures list <measure name>`.
+
+```console
+tw contracts write <name> <value> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+```
+Write a new value for the measure with the specified name. Note that you must include the unit of measure; it does not need to be the same one registered for the measure (the system will perform a conversion) but it must be compatible.
+
+```console
+tw contracts create <name> <type> <unit> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+```
+Create a new measure with the specified name, type (for example `"Temperature"`) and unit (for example `"DegreesCelsius"`).
+
+```console
+tw contracts subscribe <name>... [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+```
+Subscribe for changes to one or more measures. Each time a measure changes a new line will be printed in the form `name=value`. Note that the unit of measure is not included (use `tw measures list <name>` if you want to query it). The first value(s) printed are the current value(s) and then after each change.
+
+```console
+tw measures lint <path> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--exclude=<rule id>]
+```
+Check the specified .twm (Tinkwell Measures configuration) file for errors or bad practices. The return code is non zero if the file contains any known issue. Use `--exclude` if you want to exclude a specific rule.
+
+#### Examples
+
+```bash
+tw measures create temp Temperature DegreesCelsius
+tw measures write temp "90 °F"
+tw measures read temp # It'll display 32.22 °C
+```
+Create a new measure `"temp"` stored as °C and update it with a value expressed in °F. Subsequent reads show that the value has been converted into the registered unit of measure (because a conversion from °F to °C is possible).
+
+```bash
+tw measures subscribe temperature power
+```
+Subscribe for changes to the two measures `"temperature"` and `"power"`. Terminate the program to stop watching for changes.
+
+### ARGUMENTS
+
+**`[filter]`**
+
+When specified it filters the list to include only measures with the specified text in their name. Search is case insensitive. You can use an [expression](#text-matching).
+
+**`<name>`**
+
+Name of a measure.
+
+**`<value>`**
+
+Value of a measure, including its unit of measure. It must be formatted using en-US culture regardless of what your UI settings are. For example half degree Celsius is always expressed as `"0.5 °C"`. If the unit is not the same of the measure you're updating then the service will perform a conversion (if the two measures are compatible!).
+
+**`<type>`**, **`<unit>`**
+
+Type (for example `"Power"` `"Temperature"`) and unit (for example `"Watt"`, `"DegreesCelsius"`). See the list of [supported unit of measure](./Units.md).
+
+**`--verbose`** **`-v`**
+
+Produce a detailed description of each measure.
+
+**`--exclude=<rule id>`** **`-r=<rule id>`**
+
+Exclude the specified rule from the output. It's useful when `tw measures lint` is part of a build process and a non zero return value might stop the build/deployment. If you're absolutely sure that the flagged issue is not a problem then you can instruct the linter to exclude it.
+
+Produce a detailed description of each measure.
+
 ---
 

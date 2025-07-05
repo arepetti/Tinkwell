@@ -35,3 +35,7 @@ If you are not using an existing host (such as `GrpcHost`) to host your services
     - Send the command `exit`.
     - From now on you must use that host to contact the gRPC Discovery Service to find all the other services (or to register your own services).
 - If you want your service to be monitored for health (by the Watchdog) then you need to expose a `Tinkwell.HealthCheck` service (and use your own metrics to determine its status).
+
+## Important
+
+If you're using a .NET language then there are very few reasons to write your own runner (mostly .NET version incompatibilities). If you're using another language (Java, Python, Rust, C++, etc) you should consider invoking the [command line tool](./CLI.md) `tw` instead of interacting directly with the supervisor to register and to resolve the Discovery Service address (you can even subscribe for changes to a set of measures, if that's all you need).

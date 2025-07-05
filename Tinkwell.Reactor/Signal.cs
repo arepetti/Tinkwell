@@ -2,7 +2,7 @@ using Tinkwell.Measures.Configuration.Parser;
 
 namespace Tinkwell.Reactor;
 
-sealed class Signal : SignalDefinition, IMeasureDependent
+sealed class Signal(string? owner = default) : SignalDefinition, IMeasureDependent
 {
     public bool Disabled { get; set; }
 
@@ -10,5 +10,5 @@ sealed class Signal : SignalDefinition, IMeasureDependent
 
     string IMeasureDependent.Expression => When;
 
-    internal string? Owner { get; set; }
+    internal string? Owner { get; set; } = owner;
 }

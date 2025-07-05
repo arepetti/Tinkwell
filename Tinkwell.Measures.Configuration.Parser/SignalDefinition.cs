@@ -1,6 +1,6 @@
 namespace Tinkwell.Measures.Configuration.Parser;
 
-public class SignalDefinition : ISignalDefinition
+public class SignalDefinition
 {
     public string Name { get; set; } = "";
     public string When { get; set; } = "";

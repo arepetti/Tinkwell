@@ -4,17 +4,19 @@ using System.Diagnostics;
 using System.Globalization;
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ipc;
+using Tinkwell.Bootstrapper.Reflection;
+using Tinkwell.Measures.Configuration.Parser;
 using Tinkwell.Services;
 
 namespace Tinkwell.Reactor;
 
 sealed class Reactor : IAsyncDisposable
 {
-    public Reactor(ILogger<Reactor> logger, ServiceLocator locator, SignalListConfigReader configReader, ReactorOptions options)
+    public Reactor(ILogger<Reactor> logger, ServiceLocator locator, TwmFileReader fileReader, ReactorOptions options)
     {
         _logger = logger;
         _locator = locator;
-        _configReader = configReader;
+        _fileReader = fileReader;
         _options = options;
     }
 
@@ -24,7 +26,13 @@ sealed class Reactor : IAsyncDisposable
         _eventsGateway = await _locator.FindEventsGatewayAsync(cancellationToken);
 
         _logger.LogDebug("Loading signals from {Path}", _options.Path);
-        _signals = await _configReader.ReadFromFileAsync(_options.Path, cancellationToken);
+        var file = await _fileReader.ReadFromFileAsync(_options.Path, cancellationToken);
+
+        var rootSignals = file.Signals.Select(signal => ShallowCloner.CopyAllPublicProperties(signal, new Signal()));
+        var dependentSignals = file.Measures.SelectMany(measure =>
+            measure.Signals.Select(signal => ShallowCloner.CopyAllPublicProperties(signal, new Signal(measure.Name))));
+
+        _signals = Enumerable.Concat(dependentSignals, rootSignals);
 
         if (!_signals.Any())
         {
@@ -61,7 +69,7 @@ sealed class Reactor : IAsyncDisposable
 
     private readonly ILogger<Reactor> _logger;
     private readonly ServiceLocator _locator;
-    private readonly SignalListConfigReader _configReader;
+    private readonly TwmFileReader _fileReader;
     private readonly ReactorOptions _options;
     private readonly CancellableLongRunningTask _worker = new();
     private readonly SignalDependencyWalker _dependencyWalker = new();
@@ -173,7 +181,7 @@ sealed class Reactor : IAsyncDisposable
         string? owningMeasure = signal.Owner;
         bool hasOwningMeasure = !string.IsNullOrWhiteSpace(owningMeasure);
 
-        var getManyRequest = new Services.GetManyRequest();
+        var getManyRequest = new GetManyRequest();
         getManyRequest.Names.AddRange(signal.Dependencies);
 
         var response = await _store.Client.GetManyAsync(getManyRequest, cancellationToken: cancellationToken);
@@ -207,6 +215,7 @@ sealed class Reactor : IAsyncDisposable
             Subject = FromPayload(nameof(PublishEventsRequest.Subject), signal.Owner ?? "?"),
             Verb = FromPayloadEnum(nameof(PublishEventsRequest.Verb), Verb.Triggered),
             Object = FromPayload(nameof(PublishEventsRequest.Object), signal.Name),
+            Payload = System.Text.Json.JsonSerializer.Serialize(signal.Payload),
         });
 
         string FromPayload(string propertyName, string defaultValue)

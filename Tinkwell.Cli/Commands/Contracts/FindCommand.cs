@@ -1,15 +1,14 @@
 using System.ComponentModel;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using Tinkwell.Services;
 
-namespace Tinkwell.Cli.Commands.Services;
+namespace Tinkwell.Cli.Commands.Contracts;
 
-[CommandFor("find", parent: typeof(ServicesCommand))]
+[CommandFor("find", parent: typeof(ContractsCommand))]
 [Description("Find the service with the specified name.")]
 sealed class FindCommand : AsyncCommand<FindCommand.Settings>
 {
-    public sealed class Settings : ServicesCommand.Settings
+    public sealed class Settings : ContractsCommand.Settings
     {
         [CommandArgument(0, "<NAME>")]
         [Description("Name of the service to find.")]
@@ -26,7 +25,7 @@ sealed class FindCommand : AsyncCommand<FindCommand.Settings>
             .Spinner(Spinner.Known.Default)
             .StartAsync("Querying...", async ctx =>
             {
-                var request = new DiscoveryFindRequest();
+                var request = new Tinkwell.Services.DiscoveryFindRequest();
                 request.Name = settings.Name;
 
                 var discovery = await DiscoveryHelpers.FindDiscoveryServiceAsync(settings);
@@ -37,13 +36,13 @@ sealed class FindCommand : AsyncCommand<FindCommand.Settings>
         {
             var table = new PropertyValuesTable();
             table.AddNameEntry(settings.Name);
-            table.AddVipEntry("Host", response.Host);
+            table.AddEntry("Host", response.Host);
             table.AddEntry("Endpoint", response.Url);
             AnsiConsole.Write(table.ToSpectreTable());
         }
         else
         {
-            AnsiConsole.MarkupLineInterpolated($"[magenta]{response.Host}[/]");
+            AnsiConsole.WriteLine(response.Host);
         }
 
         return ExitCode.Ok;

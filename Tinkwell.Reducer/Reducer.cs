@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
 using Tinkwell.Bootstrapper;
+using Tinkwell.Bootstrapper.Reflection;
 using Tinkwell.Measures.Configuration.Parser;
 using UnitsNet;
 
@@ -10,11 +11,11 @@ namespace Tinkwell.Reducer;
 
 sealed class Reducer : IAsyncDisposable
 {
-    public Reducer(ILogger<Reducer> logger, ServiceLocator locator, MeasureListConfigReader configReader, ReducerOptions options)
+    public Reducer(ILogger<Reducer> logger, ServiceLocator locator, TwmFileReader fileReader, ReducerOptions options)
     {
         _logger = logger;
         _locator = locator;
-        _configReader = configReader;
+        _fileReader = fileReader;
         _options = options;
         _dependencyWalker = new();
     }
@@ -24,8 +25,10 @@ sealed class Reducer : IAsyncDisposable
         _store = await _locator.FindStoreAsync(cancellationToken);
 
         _logger.LogDebug("Loading derived measures from {Path}", _options.Path);
-        _derivedMeasures = await _configReader.ReadFromFileAsync(
-            _options.Path, x => !string.IsNullOrWhiteSpace(x.Expression), cancellationToken);
+        var file = await _fileReader.ReadFromFileAsync(_options.Path, cancellationToken);
+        _derivedMeasures = file.Measures
+            .Where(x => !string.IsNullOrWhiteSpace(x.Expression))
+            .Select(x => ShallowCloner.CopyAllPublicProperties(x, new Measure()));
 
         // If there are no measures to calculate we do not subscribe to anything and just terminate here
         if (!_derivedMeasures.Any())
@@ -62,12 +65,12 @@ sealed class Reducer : IAsyncDisposable
 
     private readonly ILogger<Reducer> _logger;
     private readonly ServiceLocator _locator;
-    private readonly MeasureListConfigReader _configReader;
+    private readonly TwmFileReader _fileReader;
     private readonly ReducerOptions _options;
-    private readonly DependencyWalker<MeasureDefinition> _dependencyWalker;
+    private readonly DependencyWalker<Measure> _dependencyWalker;
     private readonly CancellableLongRunningTask _worker = new();
     private GrpcService<Services.Store.StoreClient>? _store;
-    private IEnumerable<MeasureDefinition> _derivedMeasures = [];
+    private IEnumerable<Measure> _derivedMeasures = [];
 
     private async Task RegisterDerivedMeasuresAsync(CancellationToken cancellationToken)
     {
@@ -161,7 +164,7 @@ sealed class Reducer : IAsyncDisposable
             changedMeasure, affectedMeasures?.Count ?? 0, stopwatch.ElapsedMilliseconds);
     }
 
-    private async Task RecalculateMeasureAsync(MeasureDefinition measure, CancellationToken cancellationToken)
+    private async Task RecalculateMeasureAsync(Measure measure, CancellationToken cancellationToken)
     {
         Debug.Assert(_store is not null);
 
@@ -195,7 +198,7 @@ sealed class Reducer : IAsyncDisposable
         }
     }
 
-    private async Task<IQuantity?> EvaluateMeasureExpression(MeasureDefinition measure, CancellationToken cancellationToken)
+    private async Task<IQuantity?> EvaluateMeasureExpression(Measure measure, CancellationToken cancellationToken)
     {
         Debug.Assert(_store is not null);
 
@@ -227,7 +230,7 @@ sealed class Reducer : IAsyncDisposable
         return result;
     }
 
-    private IQuantity? ConvertResultToQuantity(MeasureDefinition measure, object? result)
+    private IQuantity? ConvertResultToQuantity(Measure measure, object? result)
     {
         if (result is null)
             return null;
