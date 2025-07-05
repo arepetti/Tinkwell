@@ -1,4 +1,5 @@
 using Superpower;
+using Superpower.Model;
 using Superpower.Parsers;
 using System.Globalization;
 
@@ -9,7 +10,21 @@ public static class MeasureListConfigParser
     public static IEnumerable<object> Parse(string text)
     {
         var tokens = MeasureListConfigTokenizer.Instance.Tokenize(Preprocessor.Transform(text));
-        return ConfigEntryParser.Many().Parse(tokens);
+        var result = ConfigEntryParser.Many().TryParse(tokens);
+
+        if(!result.HasValue)
+            throw new ParseException(result.ErrorMessage!);
+
+        if (!result.Remainder.IsAtEnd)
+        {
+            var unexpected = result.Remainder.ConsumeToken();
+            if (!string.IsNullOrWhiteSpace(unexpected.ErrorMessage))
+                throw new ParseException(unexpected.ErrorMessage);
+
+            throw new ParseException($"Unexpected token {unexpected.Value.Kind} at line {unexpected.Value.Position.Line}, column {unexpected.Value.Position.Column}.");
+        }
+
+        return result.Value;
     }
 
     private static TokenListParser<MeasureListConfigToken, string> Identifier =>
@@ -116,7 +131,8 @@ public static class MeasureListConfigParser
     private static TokenListParser<MeasureListConfigToken, object> ConfigEntryParser =>
         MeasureBlockParser.Select(m => (object)m)
         .Or(ImportDirectiveParser.Select(i => (object)i))
-        .Or(SignalBlockParser.Select(s => (object)s));
+        .Or(SignalBlockParser.Select(s => (object)s))
+        .Named("known entry");
 
     private static string Unquote(string s) =>
         s.Length >= 2 && s.StartsWith('"') && s.EndsWith('"') ? s[1..^1] : s;

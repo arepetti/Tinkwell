@@ -24,6 +24,6 @@ sealed class NameAllowedChars : Linter.Rule, ITwmLinterRule<MeasureDefinition>, 
         if (InvalidCharacters.Any(c => name.Contains(c, StringComparison.Ordinal)))
             return new Linter.Issue(Id, Linter.IssueSeverity.Error, target, name, $"Name cannot contain any of: {string.Join("", InvalidCharacters)}");
 
-        return null;
+        return Ok();
     }
 }

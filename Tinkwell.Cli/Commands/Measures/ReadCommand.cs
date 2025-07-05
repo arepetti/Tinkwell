@@ -2,7 +2,6 @@ using System.ComponentModel;
 using System.Globalization;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using Tinkwell.Cli.Commands.Contracts;
 
 namespace Tinkwell.Cli.Commands.Measures;
 
@@ -10,7 +9,7 @@ namespace Tinkwell.Cli.Commands.Measures;
 [Description("Read the value of a measure.")]
 sealed class ReadCommand : AsyncCommand<ReadCommand.Settings>
 {
-    public sealed class Settings : ContractsCommand.Settings
+    public sealed class Settings : MeasuresCommand.Settings
     {
         [CommandArgument(0, "<NAME>")]
         [Description("Name of the measure to read")]

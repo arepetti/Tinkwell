@@ -10,7 +10,7 @@ namespace Tinkwell.Cli.Commands.Measures;
 [Description("Validate the content of a twm configuration file.")]
 sealed class LintCommand : AsyncCommand<LintCommand.Settings>
 {
-    public sealed class Settings : ContractsCommand.Settings
+    public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<PATH>")]
         [Description("Path of the file to lint")]
@@ -19,6 +19,10 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
         [CommandOption("-x|--exclude")]
         [Description("Name of a rule to exclude")]
         public string[] Exclusions { get; set; } = [];
+
+        [CommandOption("--strict")]
+        [Description("Use stricter rules.")]
+        public bool Strict{ get; set; }
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
@@ -28,10 +32,9 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
             .StartAsync("Linting...", async ctx =>
             {
                 var linter = new TwmLinter();
+                linter.Exclusions = settings.Exclusions;
                 return await linter.CheckAsync(settings.Path);
             });
-
-        issues = issues.Where(x => !settings.Exclusions.Contains(x.Id, StringComparer.OrdinalIgnoreCase));
 
         if (!issues.Any())
         {
@@ -63,7 +66,8 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
 
         AnsiConsole.Write(table);
 
-        return ExitCode.Canceled;
+        bool ignorable = !settings.Strict && issues.All(x => x.Severity == Linter.IssueSeverity.Minor);
+        return ignorable ? ExitCode.Ok : ExitCode.Canceled;
     }
 
     private static string IssueToColor(Linter.Issue issue)

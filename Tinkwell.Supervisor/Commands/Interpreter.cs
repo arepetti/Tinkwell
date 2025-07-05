@@ -89,6 +89,11 @@ sealed class Interpreter
             exitCmd.OnExecute(() => writer.WriteLine("OK"));
         });
 
+        app.Command("pid", exitCmd =>
+        {
+            exitCmd.OnExecute(() => writer.WriteLine(Environment.ProcessId.ToString()));
+        });
+
         app.Command("exit", exitCmd =>
         {
             exitCmd.OnExecute(() => TerminateParsingExitCode);

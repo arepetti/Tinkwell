@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using Tinkwell.Cli.Commands.Contracts;
 
 namespace Tinkwell.Cli.Commands.Measures;
 
@@ -9,7 +8,7 @@ namespace Tinkwell.Cli.Commands.Measures;
 [Description("List all the registered measures.")]
 sealed class ListCommand : AsyncCommand<ListCommand.Settings>
 {
-    public sealed class Settings : ContractsCommand.Settings
+    public sealed class Settings : MeasuresCommand.Settings
     {
         [CommandArgument(0, "[SEARCH]")]
         [Description("An optional case-insensitive partial match to return only the matching measures. You can use wildcards.")]

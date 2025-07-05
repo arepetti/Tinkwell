@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Tinkwell.Measures.Configuration.Parser;
+﻿using Tinkwell.Measures.Configuration.Parser;
 
 namespace Tinkwell.Cli.Commands.Measures.Lint;
 
@@ -7,8 +6,8 @@ sealed class TwmLinter : Linter<ITwmFile>
 {
     public TwmLinter()
     {
-        _rulesForMeasures = FindRules<MeasureDefinition>();
-        _rulesForSignals = FindRules<SignalDefinition>();
+        _rulesForMeasures = FindRules<ITwmLinterRule<MeasureDefinition>>();
+        _rulesForSignals = FindRules<ITwmLinterRule<SignalDefinition>>();
     }
 
     protected override Task<ITwmFile> LoadFileAsync(string path)
@@ -46,18 +45,9 @@ sealed class TwmLinter : Linter<ITwmFile>
     {
         foreach (var rule in _rulesForSignals)
         {
-            var issue = rule.Apply(file, null, signal);
+            var issue = rule.Apply(file, parent, signal);
             if (issue is not null)
                 issues.Add(issue);
         }
-    }
-
-    private IEnumerable<ITwmLinterRule<T>> FindRules<T>()
-    {
-        return Assembly
-            .GetExecutingAssembly()
-            .GetTypes()
-            .Where(type => typeof(ITwmLinterRule<T>).IsAssignableFrom(type) && type.IsClass && !type.IsAbstract)
-            .Select(type => (ITwmLinterRule<T>)Activator.CreateInstance(type)!);
     }
 }

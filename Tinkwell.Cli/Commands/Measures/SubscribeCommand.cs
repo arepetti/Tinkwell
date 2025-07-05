@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Globalization;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using Tinkwell.Cli.Commands.Contracts;
 using Tinkwell.Services;
 
 namespace Tinkwell.Cli.Commands.Measures;
@@ -12,7 +11,7 @@ namespace Tinkwell.Cli.Commands.Measures;
 [Description("Read the value of a measure and subscribe for changes.")]
 sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
 {
-    public sealed class Settings : ContractsCommand.Settings
+    public sealed class Settings : MeasuresCommand.Settings
     {
         [CommandArgument(0, "<NAME>")]
         [Description("Names of the measure to read")]

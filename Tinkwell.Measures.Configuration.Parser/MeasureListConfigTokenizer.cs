@@ -29,7 +29,7 @@ public enum MeasureListConfigToken
     SignalKeyword,
     WhenKeyword,
     WithKeyword,
-    Boolean
+    Boolean,
 }
 
 static class MeasureListConfigTokenizer

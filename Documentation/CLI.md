@@ -75,7 +75,7 @@ Interact with the [Supervisor](./Glossary.md#supervisor) using a low level inter
 tw supervisor send <COMMAND> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
 tw supervisor signal <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
 tw supervisor restart <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
-tw supervisor claim-port <RUNNER MACHINE> <RUNNER NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
+tw supervisor claim-port <MACHINE> <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
 ```
 
 ### DESCRIPTION
@@ -100,20 +100,26 @@ tw supervisor restart <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--
 Restart the process associated with the runner with the specified name. Note that not all runners are restartable and this might cause the whole application to fail. Use it only as a last resort.
 
 ```console
-tw supervisor claim-port <RUNNER MACHINE> <RUNNER NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
+tw supervisor claim-port <MACHINE> <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
 ```
-Claim an HTTP(S) port for the runner with the specified name `<RUNNER NAME>` running on the machine `<RUNNER MACHINE>`. You do not normally need this command unless you're using `tw` to integrate your own script/application with Tinkwell and you're not using (or you can't use) the provided .NET libraries. Like all commands in `tw supervisor` this command needs confirmation then include `-y` if you're calling it from a script/another application.
+Claim an HTTP(S) port for the runner with the specified name `<NAME>` running on the machine `<MACHINE>`. You do not normally need this command unless you're using `tw` to integrate your own script/application with Tinkwell and you're not using (or you can't use) the provided .NET libraries. You can obtain the runner name (if your process/script has been launched by the Supervisor) in the environment variable `TINKWELL_RUNNER_NAME`.
+
+Like all commands in `tw supervisor` this command needs confirmation then include `-y` if you're calling it from a script/another application.
 The returned value is an integer containing the first available port number to use.
 
 ### ARGUMENTS
 
-**`<RUNNER MACHINE>`**
+**`<NAME>`**
+
+The command you want to send to the Supervisor. Keep in mind that its commands are structured like a CLI (with arguments, options and quoted strings).
+
+**`<NAME>`**
+
+Name of the runner.
+
+**`<MACHINE>`**
 
 Name of the machine where the runner calling `tw supervisor claim-port` is running. It could be a computer name (like `"my-computer"`) or an IP address.
-
-**`<RUNNER NAME>`**
-
-Name of the runner claiming the port. You can obtain this (if your process/script has been launched by the Supervisor) in the environment variable `TINKWELL_RUNNER_NAME`.
 
 **`--confirmed`** **`-y`**
 
@@ -128,7 +134,7 @@ Inspect and manage [runners](./Glossary.md#runners).
 ### SYNOPSIS
 
 ```console
-tw runners list [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v] [--columns]
+tw runners list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v] [--columns]
 tw runners inspect <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
 tw runners get-host <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
 tw runners get-name [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--name=<filter>] [--role=<role>] [--host=<address>]
@@ -157,12 +163,12 @@ tw runners get-host <name> [--machine=<machine name>] [--pipe=<pipe name>] [--ti
 Resolve the host name (for example `"https://my-machine:5000"`) of the specified runner. It returns an empty string if the specified runner does not host any gRPC service.
 
 ```console
-tw runners get-name [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--name=<filter>] [--role=<role>] [--host=<address>]
+tw runners get-name [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--name=<filter>] [--role=<role>] [--host=<address>]
 ```
 Resolve the full name of a runner starting from a partial match (when using `--name`, see also `[filter]`), its role (with `--role`) or address (with `--host`). `[filter]` is the preferred alternative to `--name` when using `tw runners get-name`. If they're both specified then `[filter]` has the precedence. If more than one runner matches the expression then an error is returned.
 
 ```console
-tw runners profile [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
+tw runners profile [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
 ```
 Inspect resources consumed by all the Tinkwell processes.
 
@@ -172,7 +178,7 @@ Inspect resources consumed by all the Tinkwell processes.
 
 The name of the runner to inspect (for `tw runners inspect`) or for which you want to resolve the host address (for `tw runners get-host`).
 
-**`[filter]`**
+**`[search]`**
 
 Filter to limit the search to runners with a name that matches the specified [expression](#text-matching).
 
@@ -225,7 +231,7 @@ Use `tw contracts` when you want to inspect the services registered in the [syst
 ### COMMANDS
 
 ```console
-tw contracts list [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--verbose|-v]
+tw contracts list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--verbose|-v]
 ```
 List all the registered services.
 
@@ -273,7 +279,7 @@ tw measures read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeo
 tw measures write <name> <value> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 tw measures create <name> <type> <unit> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 tw measures subscribe <name>... [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
-tw measures lint <path> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--exclude=<rule id>]
+tw measures lint <path> [--exclude=<rule id>] [--strict]
 ```
 
 ### DESCRIPTION
@@ -283,32 +289,32 @@ Use `tw measures` when you want to inspect the measures registered in the [syste
 ### COMMANDS
 
 ```console
-tw contracts list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--values] [--verbose|-v]
+tw measures list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--values] [--verbose|-v]
 ```
 List all the registered measures, optionally displaying their current value if `--values` is specified. Use `--verbose` to obtain all the fields associated with every measure`.
 
 ```console
-tw contracts read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 ```
 Read the current value of the measure with the specified name. Note that it does not include the unit of measure (which is the one specified when the measure has been registered). If you do not know the unit then use `tw measures list <measure name>`.
 
 ```console
-tw contracts write <name> <value> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures write <name> <value> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 ```
 Write a new value for the measure with the specified name. Note that you must include the unit of measure; it does not need to be the same one registered for the measure (the system will perform a conversion) but it must be compatible.
 
 ```console
-tw contracts create <name> <type> <unit> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures create <name> <type> <unit> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 ```
-Create a new measure with the specified name, type (for example `"Temperature"`) and unit (for example `"DegreesCelsius"`).
+Create a new measure with the specified name, type (for example `"Temperature"`) and unit (for example `"DegreesCelsius"`). See the list of [supported units](./Units.md).
 
 ```console
-tw contracts subscribe <name>... [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures subscribe <name>... [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 ```
 Subscribe for changes to one or more measures. Each time a measure changes a new line will be printed in the form `name=value`. Note that the unit of measure is not included (use `tw measures list <name>` if you want to query it). The first value(s) printed are the current value(s) and then after each change.
 
 ```console
-tw measures lint <path> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--exclude=<rule id>]
+tw measures lint <path> [--exclude=<rule id>] [--strict]
 ```
 Check the specified .twm (Tinkwell Measures configuration) file for errors or bad practices. The return code is non zero if the file contains any known issue. Use `--exclude` if you want to exclude a specific rule.
 
@@ -328,7 +334,7 @@ Subscribe for changes to the two measures `"temperature"` and `"power"`. Termina
 
 ### ARGUMENTS
 
-**`[filter]`**
+**`[search]`**
 
 When specified it filters the list to include only measures with the specified text in their name. Search is case insensitive. You can use an [expression](#text-matching).
 
@@ -348,11 +354,13 @@ Type (for example `"Power"` `"Temperature"`) and unit (for example `"Watt"`, `"D
 
 Produce a detailed description of each measure.
 
-**`--exclude=<rule id>`** **`-r=<rule id>`**
+**`--exclude=<rule id>`** **`-x=<rule id>`**
 
 Exclude the specified rule from the output. It's useful when `tw measures lint` is part of a build process and a non zero return value might stop the build/deployment. If you're absolutely sure that the flagged issue is not a problem then you can instruct the linter to exclude it.
 
-Produce a detailed description of each measure.
+**`--strict`**
+
+Apply stricter rules and the exit code is not zero when all the issues are minor.
 
 ---
 
