@@ -83,6 +83,13 @@ signal low_battery {
 That's enough to start experimenting, open a terminal and type this:
 
 ```bash
+# This will check the configuration file in search of common mistakes
+./tw measures lint ./config/measures.twm
+```
+
+Now start the supervisor (`Tinkwell.Supervisor`) and wait until it's ready. In the first terminal type this:
+
+```bash
 # In this terminal you're going to see signals (alarms)
 ./tw events subscribe signal
 ```
@@ -100,6 +107,7 @@ In yet another terminal:
 # This should cause a signal to be published!
 ./tw measures write voltage "46 V"
 ```
+
 ## More information
 
 -   [Glossary](./Glossary.md): Understand the core concepts and terminology.
