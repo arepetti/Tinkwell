@@ -6,7 +6,7 @@ All the sub-commands are accessible with the `tw` command.
 
 **Initial setup**: [`tw certs`](#tw-certs), [`tw ensamble`](#tw-ensamble), [`tw measures`](#tw-measures)
 
-**Measures and alarms**: [`tw measures`](#tw-measures), [`tw reactor`](#tw-reactor), [`tw events`](#tw-events), [`tw executor`](#tw-executor)
+**Measures and alarms**: [`tw measures`](#tw-measures), [`tw events`](#tw-events), [`tw executor`](#tw-executor)
 
 **Events**: [`tw events`](#tw-events), [`tw executor`](#tw-executor)
 
@@ -452,5 +452,54 @@ Includes only the events with the specified object. You can use [wildcards](#tex
 **`--verbose`** **`-v`**
 
 Produce a detailed description of each event.
+
+---
+
+##  `tw certs`
+
+Manage self-signed certificates.
+
+### SYNOPSIS
+
+```console
+tw certs create [COMMON NAME] [--validity=<years>] [--export-name=<file name>] [--export-path=<path>] [--set-environment] [--export-pem]
+```
+
+### DESCRIPTION
+
+Use `tw certs` when you initially setup a machine to run Tinkwell.
+
+### COMMANDS
+
+```console
+tw certs create [COMMON NAME] [--validity=<years>] [--export-name=<file name>] [--export-path=<path>] [--set-environment] [--export-pem]
+```
+Create a new self-signed certificate. Remember to store the PEM files (if generated) in a secure location!
+
+### ARGUMENTS
+
+**`[COMMON NAME]`**
+
+Common name `CN` (aka _Friendly name_) name for the certificate. If omitted then a generic one will be used.
+
+**`--validity=<years>`**
+
+The validity (in years) of the newly created certificate. After the certificate is expired you will need to generate (and install/trust) a new one.
+
+**`--export-name=<file name>`**
+
+File name (without path or extension) used to save the generated certificate. It'll be located in the directory specified with `--export-path` and the extension depends on the format.
+
+**`--export-path=<path>`**
+
+Directory where the generated certificate(s) will be saved.
+
+**`--set-environment`**
+
+Set the environment variables needed to instruct Tinkwell to use the generated certificate. If omitted then you're going to do it manually. This option is available only on Windows. Default is false.
+
+**`--export-pem`**
+
+Export also the PEM files (certificate and key) together with the PFX certificate needed to run Tinkwell. You're going to need them to install/trust the certificate if running on Linux/BSD/MacOS. Default is false for Windows.
 
 ---

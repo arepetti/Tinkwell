@@ -56,7 +56,7 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
 
         if (!result.Issues.Any())
         {
-            AnsiConsole.MarkupLineInterpolated($"No issues found in [blue]{settings.Path}[/].");
+            AnsiConsole.MarkupLineInterpolated($"No issues found in [blueviolet]{settings.Path}[/].");
             return ExitCode.Ok;
         }
 

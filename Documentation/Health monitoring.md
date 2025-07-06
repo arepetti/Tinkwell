@@ -26,7 +26,7 @@ All the properties are optional (the `properties` block can be omitted). Availab
 ---
 If the basic logic implemented in this service is not enough for your needs then you can implement your own logic and expose a `Tinkwell.HealthCheck` service (see `protos/tinkwell.health_check.proto`), do not forget to register it with `HealthCheck` as `FamilyName`. This could be the case if you want to use OpenTelemetry, you could, for example, write your own exporter derived from `BaseExporter<Metric>`. Alternatively you could leave out this service and the watchdog entirely and use OpenTelemetry for everything.
 
-You're going to need to expose your own service also if you're writing a [custom runner](Custom%20runners.md).
+You're going to need to expose your own service also if you're writing a [custom runner](Custom-runners.md).
 
 ## Configuring the Watchdog
 

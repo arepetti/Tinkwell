@@ -144,7 +144,7 @@ You can define your own reusable templates:
     * `{{ properties }}`: replaced with all the `<key>` and `<value>` pairs, including `{` and `}`. If not specified then it's `{}`.
     * `{{ host.grpc }}`: replaced with the name of the default runner to host [services](./Glossary.md#service) packaged as libraries.
     * `{{ host.dll }}`: replaced with the name of the default runner to host [agents](./Glossary.md#agent) packaged as libraries.
-    * `{{ firmlet.health_check }}`: replaced with the name of the assembly implementing the [Health Check service](./Glossary.md#health-check-service). See [Health monitoring](./Health%20monitoring.md) for the overall configuration.
+    * `{{ firmlet.health_check }}`: replaced with the name of the assembly implementing the [Health Check service](./Glossary.md#health-check-service). See [Health monitoring](./Health-monitoring.md) for the overall configuration.
     * `{{ address.supervisor }}`: replaced with the named pipe used to communicate directly with the [Supervisor](./Glossary.md#supervisor) without using the [Orchestrator](./Glossary.md#orchestrator-service).
     
 For example, this is the template used for `service`:

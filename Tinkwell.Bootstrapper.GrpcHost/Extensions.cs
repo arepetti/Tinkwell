@@ -36,8 +36,8 @@ static class Extensions
     public static (string Path, string Password) ResolveCertificate(this IHostApplicationBuilder builder)
     {
         var path = Path.Combine(builder.Environment.ContentRootPath,
-            Environment.GetEnvironmentVariable("TINKWELL_CERT_PATH") ?? "");
-        var password = Environment.GetEnvironmentVariable("TINKWELL_CERT_PASS") ?? "";
+            Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePath) ?? "");
+        var password = Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePass) ?? "";
 
         return (path, password);
     }

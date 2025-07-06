@@ -58,6 +58,9 @@ sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
             {
                 await foreach (var response in call.ResponseStream.ReadAllAsync())
                 {
+                    if (!IsVisible(settings, response))
+                        continue;
+
                     table
                         .AddEntry("ID", response.Id)
                         .AddEntry("Correlation ID", response.CorrelationId)
@@ -80,9 +83,7 @@ sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
             {
                 await foreach (var response in call.ResponseStream.ReadAllAsync())
                 {
-                    // The service does not support a correlation ID filter but when debugging an issue with a chain of
-                    // events it's pretty handy to limit the output in the console.
-                    if (!string.IsNullOrWhiteSpace(settings.CorrelationId) && !string.Equals(settings.CorrelationId, response.CorrelationId, StringComparison.Ordinal))
+                    if (!IsVisible(settings, response))
                         continue;
 
                     table.AddRow(
@@ -97,5 +98,13 @@ sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
         }
 
         return ExitCode.Ok;
+    }
+
+    private static bool IsVisible(Settings settings, SubscribeEventsResponse response)
+    {
+        // The service does not support a correlation ID filter but when debugging an issue with a chain of
+        // events it's pretty handy to limit the output in the console.
+        return string.IsNullOrWhiteSpace(settings.CorrelationId)
+            || string.Equals(settings.CorrelationId, response.CorrelationId, StringComparison.Ordinal);
     }
 }
