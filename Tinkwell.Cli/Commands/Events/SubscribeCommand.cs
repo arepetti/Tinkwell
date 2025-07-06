@@ -46,28 +46,45 @@ sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
         using var gateway = await DiscoveryHelpers.FindEventsGatewayServiceAsync(settings);
         using var call = gateway.Client.SubscribeToMatching(request);
 
-        var table = new Table();
-        table.Border = TableBorder.Simple;
-        table.AddColumns(
-            "[yellow]Topic[/]",
-            "[yellow]Subject[/]",
-            "[yellow]Verb[/]",
-            "[yellow]Object[/]"
-        );
-
-        await AnsiConsole.Live(table).StartAsync(async ctx =>
+        if (settings.Verbose)
         {
-            await foreach (var response in call.ResponseStream.ReadAllAsync())
+            var table = new PropertyValuesTable();
+            await AnsiConsole.Live(table).StartAsync(async ctx =>
             {
-                table.AddRow(
-                    response.Topic.EscapeMarkup(),
-                    response.Subject.EscapeMarkup(),
-                    response.Verb.ToString().EscapeMarkup(),
-                    response.Object.EscapeMarkup()
-                );
-                ctx.Refresh();
-            }
-        });
+                await foreach (var response in call.ResponseStream.ReadAllAsync())
+                {
+                    table
+                        .AddEntry("ID", response.Id)
+                        .AddEntry("Correlation ID", response.CorrelationId)
+                        .AddEntry("Timestamp", response.OccurredAt)
+                        .AddEntry("Topic", response.Topic)
+                        .AddEntry("Subject", response.Subject)
+                        .AddEntry("Verb", response.Verb)
+                        .AddEntry("Object", response.Object)
+                        .AddEntry("Payload", response.Payload)
+                        .AddRow();
+
+                    ctx.Refresh();
+                }
+            });
+        }
+        else
+        {
+            var table = new SimpleTable("Topic", "Subject", "Verb", "Object");
+            await AnsiConsole.Live(table).StartAsync(async ctx =>
+            {
+                await foreach (var response in call.ResponseStream.ReadAllAsync())
+                {
+                    table.AddRow(
+                        response.Topic,
+                        response.Subject,
+                        response.Verb.ToString(),
+                        response.Object
+                    );
+                    ctx.Refresh();
+                }
+            });
+        }
 
         return ExitCode.Ok;
     }

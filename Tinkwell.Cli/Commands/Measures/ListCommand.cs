@@ -23,7 +23,10 @@ sealed class ListCommand : AsyncCommand<ListCommand.Settings>
         public bool Values { get; set; }
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
+        => List(settings);
+
+    public static async Task<int> List(Settings settings)
     {
         var response = await AnsiConsole.Status()
             .Spinner(Spinner.Known.Default)

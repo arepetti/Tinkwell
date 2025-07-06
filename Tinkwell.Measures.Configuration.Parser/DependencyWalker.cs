@@ -5,7 +5,9 @@ namespace Tinkwell.Measures.Configuration.Parser;
 
 public class DependencyWalker<T> where T : IMeasureDependent
 {
-    // Gets the forward dependency map, where the key is a measure and the value is a list of its direct dependencies.
+    public IEnumerable<T> Items => _items;
+
+    // Gets the forward dependency map, where the key is a item and the value is a list of its direct dependencies.
     public IReadOnlyDictionary<string, IList<string>> ForwardDependencyMap => _forwardDependencyMap;
 
     // Gets the reverse dependency map, where the key is a dependency and the value is a list of measures that depend on it.
@@ -18,7 +20,11 @@ public class DependencyWalker<T> where T : IMeasureDependent
     // Returns true if the dependencies were successfully resolved and no circular dependencies were found; otherwise, false.
     public bool Analyze(IEnumerable<T> measures)
     {
-        _measures = measures;
+        _items = measures;
+
+        foreach (var item in _items)
+            item.Dependencies.Clear();
+
         _forwardDependencyMap.Clear();
         _reverseDependencyMap.Clear();
         _calculationOrder.Clear();
@@ -33,29 +39,26 @@ public class DependencyWalker<T> where T : IMeasureDependent
     private readonly Dictionary<string, IList<string>> _forwardDependencyMap = new();
     private readonly Dictionary<string, IList<string>> _reverseDependencyMap = new();
     private List<string> _calculationOrder = new();
-    private IEnumerable<T> _measures = Enumerable.Empty<T>();
+    private IEnumerable<T> _items = Enumerable.Empty<T>();
 
     private void ExtractDependencies()
     {
-        foreach (var measure in _measures)
+        foreach (var item in _items)
         {
             // NCalc is used to parse the expression and find all external parameters:
             // they're all the (forward) dependencies of this expression!
-            var dependencies = ResolveDependencies(measure);
-            measure.Dependencies.Clear();
-            foreach (var dependency in dependencies)
-                measure.Dependencies.Add(dependency);
-
-            _forwardDependencyMap[measure.Name] = measure.Dependencies;
-
-            // Build the reverse map for efficient lookup of dependents
-            foreach (var dependency in measure.Dependencies)
+            foreach (var dependency in ResolveDependencies(item))
             {
-                if (!_reverseDependencyMap.ContainsKey(dependency))
-                    _reverseDependencyMap[dependency] = new List<string>();
+                item.Dependencies.Add(dependency);
 
-                _reverseDependencyMap[dependency].Add(measure.Name);
+                // The reverse map is for efficient lookup of dependents
+                if (!_reverseDependencyMap.ContainsKey(dependency))
+                    _reverseDependencyMap[dependency] = [];
+
+                _reverseDependencyMap[dependency].Add(item.Name);
             }
+
+            _forwardDependencyMap[item.Name] = item.Dependencies;
         }
     }
 
@@ -68,23 +71,23 @@ public class DependencyWalker<T> where T : IMeasureDependent
         Debug.Assert(_calculationOrder.Count == 0);
 
         var inDegree = new Dictionary<string, int>();
-        foreach (var measure in _measures)
-            inDegree[measure.Name] = 0;
+        foreach (var item in _items)
+            inDegree[item.Name] = 0;
 
-        // Calculate the in-degree for each measure (number of dependencies it has).
+        // Calculate the in-degree for each item (number of dependencies it has).
         foreach (var entry in _forwardDependencyMap)
         {
             foreach (var dependency in entry.Value)
             {
-                // We only care about dependencies that are also derived measures themselves
+                // We only care about dependencies that are also items themselves
                 if (inDegree.ContainsKey(dependency))
                     inDegree[entry.Key]++;
             }
         }
 
-        // Initialize the queue with all measures that have an in-degree of 0 (no dependencies)
+        // Initialize the queue with all items that have an in-degree of 0 (no dependencies)
         var queue = new Queue<string>();
-        foreach (var measure in _measures)
+        foreach (var measure in _items)
         {
             if (inDegree[measure.Name] == 0)
                 queue.Enqueue(measure.Name);
@@ -95,7 +98,7 @@ public class DependencyWalker<T> where T : IMeasureDependent
             var current = queue.Dequeue();
             _calculationOrder.Add(current);
 
-            // For the current measure, find all measures that depend on it (dependents)
+            // For the current item, find all items that depend on it (dependents)
             if (_reverseDependencyMap.TryGetValue(current, out var dependents))
             {
                 foreach (var dependent in dependents)
@@ -108,8 +111,8 @@ public class DependencyWalker<T> where T : IMeasureDependent
             }
         }
 
-        // If the number of measures in the sorted list is equal to the total number of measures,
+        // If the number of items in the sorted list is equal to the total number of items,
         // the sort was successful and there are no circular dependencies.
-        return _calculationOrder.Count == _measures.Count();
+        return _calculationOrder.Count == _items.Count();
     }
 }

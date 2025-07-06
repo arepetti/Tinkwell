@@ -7,6 +7,7 @@ sealed class TwmLinter : Linter<ITwmFile>
 {
     protected override void LoadRules()
     {
+        _rulesForFile = FindRules<ITwmLinterRule<ITwmFile>>();
         _rulesForMeasures = FindRules<ITwmLinterRule<MeasureDefinition>>();
         _rulesForSignals = FindRules<ITwmLinterRule<SignalDefinition>>();
     }
@@ -19,32 +20,51 @@ sealed class TwmLinter : Linter<ITwmFile>
 
     protected override Result Lint(ITwmFile data)
     {
+        Debug.Assert(_rulesForFile is not null);
         Debug.Assert(_rulesForMeasures is not null);
         Debug.Assert(_rulesForSignals is not null);
 
         var result = new Result();
+        result.Rules.AddRange(_rulesForFile.Cast<Rule>());
         result.Rules.AddRange(_rulesForMeasures.Cast<Rule>());
         result.Rules.AddRange(_rulesForSignals.Cast<Rule>());
 
+        ApplyRulesTo(data, result);
+
         foreach (var measure in data.Measures)
-            ApplyRulesTo(data, null, measure, result);
+            ApplyRulesTo(data, measure, result);
 
         foreach (var signal in data.Signals)
             ApplyRulesTo(data, null, signal, result);
 
-        result.Messages.Add($"Applied {result.Rules.Count} rules.");
+        result.Messages.Add($"Examined 1 file.");
         result.Messages.Add($"Examined {_measureCount} measures.");
         result.Messages.Add($"Examined {_signalCount} signals.");
+        result.Messages.Add($"Applied {result.Rules.Count} rules.");
+        result.Messages.Add($"Found {result.Issues.Count} issues.");
 
         return result;
     }
 
+    private IEnumerable<ITwmLinterRule<ITwmFile>>? _rulesForFile;
     private IEnumerable<ITwmLinterRule<MeasureDefinition>>? _rulesForMeasures;
     private IEnumerable<ITwmLinterRule<SignalDefinition>>? _rulesForSignals;
     private int _measureCount = 0;
     private int _signalCount = 0;
 
-    private void ApplyRulesTo(ITwmFile file, object? parent, MeasureDefinition measure, Result result)
+    private void ApplyRulesTo(ITwmFile file, Result result)
+    {
+        Debug.Assert(_rulesForFile is not null);
+
+        foreach (var rule in _rulesForFile)
+        {
+            var issue = rule.Apply(file, null, file);
+            if (issue is not null)
+                result.Issues.Add(issue);
+        }
+    }
+
+    private void ApplyRulesTo(ITwmFile file, MeasureDefinition measure, Result result)
     {
         Debug.Assert(_rulesForMeasures is not null);
         

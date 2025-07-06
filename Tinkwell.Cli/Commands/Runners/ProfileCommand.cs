@@ -44,34 +44,20 @@ sealed class ProfileCommand : AsyncCommand<ProfileCommand.Settings>
                     return (ExitCode.Ok, profiler.Snapshots);
                 });
 
-            var table = new Table();
-            table.Border = TableBorder.Horizontal;
-            table.AddColumns(
-                "[yellow]Name[/]",
-                "[yellow]PID[/]",
-                "[yellow]CPU\n(%)[/]",
-                "[yellow]Memory\n(MB)[/]",
-                "[yellow]Peak memory\n(MB)[/]",
-                "[yellow]Threads[/]",
-                "[yellow]Handles[/]"
-            );
-
-            table.Columns[2].RightAligned();
-            table.Columns[3].RightAligned();
-            table.Columns[4].RightAligned();
-            table.Columns[5].RightAligned();
-            table.Columns[6].RightAligned();
+            var table = new SimpleTable(TableBorder.Horizontal)
+                .AddColumns("Name", "PID", "CPU\n(%)", "Memory\n(MB)", "Peak memory\n(MB)", "Threads", "Handles")
+                .RightAlign(2, 3, 4, 5, 6);
 
             foreach (var entry in data)
             {
                 table.AddRow(
-                    $"[cyan]{entry.Name.EscapeMarkup()}[/]",
-                    entry.Pid.ToString().EscapeMarkup(),
-                    Format(entry.Cpu, approximate: true)!.EscapeMarkup(),
-                    Format(entry.Memory)!.EscapeMarkup(),
-                    Format(entry.PeakMemory)!.EscapeMarkup(),
-                    Format(entry.ThredCount)!.EscapeMarkup(),
-                    Format(entry.HandleCount)!.EscapeMarkup()
+                    entry.Name,
+                    Format(entry.Pid),
+                    Format(entry.Cpu, approximate: true),
+                    Format(entry.Memory),
+                    Format(entry.PeakMemory),
+                    Format(entry.ThredCount),
+                    Format(entry.HandleCount)
                 );
             }
 

@@ -1,8 +1,10 @@
-﻿using Spectre.Console;
+﻿using System.Globalization;
+using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace Tinkwell.Cli.Commands;
 
-sealed class PropertyValuesTable
+sealed class PropertyValuesTable : IRenderable
 {
     public PropertyValuesTable()
     {
@@ -28,7 +30,7 @@ sealed class PropertyValuesTable
     public PropertyValuesTable AddEntry(string key, object? value, int indentation = 0)
     {
         string prefix = new string(' ', indentation * 2);
-        string str = value is not null ? Convert.ToString(value) ?? "" : "";
+        string str = value is not null ? Convert.ToString(value, CultureInfo.InvariantCulture) ?? "" : "";
 
         string nameColor = indentation == 0 ? "yellow" : "silver";
 
@@ -61,6 +63,12 @@ sealed class PropertyValuesTable
 
         return this;
     }
+
+    Measurement IRenderable.Measure(RenderOptions options, int maxWidth)
+        => ((IRenderable)_table).Measure(options, maxWidth);
+
+    IEnumerable<Segment> IRenderable.Render(RenderOptions options, int maxWidth)
+        => ((IRenderable)_table).Render(options, maxWidth);
 
     private readonly Table _table;
 

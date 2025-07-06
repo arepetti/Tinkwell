@@ -47,25 +47,11 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
                 AnsiConsole.WriteLine(message);
 
             AnsiConsole.MarkupLine("\n[yellow]APPLIED RULES[/]");
-            var ruleTable = new Table();
-            ruleTable.Border = TableBorder.Simple;
-            ruleTable.AddColumns("" +
-                "[yellow]ID[/]",
-                "[yellow]Strict[/]",
-                "[yellow]Name[/]"
-            );
-
+            var ruleTable = new SimpleTable("ID", "Strict", "Name");
             foreach (var rule in result.Rules)
-            {
-                string rowColor = rule.IsStrict ? "white" : "silver";
-                ruleTable.AddRow(
-                    $"[{rowColor}]{rule.Id.EscapeMarkup()}[/]",
-                    rule.IsStrict ? "[white]Yes[/]" : "No",
-                    $"[{rowColor}]{rule.Name.EscapeMarkup()}[/]"
-                );
-            }
+                ruleTable.AddColoredRow(rule.IsStrict ? "white" : "silver", rule.Id, rule.IsStrict ? "Yes" : "No", rule.Name);
 
-            AnsiConsole.Write(ruleTable);
+            AnsiConsole.Write(ruleTable.ToSpectreTable());
         }
 
         if (!result.Issues.Any())
@@ -74,32 +60,24 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
             return ExitCode.Ok;
         }
 
-        var table = new Table();
-        table.Border = TableBorder.Simple;
-        table.AddColumns("" +
-            "[yellow]Rule[/]",
-            "[yellow]Severity[/]",
-            "[yellow]Target[/]",
-            "[yellow]Name[/]",
-            "[yellow]Description[/]"
-        );
-
+        var table = new SimpleTable("Rule", "Severity", "Target", "Name", "Description");
         foreach (var issue in result.Issues)
         {
             var color = IssueToColor(issue);
-            table.AddRow(
-                $"[{color}]{issue.Id.EscapeMarkup()}[/]",
-                $"[{color}]{issue.Severity.ToString().EscapeMarkup()}[/]",
-                $"[{color}]{issue.TargetType.EscapeMarkup()}[/]",
-                $"[{color}]{issue.TargetName.EscapeMarkup()}[/]",
-                $"[{color}]{issue.Message.EscapeMarkup()}[/]"
+            table.AddColoredRow(
+                color,
+                issue.Id,
+                issue.Severity.ToString(),
+                issue.TargetType,
+                issue.TargetName,
+                issue.Message
             );
         }
 
         if (settings.Verbose)
             AnsiConsole.MarkupLine("\n[yellow]ISSUES[/]");
 
-        AnsiConsole.Write(table);
+        AnsiConsole.Write(table.ToSpectreTable());
 
         return result.Ignorable ? ExitCode.Ok : ExitCode.Canceled;
     }

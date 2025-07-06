@@ -249,7 +249,7 @@ Find the address of the service with the specified name (or family name or alias
 tw contracts resolve-discovery-address [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
 ```
 Resolve the address of the Discovery Service. You can use this if you're integrating your own runner and you want to obtain
-the Discovery Service (which you can then use to discover all the other services). Calling this method is the prefferred way for external code (not hosted inside one of the default hosts).
+the Discovery Service (which you can then use to discover all the other services). Calling this method is the preferred way for external code (not hosted inside one of the default hosts).
 
 ### ARGUMENTS
 
@@ -280,6 +280,7 @@ Manage [measures](./Glossary.md#measure).
 
 ```console
 tw measures list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--values] [--verbose|-v]
+tw measures inspect <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--value]
 tw measures read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 tw measures write <name> <value> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 tw measures create <name> <type> <unit> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
@@ -297,6 +298,11 @@ Use `tw measures` when you want to inspect the measures registered in the [syste
 tw measures list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--values] [--verbose|-v]
 ```
 List all the registered measures, optionally displaying their current value if `--values` is specified. Use `--verbose` to obtain all the fields associated with every measure`.
+
+```console
+tw measures inspect <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--value]
+```
+List the details about a specific measure. It's a shortcut for `tw measures list <name> --verbose`.
 
 ```console
 tw measures read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
@@ -354,6 +360,10 @@ Value of a measure, including its unit of measure. It must be formatted using en
 **`<type>`**, **`<unit>`**
 
 Type (for example `"Power"` `"Temperature"`) and unit (for example `"Watt"`, `"DegreesCelsius"`). See the list of [supported unit of measure](./Units.md).
+
+**`--values`**, **`-value`**
+
+Include the measure current value in the output.
 
 **`--exclude=<rule id>`** **`-x=<rule id>`**
 
@@ -420,7 +430,7 @@ Optional payload, if specified must be a valid serialized JSON object.
 
 **`--correlation-id=<correlation id>`**
 
-Optional correlation-id, if specified must be a valid UUID.
+Optional Correlation ID, if specified must be a valid UUID.
 
 **`--subject=<subject>`**
 
@@ -436,6 +446,6 @@ Includes only the events with the specified object. You can use [wildcards](#tex
 
 **`--verbose`** **`-v`**
 
-Produce a detailed description of each measure.
+Produce a detailed description of each event.
 
 ---

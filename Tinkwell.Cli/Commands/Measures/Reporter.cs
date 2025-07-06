@@ -15,26 +15,18 @@ static class Reporter
 
     private static void PrintCompact(IEnumerable<StoreListReply.Types.Item> measures, bool withValues)
     {
-        var table = new Table();
-        table.Border = TableBorder.Simple;
-        table.AddColumns("" +
-            "[yellow]Name[/]",
-            "[yellow]Type[/]",
-            "[yellow]Unit[/]",
-            withValues ? "[yellow]Value[/]" : ""
-        );
-
+        var table = new SimpleTable("Name", "Type", "Unit", withValues ? "Value" : null);
         foreach (var measure in measures)
         {
-            table.AddRow(
+            table.AddUnescapedRow(
                 $"[cyan]{measure.Name.EscapeMarkup()}[/]",
                 measure.QuantityType.EscapeMarkup(),
                 measure.Unit.EscapeMarkup(),
-                withValues ? measure.Value.EscapeMarkup() : ""
+                withValues ? measure.Value.EscapeMarkup() : null
             );
         }
 
-        AnsiConsole.Write(table);
+        AnsiConsole.Write(table.ToSpectreTable());
     }
 
     private static void PrintVerbose(IEnumerable<StoreListReply.Types.Item> measures, bool withValues)

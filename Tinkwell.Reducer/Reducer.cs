@@ -26,22 +26,23 @@ sealed class Reducer : IAsyncDisposable
 
         _logger.LogDebug("Loading derived measures from {Path}", _options.Path);
         var file = await _fileReader.ReadFromFileAsync(_options.Path, cancellationToken);
-        _derivedMeasures = file.Measures
+        var measures = file.Measures
             .Where(x => !string.IsNullOrWhiteSpace(x.Expression))
-            .Select(x => ShallowCloner.CopyAllPublicProperties(x, new Measure()));
-
-        // If there are no measures to calculate we do not subscribe to anything and just terminate here
-        if (!_derivedMeasures.Any())
-        {
-            _logger.LogWarning("No derived measures to calculate, Reducer is going to sit idle.");
-            return;
-        }
+            .Select(x => ShallowCloner.CopyAllPublicProperties(x, new Measure()))
+            .ToArray();
 
         // We need to analyze the dependencies between the derived measures to determine the correct calculation order.
         // This is crucial to ensure that we don't try to calculate a measure before its dependencies are calculated.
-        if (!_dependencyWalker.Analyze(_derivedMeasures))
+        if (!_dependencyWalker.Analyze(measures))
         {
             _logger.LogCritical("Circular dependency detected in derived measures. Aborting Reducer startup.");
+            return;
+        }
+
+        // If there are no measures to calculate we do not subscribe to anything and just terminate here
+        if (!_dependencyWalker.Items.Any())
+        {
+            _logger.LogWarning("No derived measures to calculate, Reducer is going to sit idle.");
             return;
         }
 
@@ -49,8 +50,17 @@ sealed class Reducer : IAsyncDisposable
         await RegisterDerivedMeasuresAsync(cancellationToken);
         await CalculateInitialValuesAsync(cancellationToken);
 
-        await _worker.StartAsync(SubscribeToChangesAsync, cancellationToken);
-        _logger.LogDebug("Reducer started successfully, now watching for changes");
+        // If there are no measures with dependencies then we do not subscribe to anything
+        if (_dependencyWalker.ForwardDependencyMap.Count == 0)
+        {
+            _logger.LogWarning("No measures with dependencies to watch, Reducer is going to sit idle.");
+            return;
+        }
+        else
+        {
+            await _worker.StartAsync(SubscribeToChangesAsync, cancellationToken);
+            _logger.LogDebug("Reducer started successfully, now watching for changes");
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -70,8 +80,7 @@ sealed class Reducer : IAsyncDisposable
     private readonly DependencyWalker<Measure> _dependencyWalker;
     private readonly CancellableLongRunningTask _worker = new();
     private GrpcService<Services.Store.StoreClient>? _store;
-    private IEnumerable<Measure> _derivedMeasures = [];
-
+    
     private async Task RegisterDerivedMeasuresAsync(CancellationToken cancellationToken)
     {
         Debug.Assert(_store is not null);
@@ -80,7 +89,7 @@ sealed class Reducer : IAsyncDisposable
         // this process instead of calling Store.Register() too many times.
         foreach (var measureName in _dependencyWalker.CalculationOrder)
         {
-            var measure = _derivedMeasures.First(m => m.Name == measureName);
+            var measure = _dependencyWalker.Items.First(m => m.Name == measureName);
             _logger.LogDebug("Registering derived measure {Name}", measure.Name);
             await _store.Client.RegisterAsync(new Services.StoreRegisterRequest
             {
@@ -99,7 +108,7 @@ sealed class Reducer : IAsyncDisposable
     {
         foreach (var measureName in _dependencyWalker.CalculationOrder)
         {
-            var measure = _derivedMeasures.First(m => m.Name == measureName);
+            var measure = _dependencyWalker.Items.First(m => m.Name == measureName);
             await RecalculateMeasureAsync(measure, cancellationToken);
         }
     }
@@ -147,13 +156,13 @@ sealed class Reducer : IAsyncDisposable
         if (_dependencyWalker.ReverseDependencyMap.TryGetValue(changedMeasure, out var affectedMeasures))
         {
             // We only care about the affected measures that are also derived measures.
-            var derivedAffectedMeasures = affectedMeasures.Where(name => _derivedMeasures.Any(dm => dm.Name == name)).ToList();
+            var derivedAffectedMeasures = affectedMeasures.Where(name => _dependencyWalker.Items.Any(dm => dm.Name == name)).ToList();
 
             foreach (var measureName in _dependencyWalker.CalculationOrder)
             {
                 if (derivedAffectedMeasures.Contains(measureName))
                 {
-                    var measure = _derivedMeasures.First(m => m.Name == measureName);
+                    var measure = _dependencyWalker.Items.First(m => m.Name == measureName);
                     await RecalculateMeasureAsync(measure, cancellationToken);
                 }
             }

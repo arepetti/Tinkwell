@@ -31,17 +31,16 @@ sealed class Reactor : IAsyncDisposable
         var rootSignals = file.Signals.Select(signal => ShallowCloner.CopyAllPublicProperties(signal, new Signal()));
         var dependentSignals = file.Measures.SelectMany(measure =>
             measure.Signals.Select(signal => ShallowCloner.CopyAllPublicProperties(signal, new Signal(measure.Name))));
+        var allSignals = Enumerable.Concat(dependentSignals, rootSignals).ToArray();
 
-        _signals = Enumerable.Concat(dependentSignals, rootSignals);
+        // We can safely ignore the return value, signals cannot have circular dependencies
+        Trace.Assert(_dependencyWalker.Analyze(allSignals));
 
-        if (!_signals.Any())
+        if (!_dependencyWalker.Items.Any())
         {
             _logger.LogWarning("No signals to monitor, Reactor is going to sit idle.");
             return;
         }
-
-        // We can safely ignore the return value, signals cannot have circular dependencies
-        Trace.Assert(_dependencyWalker.Analyze(_signals));
 
         if (_options.CheckOnStartup)
             await CheckAllConditionsAsync(cancellationToken);
@@ -73,7 +72,6 @@ sealed class Reactor : IAsyncDisposable
     private readonly ReactorOptions _options;
     private readonly CancellableLongRunningTask _worker = new();
     private readonly SignalDependencyWalker _dependencyWalker = new();
-    private IEnumerable<Signal> _signals = [];
     private GrpcService<Store.StoreClient>? _store;
     private GrpcService<EventsGateway.EventsGatewayClient>? _eventsGateway;
 
@@ -116,7 +114,7 @@ sealed class Reactor : IAsyncDisposable
         var signalsToCalculate = _dependencyWalker.CalculationOrder.Where(x => affectedSignals.Contains(x));
         foreach (var signalName in signalsToCalculate)
         {
-            var measure = _signals.First(m => m.Name == signalName);
+            var measure = _dependencyWalker.Items.First(m => m.Name == signalName);
             await CheckConditionAsync(measure, tryWait: false, cancellationToken);
         }
     }
@@ -124,7 +122,7 @@ sealed class Reactor : IAsyncDisposable
     private async Task CheckAllConditionsAsync(CancellationToken cancellationToken)
     {
         _logger.LogDebug("Checking for all conditions already met");
-        foreach (var signal in _signals)
+        foreach (var signal in _dependencyWalker.Items)
             await CheckConditionAsync(signal, tryWait: true, cancellationToken);
     }
 

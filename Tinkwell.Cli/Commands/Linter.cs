@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using System.Text;
-using static Tinkwell.Cli.Commands.Linter;
 
 namespace Tinkwell.Cli.Commands;
 
@@ -27,6 +26,7 @@ abstract class Linter
 
     public record Issue(string Id, IssueSeverity Severity, string TargetType, string TargetName, string Message);
 
+    [AttributeUsage(AttributeTargets.Class)]
     public sealed class StrictAttribute : Attribute { }
 
     public abstract class Rule
