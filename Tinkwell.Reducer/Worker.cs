@@ -8,9 +8,7 @@ sealed class Worker(Reducer reducer) : IHostedService
         => _reducer.StartAsync(cancellationToken);
 
     public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        await _reducer.DisposeAsync();
-    }
+        => await _reducer.DisposeAsync();
 
     private readonly Reducer _reducer = reducer;
 }

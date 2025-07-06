@@ -196,8 +196,10 @@ sealed class Reactor : IAsyncDisposable
                 if (response.Values.TryGetValue(owningMeasure, out var owningQuantityProto))
                     expression.Parameters["value"] = owningQuantityProto.Number;
             }
-
-            return null;
+            else
+            {
+                _logger.LogWarning("Cannot find dependency {Dependency} for signal {Signal}", dependency, signal.Name);
+            }
         }
 
         return Convert.ToBoolean(expression.Evaluate(), CultureInfo.InvariantCulture);

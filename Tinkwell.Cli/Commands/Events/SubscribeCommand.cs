@@ -6,7 +6,7 @@ using Tinkwell.Services;
 
 namespace Tinkwell.Cli.Commands.Events;
 
-[CommandFor("subsscribe", parent: typeof(EventsCommand))]
+[CommandFor("subscribe", parent: typeof(EventsCommand))]
 [Description("Subscribe to a stream of events.")]
 sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
 {
@@ -28,6 +28,10 @@ sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
         [Description("Filter to receive only events with the specified object.")]
         public string Object { get; set; } = "";
 
+        [CommandOption("--correlation-id")]
+        [Description("Filter to receive only events with the specified correlation ID.")]
+        public string CorrelationId { get; set; } = "";
+
         [CommandOption("-v|--verbose")]
         [Description("Show more details about the events.")]
         public bool Verbose { get; set; }
@@ -45,6 +49,7 @@ sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
 
         using var gateway = await DiscoveryHelpers.FindEventsGatewayServiceAsync(settings);
         using var call = gateway.Client.SubscribeToMatching(request);
+        AnsiConsole.WriteLine("Listening...");
 
         if (settings.Verbose)
         {
@@ -59,7 +64,7 @@ sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
                         .AddEntry("Timestamp", response.OccurredAt)
                         .AddEntry("Topic", response.Topic)
                         .AddEntry("Subject", response.Subject)
-                        .AddEntry("Verb", response.Verb)
+                        .AddEntry("Verb", response.Verb.ToString().ToLowerInvariant())
                         .AddEntry("Object", response.Object)
                         .AddEntry("Payload", response.Payload)
                         .AddRow();
@@ -75,10 +80,15 @@ sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
             {
                 await foreach (var response in call.ResponseStream.ReadAllAsync())
                 {
+                    // The service does not support a correlation ID filter but when debugging an issue with a chain of
+                    // events it's pretty handy to limit the output in the console.
+                    if (!string.IsNullOrWhiteSpace(settings.CorrelationId) && !string.Equals(settings.CorrelationId, response.CorrelationId, StringComparison.Ordinal))
+                        continue;
+
                     table.AddRow(
                         response.Topic,
                         response.Subject,
-                        response.Verb.ToString(),
+                        response.Verb.ToString().ToLowerInvariant(),
                         response.Object
                     );
                     ctx.Refresh();

@@ -7,7 +7,6 @@ abstract class NoFlatCase : NamingStyleBase
     public Linter.Issue? Validate<T>(ITwmFile file, string identifier)
     {
         var style = DetectStyle(identifier);
-        Console.WriteLine($"{identifier}={style}");
         if (style == CaseStyle.Unknown && identifier.Length > 16) // Very very arbitrary
         {
             var dominantStyle = DetectDominantStyle(file);

@@ -16,6 +16,9 @@ static class CommandAppExtensions
             {
                 config.AddBranch(branchCommand.Name, branch =>
                 {
+                    // Only argument and options supports DescriptionAttribute out-of-the-box, we
+                    // have to add it by hand here using the attribute (and they have SetDescription()
+                    // and WithDescription(), I guess the API evolved a bit over time).
                     branch.SetDescription(branchCommand.Description);
                     foreach (var subCommand in allCommands.Where(x => x.Parent == branchCommand.Type))
                     {
@@ -46,6 +49,9 @@ static class CommandAppExtensions
 
     private static ICommandConfigurator AddCommand(this IConfigurator<CommandSettings> configurator, string name, Type type)
     {
+        // Unfortunately Spectre.Console.Cli exposes only AddCommand<T>() and no AddCommand(Type) but we have a Type
+        // because the whole point is to use Reflection instead of setting up all the commands by hand. Because of that
+        // we need to invoke the AddCommand<T>() method via Reflection.
         var method = typeof(IConfigurator<CommandSettings>)
             .GetMethods()
             .First(m => m.Name == nameof(IConfigurator.AddCommand) && m.IsGenericMethod);

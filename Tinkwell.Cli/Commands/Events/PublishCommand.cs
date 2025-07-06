@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using Tinkwell.Services;
 
 namespace Tinkwell.Cli.Commands.Events;
 
@@ -35,11 +36,11 @@ sealed class PublishCommand : AsyncCommand<PublishCommand.Settings>
             .Spinner(Spinner.Known.Default)
             .StartAsync("Publishing...", async ctx =>
             {
-                var request = new Services.PublishEventsRequest
+                var request = new PublishEventsRequest
                 {
                     Topic = settings.Topic,
                     Subject = settings.Subject,
-                    Verb = Enum.Parse<Services.Verb>(settings.Verb),
+                    Verb = Enum.Parse<Verb>(settings.Verb, true),
                     Object = settings.Object,
                     Payload = settings.Payload,
                     CorrelationId = settings.CorrelationId,

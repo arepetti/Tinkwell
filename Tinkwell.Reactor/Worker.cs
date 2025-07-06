@@ -8,9 +8,7 @@ sealed class Worker(Reactor reactor) : IHostedService
         => _reactor.StartAsync(cancellationToken);
 
     public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        await _reactor.DisposeAsync();
-    }
+        => await _reactor.DisposeAsync();
 
     private readonly Reactor _reactor = reactor;
 }
