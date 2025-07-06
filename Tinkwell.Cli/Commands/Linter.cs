@@ -7,9 +7,9 @@ abstract class Linter
 {
     public interface IResult
     {
-        IEnumerable<Linter.Rule> Rules { get; }
+        IEnumerable<Rule> Rules { get; }
 
-        IEnumerable<Linter.Issue> Issues { get; }
+        IEnumerable<Issue> Issues { get; }
 
         IEnumerable<string> Messages { get; }
 
@@ -27,7 +27,11 @@ abstract class Linter
     public record Issue(string Id, IssueSeverity Severity, string TargetType, string TargetName, string Message);
 
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class StrictAttribute : Attribute { }
+    public sealed class RuleAttribute(bool strict = false, string category = "") : Attribute
+    {
+        public bool Strict { get; } = strict;
+        public string Category { get; } = category;
+    }
 
     public abstract class Rule
     {
@@ -38,7 +42,10 @@ abstract class Linter
             => GetType().Name;
 
         public bool IsStrict
-            => GetType().GetCustomAttribute<StrictAttribute>() is not null;
+            => GetType().GetCustomAttribute<RuleAttribute>()?.Strict ?? false;
+
+        public string Category
+            => GetType().GetCustomAttribute<RuleAttribute>()?.Category ?? "";
 
         protected static Issue? Ok() => null;
 
@@ -135,12 +142,29 @@ abstract class Linter<TData> : Linter
         return Assembly
             .GetExecutingAssembly()
             .GetTypes()
-            .Where(type => typeof(T).IsAssignableFrom(type) && typeof(Rule).IsAssignableFrom(type) && type.IsClass && !type.IsAbstract)
-            .Where(type => _strict || type.GetCustomAttribute<StrictAttribute>() is null)
+            .Where(type => typeof(T).IsAssignableFrom(type) && IsRuleType(type))
             .Select(type => (T)Activator.CreateInstance(type)!)
-            .Where(rule => !Exclusions.Contains(((Rule)(object)rule!).Id, StringComparer.Ordinal));
+            .Where(rule => IsIncluded((Rule)(object)rule!));
     }
 
     private bool _strict;
+
+    private static bool IsRuleType(Type type)
+        => typeof(Rule).IsAssignableFrom(type) && type.IsClass && !type.IsAbstract;
+
+    private bool IsIncluded(Rule rule)
+    {
+        var attribute = rule.GetType().GetCustomAttribute<RuleAttribute>();
+        bool strict = attribute?.Strict ?? false;
+        string category = attribute?.Category ?? "";
+
+        if (strict && !_strict)
+            return false;
+
+        if (!string.IsNullOrWhiteSpace(category) && Exclusions.Contains(category, StringComparer.Ordinal))
+            return false;
+        
+        return !Exclusions.Contains(rule.Id, StringComparer.Ordinal);
+    }
 }
 

@@ -285,7 +285,7 @@ tw measures read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeo
 tw measures write <name> <value> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 tw measures create <name> <type> <unit> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 tw measures subscribe <name>... [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
-tw measures lint <path> [--exclude=<rule id>] [--strict]
+tw measures lint <path> [--exclude=<rule>] [--strict]
 ```
 
 ### DESCRIPTION
@@ -307,7 +307,7 @@ List the details about a specific measure. It's a shortcut for `tw measures list
 ```console
 tw measures read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
 ```
-Read the current value of the measure with the specified name. Note that it does not include the unit of measure (which is the one specified when the measure has been registered). If you do not know the unit then use `tw measures list <measure name>`.
+Read the current value of the measure with the specified name. Note that it does not include the unit of measure (which is the one specified when the measure has been registered). If you do not know the unit then use `tw measures list <name>`.
 
 ```console
 tw measures write <name> <value> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
@@ -325,7 +325,7 @@ tw measures subscribe <name>... [--machine=<machine name>] [--pipe=<pipe name>] 
 Subscribe for changes to one or more measures. Each time a measure changes a new line will be printed in the form `name=value`. Note that the unit of measure is not included (use `tw measures list <name>` if you want to query it). The first value(s) printed are the current value(s) and then after each change.
 
 ```console
-tw measures lint <path> [--exclude=<rule id>]... [--strict] [--verbose]
+tw measures lint <path> [--exclude=<rule>]... [--strict] [--verbose]
 ```
 Check the specified .twm (Tinkwell Measures configuration) file for errors or bad practices. The return code is non zero if the file contains any known issue. Use `--exclude` if you want to exclude a specific rule.
 
@@ -361,13 +361,18 @@ Value of a measure, including its unit of measure. It must be formatted using en
 
 Type (for example `"Power"` `"Temperature"`) and unit (for example `"Watt"`, `"DegreesCelsius"`). See the list of [supported unit of measure](./Units.md).
 
+**`<path>`**
+
+Path of a configuration file to analyze.
+
 **`--values`**, **`-value`**
 
 Include the measure current value in the output.
 
-**`--exclude=<rule id>`** **`-x=<rule id>`**
+**`--exclude=<rule>`** **`-x=<rule>`**
 
 Exclude the specified rule from the output. It's useful when `tw measures lint` is part of a build process and a non zero return value might stop the build/deployment. If you're absolutely sure that the flagged issue is not a problem then you can instruct the linter to exclude it. Use rule ID, not name! Use `--verbose` to see exactly which rules are applied.
+You can either exclude a specific rule using its ID or a group, using their category (use the `--verbose` flag to list all the applied measures, including their category).
 
 **`--strict`**
 
@@ -397,7 +402,7 @@ Use `tw events` when you want to publish an event or subscribe to an event strea
 ### COMMANDS
 
 ```console
-tw events publish <topic> <subject> <verb> <object> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--payload=<payload>] [--correlation-id=<correlation id>]
+tw events publish <topic> <subject> <verb> <object> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--payload=<payload>] [--correlation-id=<id>]
 ```
 Publish an event.
 
@@ -428,7 +433,7 @@ The object of the action performed by `"<subject>"` (for example `"high_temperat
 
 Optional payload, if specified must be a valid serialized JSON object.
 
-**`--correlation-id=<correlation id>`**
+**`--correlation-id=<id>`**
 
 Optional Correlation ID, if specified must be a valid UUID.
 

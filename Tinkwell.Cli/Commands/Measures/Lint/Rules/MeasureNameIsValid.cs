@@ -2,6 +2,7 @@
 
 namespace Tinkwell.Cli.Commands.Measures.Lint.Rules;
 
+[Linter.Rule(category: "best-practice")]
 sealed class MeasureNameIsValid : Linter.Rule, ITwmLinterRule<MeasureDefinition>
 {
     public Linter.Issue? Apply(ITwmFile file, object? parent, MeasureDefinition item)

@@ -16,7 +16,7 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
         public string Path { get; set; } = "";
 
         [CommandOption("-x|--exclude")]
-        [Description("Name of a rule to exclude (multiple")]
+        [Description("ID or category of a rule(s) to exclude (multiple")]
         public string[] Exclusions { get; set; } = [];
 
         [CommandOption("--strict")]
@@ -47,9 +47,9 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
                 AnsiConsole.WriteLine(message);
 
             AnsiConsole.MarkupLine("\n[yellow]APPLIED RULES[/]");
-            var ruleTable = new SimpleTable("ID", "Strict", "Name");
+            var ruleTable = new SimpleTable("ID", "Category", "Strict", "Name");
             foreach (var rule in result.Rules)
-                ruleTable.AddColoredRow(rule.IsStrict ? "white" : "silver", rule.Id, rule.IsStrict ? "Yes" : "No", rule.Name);
+                ruleTable.AddColoredRow(rule.IsStrict ? "white" : "silver", rule.Id, rule.Category, rule.IsStrict ? "Yes" : "No", rule.Name);
 
             AnsiConsole.Write(ruleTable.ToSpectreTable());
         }

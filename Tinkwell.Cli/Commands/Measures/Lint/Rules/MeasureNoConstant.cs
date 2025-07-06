@@ -2,7 +2,7 @@
 
 namespace Tinkwell.Cli.Commands.Measures.Lint.Rules;
 
-[Linter.Strict]
+[Linter.Rule(strict: true, category: "best-practice")]
 sealed class MeasureNoConstant: Linter.Rule, ITwmLinterRule<MeasureDefinition>
 {
     public Linter.Issue? Apply(ITwmFile file, object? parent, MeasureDefinition item)
