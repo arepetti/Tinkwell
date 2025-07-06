@@ -2,7 +2,7 @@ using Spectre.Console;
 
 namespace Tinkwell.Cli;
 
-static class Consoles
+public static class Consoles
 {
     public static IAnsiConsole Error
     {

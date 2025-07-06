@@ -1,7 +1,7 @@
 namespace Tinkwell.Cli;
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-sealed class CommandForAttribute : Attribute
+public sealed class CommandForAttribute : Attribute
 {
     public CommandForAttribute(string name) : this(name, null)
     {

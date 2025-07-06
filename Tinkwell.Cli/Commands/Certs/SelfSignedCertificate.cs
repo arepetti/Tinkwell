@@ -40,13 +40,13 @@ public static class SelfSignedCertificate
             X509KeyStorageFlags.DefaultKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
     }
 
-    public static void Export(X509Certificate2 cert, string baseFileName, bool exportPem, out string[] exportedFiles)
+    public static void Export(X509Certificate2 cert, string password, string baseFileName, bool exportPem, out string[] exportedFiles)
     {
         string pfxFilePath = baseFileName + ".pfx";
         string certPemFilePath = baseFileName + "-cert.pem";
         string keyPemFilePath = baseFileName + "-key.pem";
 
-        File.WriteAllBytes(pfxFilePath, cert.Export(X509ContentType.Pfx));
+        File.WriteAllBytes(pfxFilePath, cert.Export(X509ContentType.Pfx, password));
 
         if (exportPem)
         {

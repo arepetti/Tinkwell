@@ -35,6 +35,7 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
         [CommandOption("--set-environment")]
         [Description("Set the environment variables needed to run Tinkwell (Windows only).")]
         public bool SetEnvironmentVariable { get; set; }
+            = string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePath));
     }
 
     public override int Execute(CommandContext context, Settings settings)
@@ -47,6 +48,7 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
 
         SelfSignedCertificate.Export(
             certificate,
+            password,
             Path.Combine(settings.ExportPath, settings.ExportFileName),
             settings.ExportPem,
             out var exportedFiles);

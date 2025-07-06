@@ -18,7 +18,7 @@ All the sub-commands are accessible with the `tw` command.
 
 ## Common Arguments
 
-These arguments are common to most commands.
+These arguments are common to most commands. In the synopsis they're omitted and if available you'll see `[...shared...]`.
 
 **`--machine=<machine name>`**
 
@@ -77,10 +77,10 @@ Interact with the [Supervisor](./Glossary.md#supervisor) using a low level inter
 ### SYNOPSIS
 
 ```console
-tw supervisor send <COMMAND> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
-tw supervisor signal <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
-tw supervisor restart <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
-tw supervisor claim-port <MACHINE> <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
+tw supervisor send <COMMAND> [...shared...] [--confirm|-y]
+tw supervisor signal <NAME> [...shared...] [--confirm|-y]
+tw supervisor restart <NAME> [...shared...] [--confirm|-y]
+tw supervisor claim-port <MACHINE> <NAME> [...shared...] [--confirm|-y]
 ```
 
 ### DESCRIPTION
@@ -90,22 +90,22 @@ Use `tw supervisor` when you want to send commands directly with the Supervisor 
 ### COMMANDS
 
 ```console
-tw supervisor send <COMMAND> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]`
+tw supervisor send <COMMAND> [...shared...] [--confirm|-y]`
 ```
 Send the specified command to the Supervisor and prints the output. In case of errors the Supervisor always use the pattern "Error: _message_", if the command does not have a return value then it always sends "OK".
 
 ```console
-tw supervisor signal <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]`
+tw supervisor signal <NAME> [...shared...] [--confirm|-y]`
 ```
 Send a signal to the Supervisor to notify that the [runner](./Glossary.md#runner) with the specified name has completed its initialization and the bootstrap sequence can continue. A faulty runner might block its own [host](./Glossary.md#host) (which in turn, for `mode=blocking` runners, could block the bootstrapping sequence). You can try to unblock (without waiting for the initialization sequence to timeout) _signaling_ the Supervisor.
 
 ```console
-tw supervisor restart <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]`
+tw supervisor restart <NAME> [...shared...] [--confirm|-y]`
 ```
 Restart the process associated with the runner with the specified name. Note that not all runners are restartable and this might cause the whole application to fail. Use it only as a last resort.
 
 ```console
-tw supervisor claim-port <MACHINE> <NAME> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--confirm|-y]
+tw supervisor claim-port <MACHINE> <NAME> [...shared...] [--confirm|-y]
 ```
 Claim an HTTP(S) port for the runner with the specified name `<NAME>` running on the machine `<MACHINE>`. You do not normally need this command unless you're using `tw` to integrate your own script/application with Tinkwell and you're not using (or you can't use) the provided .NET libraries. You can obtain the runner name (if your process/script has been launched by the Supervisor) in the environment variable `TINKWELL_RUNNER_NAME`.
 
@@ -139,11 +139,11 @@ Inspect and manage [runners](./Glossary.md#runners).
 ### SYNOPSIS
 
 ```console
-tw runners list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v] [--columns]
-tw runners inspect <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
-tw runners get-host <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
-tw runners get-name [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--name=<filter>] [--role=<role>] [--host=<address>]
-tw runners profile [filter] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
+tw runners list [search] [...shared...] [--verbose|-v] [--columns]
+tw runners inspect <name> [...shared...] [--verbose|-v]
+tw runners get-host <name> [...shared...]
+tw runners get-name [filter] [...shared...] [--name=<filter>] [--role=<role>] [--host=<address>]
+tw runners profile [filter] [...shared...]
 ```
 
 ### DESCRIPTION
@@ -153,27 +153,27 @@ Use `tw runners` when you want to debug, monitor and manage your runners.
 ### COMMANDS
 
 ```console
-tw runners list [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--filter=<filter>] [--verbose|-v] [--columns]
+tw runners list [...shared...] [--filter=<filter>] [--verbose|-v] [--columns]
 ```
 List all the runners currently active in the [system](./Glossary.md#system). Note that if a filter is specified then it's matched against the _name_ of the runners and it does not affect the [firmlets](./Glossary.md#firmlet) (which are always returned in full when `--verbose` is specified).
 
 ```console
-tw runners inspect <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
+tw runners inspect <name> [...shared...] [--verbose|-v]
 ```
 Show detailed information about a specific runner (optionally including its firmlets). It's mostly what you can find in the [ensamble configuration file](./Ensamble.md).
 
 ```console
-tw runners get-host <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
+tw runners get-host <name> [...shared...]
 ```
 Resolve the host name (for example `"https://my-machine:5000"`) of the specified runner. It returns an empty string if the specified runner does not host any gRPC service.
 
 ```console
-tw runners get-name [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--name=<filter>] [--role=<role>] [--host=<address>]
+tw runners get-name [search] [...shared...] [--name=<filter>] [--role=<role>] [--host=<address>]
 ```
 Resolve the full name of a runner starting from a partial match (when using `--name`, see also `[filter]`), its role (with `--role`) or address (with `--host`). `[filter]` is the preferred alternative to `--name` when using `tw runners get-name`. If they're both specified then `[filter]` has the precedence. If more than one runner matches the expression then an error is returned.
 
 ```console
-tw runners profile [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
+tw runners profile [search] [...shared...]
 ```
 Inspect resources consumed by all the Tinkwell processes.
 
@@ -224,9 +224,9 @@ Inspects [services](./Glossary.md#service).
 ### SYNOPSIS
 
 ```console
-tw contracts list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--verbose|-v]
-tw contracts find <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
-tw contracts resolve-discovery-address [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
+tw contracts list [search] [...shared...] [--host=<host>] [--verbose|-v]
+tw contracts find <name> [...shared...] [--verbose|-v]
+tw contracts resolve-discovery-address [...shared...]
 ```
 
 ### DESCRIPTION
@@ -236,17 +236,17 @@ Use `tw contracts` when you want to inspect the services registered in the [syst
 ### COMMANDS
 
 ```console
-tw contracts list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--verbose|-v]
+tw contracts list [search] [...shared...] [--host=<host>] [--verbose|-v]
 ```
 List all the registered services.
 
 ```console
-tw contracts find <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--verbose|-v]
+tw contracts find <name> [...shared...] [--verbose|-v]
 ```
 Find the address of the service with the specified name (or family name or alias).
 
 ```console
-tw contracts resolve-discovery-address [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>]
+tw contracts resolve-discovery-address [...shared...]
 ```
 Resolve the address of the Discovery Service. You can use this if you're integrating your own runner and you want to obtain
 the Discovery Service (which you can then use to discover all the other services). Calling this method is the preferred way for external code (not hosted inside one of the default hosts).
@@ -279,12 +279,12 @@ Manage [measures](./Glossary.md#measure).
 ### SYNOPSIS
 
 ```console
-tw measures list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--values] [--verbose|-v]
-tw measures inspect <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--value]
-tw measures read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
-tw measures write <name> <value> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
-tw measures create <name> <type> <unit> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
-tw measures subscribe <name>... [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures list [search] [...shared...] [--host=<host>] [--values] [--verbose|-v]
+tw measures inspect <name> [...shared...] [--host=<host>] [--value]
+tw measures read <name> [...shared...] [--host=<host>]
+tw measures write <name> <value> [...shared...] [--host=<host>]
+tw measures create <name> <type> <unit> [...shared...] [--host=<host>]
+tw measures subscribe <name>... [...shared...] [--host=<host>]
 tw measures lint <path> [--exclude=<rule>] [--strict]
 ```
 
@@ -295,32 +295,32 @@ Use `tw measures` when you want to inspect the measures registered in the [syste
 ### COMMANDS
 
 ```console
-tw measures list [search] [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--values] [--verbose|-v]
+tw measures list [search] [...shared...] [--host=<host>] [--values] [--verbose|-v]
 ```
 List all the registered measures, optionally displaying their current value if `--values` is specified. Use `--verbose` to obtain all the fields associated with every measure`.
 
 ```console
-tw measures inspect <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--value]
+tw measures inspect <name> [...shared...] [--host=<host>] [--value]
 ```
 List the details about a specific measure. It's a shortcut for `tw measures list <name> --verbose`.
 
 ```console
-tw measures read <name> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures read <name> [...shared...] [--host=<host>]
 ```
 Read the current value of the measure with the specified name. Note that it does not include the unit of measure (which is the one specified when the measure has been registered). If you do not know the unit then use `tw measures list <name>`.
 
 ```console
-tw measures write <name> <value> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures write <name> <value> [...shared...] [--host=<host>]
 ```
 Write a new value for the measure with the specified name. Note that you must include the unit of measure; it does not need to be the same one registered for the measure (the system will perform a conversion) but it must be compatible.
 
 ```console
-tw measures create <name> <type> <unit> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures create <name> <type> <unit> [...shared...] [--host=<host>]
 ```
 Create a new measure with the specified name, type (for example `"Temperature"`) and unit (for example `"DegreesCelsius"`). See the list of [supported units](./Units.md).
 
 ```console
-tw measures subscribe <name>... [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>]
+tw measures subscribe <name>... [...shared...] [--host=<host>]
 ```
 Subscribe for changes to one or more measures. Each time a measure changes a new line will be printed in the form `name=value`. Note that the unit of measure is not included (use `tw measures list <name>` if you want to query it). The first value(s) printed are the current value(s) and then after each change.
 
@@ -391,8 +391,8 @@ Manage [events](./Glossary.md#event).
 ### SYNOPSIS
 
 ```console
-tw events publish <topic> <subject> <verb> <object> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--payload=<payload>] [--correlation-id=<correlation id>]
-tw events subscribe <topic> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--subject=<subject>] [--verb=<verb>] [--object=<object>] [--verbose]
+tw events publish <topic> <subject> <verb> <object> [...shared...] [--host=<host>] [--payload=<payload>] [--correlation-id=<correlation id>]
+tw events subscribe <topic> [...shared...] [--host=<host>] [--subject=<subject>] [--verb=<verb>] [--object=<object>] [--verbose]
 ```
 
 ### DESCRIPTION
@@ -402,12 +402,12 @@ Use `tw events` when you want to publish an event or subscribe to an event strea
 ### COMMANDS
 
 ```console
-tw events publish <topic> <subject> <verb> <object> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--payload=<payload>] [--correlation-id=<id>]
+tw events publish <topic> <subject> <verb> <object> [...shared...] [--host=<host>] [--payload=<payload>] [--correlation-id=<id>]
 ```
 Publish an event.
 
 ```console
-tw events subscribe <topic> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--subject=<subject>] [--verb=<verb>] [--object=<object>] [--verbose]
+tw events subscribe <topic> [...shared...] [--host=<host>] [--subject=<subject>] [--verb=<verb>] [--object=<object>] [--verbose]
 ```
 Subscribe to an event stream, showing only the events matching the specified filter(s).
 
@@ -463,11 +463,12 @@ Manage self-signed certificates.
 
 ```console
 tw certs create [COMMON NAME] [--validity=<years>] [--export-name=<file name>] [--export-path=<path>] [--set-environment] [--export-pem]
+tw certs install [PATH]
 ```
 
 ### DESCRIPTION
 
-Use `tw certs` when you initially setup a machine to run Tinkwell.
+Use `tw certs` when you initially setup a machine to run Tinkwell and you need a certificate to use for HTTPS connection for gRPC services. If you have your own valid certificate you do not need to create a self-signed certificate, just remember to set `TINKWELL_CERT_PATH` to the path of a (valid, installed and trusted) PFX certificate. Set the password in `TINKWELL_CERT_PASS`.
 
 ### COMMANDS
 
@@ -475,12 +476,23 @@ Use `tw certs` when you initially setup a machine to run Tinkwell.
 tw certs create [COMMON NAME] [--validity=<years>] [--export-name=<file name>] [--export-path=<path>] [--set-environment] [--export-pem]
 ```
 Create a new self-signed certificate. Remember to store the PEM files (if generated) in a secure location!
+You're going to be prompted for a password.
+
+```console
+tw certs install [PATH]
+```
+Install and trust a self-signed certificate. This command is available only on Windows.
+You're going to be prompted for a password.
 
 ### ARGUMENTS
 
 **`[COMMON NAME]`**
 
 Common name `CN` (aka _Friendly name_) name for the certificate. If omitted then a generic one will be used.
+
+**`[PATH]`**
+
+Path of the certificate file to install. If omitted then the same default value used in `tw certs create` and if the file it does not exist then it'll try to read the path from `TINKWELL_CERT_PATH` environment variable.
 
 **`--validity=<years>`**
 
@@ -496,10 +508,18 @@ Directory where the generated certificate(s) will be saved.
 
 **`--set-environment`**
 
-Set the environment variables needed to instruct Tinkwell to use the generated certificate. If omitted then you're going to do it manually. This option is available only on Windows. Default is false.
+Set the environment variables needed to instruct Tinkwell to use the generated certificate. If omitted then you're going to do it manually. This option is available only on Windows. Default is true if the environment variable `TINKWELL_CERT_PATH` is not already set.
 
 **`--export-pem`**
 
 Export also the PEM files (certificate and key) together with the PFX certificate needed to run Tinkwell. You're going to need them to install/trust the certificate if running on Linux/BSD/MacOS. Default is false for Windows.
 
+### Examples
+
+In a typical fresh Windows setup, all you need to do is:
+
+```bash
+./tw certs create
+./tw certs install
+```
 ---

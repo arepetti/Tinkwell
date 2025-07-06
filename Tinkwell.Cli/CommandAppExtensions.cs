@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Spectre.Console.Cli;
 
 namespace Tinkwell.Cli;
@@ -35,7 +36,21 @@ static class CommandAppExtensions
 
     private static IEnumerable<(Type Type, Type? Parent, string Name, string Description)> FindAllCommands()
     {
-        var types = Assembly.GetExecutingAssembly().GetTypes().Where(IsCommand);
+        // Some commands might have dependencies that cause errors at run-time, we load this platform-specific
+        // assemblies only if we know that they're going to work.
+        var inThisAssembly = FindAllCommands(Assembly.GetExecutingAssembly());
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var assembly = Assembly.LoadFrom($"{typeof(CommandAppExtensions).Namespace}.Windows.dll");
+            return Enumerable.Concat(inThisAssembly, FindAllCommands(assembly)).ToArray();
+        }
+
+        return inThisAssembly;
+    }
+
+    private static IEnumerable<(Type Type, Type? Parent, string Name, string Description)> FindAllCommands(Assembly assembly)
+    {
+        var types = assembly.GetTypes().Where(IsCommand);
         foreach (var type in types)
         {
             var attribute = type.GetCustomAttribute<CommandForAttribute>()!;

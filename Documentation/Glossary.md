@@ -15,7 +15,7 @@ The set of files that define the system's behavior, including the [Ensemble](#en
 *See also:* [Ensemble](#ensemble), [Derived Measure](#derived-measure)
 
 #### Derived Measure
-A [measure](#measure) whose value is calculated from other measures. The [Reducer](#reducer) is responsible for computing its value. Every measure is associated with its [unit of measure](./Units.md). Derived measures are defined in their own configuration file (see [Derived Measures Configuration](./Derived%20measures.md)).
+A [measure](#measure) whose value is calculated from other measures. The [Reducer](#reducer) is responsible for computing its value. Every measure is associated with its [unit of measure](./Units.md). Derived measures are defined in their own configuration file (see [Derived Measures Configuration](./Derived-measures.md)).
 
 *See also:* [Measure](#measure), [Reducer](#reducer), [Store (Service)](#store-service)
 

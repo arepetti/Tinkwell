@@ -5,7 +5,7 @@ namespace Tinkwell.Cli.Commands.Certs;
 
 [CommandFor("certs")]
 [Description("Manage local self-signed certificates.")]
-sealed class CertsCommand : Command<CertsCommand.Settings>
+public sealed class CertsCommand : Command<CertsCommand.Settings>
 {
     public class Settings : CommandSettings
     {
