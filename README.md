@@ -108,6 +108,10 @@ In yet another terminal:
 ./tw measures write voltage "46 V"
 ```
 
+You should see something similar to this:
+
+![Checking that all the pieces are in place](./Documentation/Images/GettingStarted-FirstRun.png)
+
 ## More information
 
 -   [Glossary](./Glossary.md): Understand the core concepts and terminology.
