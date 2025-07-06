@@ -2,7 +2,7 @@
 
 namespace Tinkwell.Cli.Commands.Measures.Lint.Rules;
 
-sealed class PrecisionRange : Linter.Rule, ITwmLinterRule<MeasureDefinition>
+sealed class MeasurePrecisionRange : Linter.Rule, ITwmLinterRule<MeasureDefinition>
 {
     public Linter.Issue? Apply(ITwmFile file, object? parent, MeasureDefinition item)
     {

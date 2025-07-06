@@ -4,10 +4,15 @@ The CLI interface lets you  **monitor** and **debug** your Tinkwell application 
 
 All the sub-commands are accessible with the `tw` command.
 
-| Supervisor                            | Services                              | Measures
-|---------------------------------------|---------------------------------------|---------------------------------------|
-| [`tw supervisor`](#tw-supervisor)     | [`tw contracts`](#tw-contracts)       | [`tw measures`](#tw-measures)         |
-| [`tw runners`](#tw-runners)           |                                       |                                       |
+**Initial setup**: [`tw certs`](#tw-certs), [`tw ensamble`](#tw-ensamble), [`tw measures`](#tw-measures)
+
+**Measures and alarms**: [`tw measures`](#tw-measures), [`tw reactor`](#tw-reactor), [`tw events`](#tw-events), [`tw executor`](#tw-executor)
+
+**Events**: [`tw events`](#tw-events), [`tw executor`](#tw-executor)
+
+**Integrations**: [`tw supervisor`](#tw-supervisor), [`tw contracts`](#tw-contracts)
+
+**Debug**: [`tw supervisor`](#tw-supervisor), [`tw runners`](#tw-runners), [`tw contracts`](#tw-contracts)
 
 ---
 
@@ -314,7 +319,7 @@ tw measures subscribe <name>... [--machine=<machine name>] [--pipe=<pipe name>] 
 Subscribe for changes to one or more measures. Each time a measure changes a new line will be printed in the form `name=value`. Note that the unit of measure is not included (use `tw measures list <name>` if you want to query it). The first value(s) printed are the current value(s) and then after each change.
 
 ```console
-tw measures lint <path> [--exclude=<rule id>] [--strict]
+tw measures lint <path> [--exclude=<rule id>]... [--strict] [--verbose]
 ```
 Check the specified .twm (Tinkwell Measures configuration) file for errors or bad practices. The return code is non zero if the file contains any known issue. Use `--exclude` if you want to exclude a specific rule.
 
@@ -350,17 +355,87 @@ Value of a measure, including its unit of measure. It must be formatted using en
 
 Type (for example `"Power"` `"Temperature"`) and unit (for example `"Watt"`, `"DegreesCelsius"`). See the list of [supported unit of measure](./Units.md).
 
+**`--exclude=<rule id>`** **`-x=<rule id>`**
+
+Exclude the specified rule from the output. It's useful when `tw measures lint` is part of a build process and a non zero return value might stop the build/deployment. If you're absolutely sure that the flagged issue is not a problem then you can instruct the linter to exclude it. Use rule ID, not name! Use `--verbose` to see exactly which rules are applied.
+
+**`--strict`**
+
+Apply stricter rules and the exit code is not zero when all the issues are minor. Use `--verbose` to see exactly which rules are applied.
+
 **`--verbose`** **`-v`**
 
 Produce a detailed description of each measure.
 
-**`--exclude=<rule id>`** **`-x=<rule id>`**
-
-Exclude the specified rule from the output. It's useful when `tw measures lint` is part of a build process and a non zero return value might stop the build/deployment. If you're absolutely sure that the flagged issue is not a problem then you can instruct the linter to exclude it.
-
-**`--strict`**
-
-Apply stricter rules and the exit code is not zero when all the issues are minor.
-
 ---
 
+##  `tw events`
+
+Manage [events](./Glossary.md#event).
+
+### SYNOPSIS
+
+```console
+tw events publish <topic> <subject> <verb> <object> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--payload=<payload>] [--correlation-id=<correlation id>]
+tw events subscribe <topic> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--subject=<subject>] [--verb=<verb>] [--object=<object>] [--verbose]
+```
+
+### DESCRIPTION
+
+Use `tw events` when you want to publish an event or subscribe to an event stream.
+
+### COMMANDS
+
+```console
+tw events publish <topic> <subject> <verb> <object> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--payload=<payload>] [--correlation-id=<correlation id>]
+```
+Publish an event.
+
+```console
+tw events subscribe <topic> [--machine=<machine name>] [--pipe=<pipe name>] [--timeout=<seconds>] [--host=<host>] [--subject=<subject>] [--verb=<verb>] [--object=<object>] [--verbose]
+```
+Subscribe to an event stream, showing only the events matching the specified filter(s).
+
+### ARGUMENTS
+
+**`<topic>`**
+
+Topic of the event (for example `"signal"`).
+
+**`<subject>`**
+
+Subject that caused the event to be published (for example a measure `"temperature"` triggered an event with topic `"signal"` because its value triggered an alarm).
+
+**`<verb>`**
+
+The action performed by `<subject>` on `<object>` (for example `"triggered"` or `"created"`).
+
+**`<object>`**
+
+The object of the action performed by `"<subject>"` (for example `"high_temperature"` alarm, triggered by measure `"temperature"`).
+
+**`--payload`**
+
+Optional payload, if specified must be a valid serialized JSON object.
+
+**`--correlation-id=<correlation id>`**
+
+Optional correlation-id, if specified must be a valid UUID.
+
+**`--subject=<subject>`**
+
+Includes only the events with the specified subject. You can use [wildcards](#text-matching).
+
+**`--verb=<verb>`**
+
+Includes only the events with the specified verb. You can use [wildcards](#text-matching).
+
+**`--object=<object>`**
+
+Includes only the events with the specified object. You can use [wildcards](#text-matching).
+
+**`--verbose`** **`-v`**
+
+Produce a detailed description of each measure.
+
+---

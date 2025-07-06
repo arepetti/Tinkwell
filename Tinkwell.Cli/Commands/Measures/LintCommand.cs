@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using Tinkwell.Cli.Commands.Contracts;
 using Tinkwell.Cli.Commands.Measures.Lint;
 
 namespace Tinkwell.Cli.Commands.Measures;
@@ -17,26 +16,59 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
         public string Path { get; set; } = "";
 
         [CommandOption("-x|--exclude")]
-        [Description("Name of a rule to exclude")]
+        [Description("Name of a rule to exclude (multiple")]
         public string[] Exclusions { get; set; } = [];
 
         [CommandOption("--strict")]
         [Description("Use stricter rules.")]
         public bool Strict{ get; set; }
+
+        [CommandOption("-v|--verbose")]
+        [Description("Show a detailed output.")]
+        public bool Verbose { get; set; }
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
-        var issues = await AnsiConsole.Status()
+        var result = await AnsiConsole.Status()
             .Spinner(Spinner.Known.Default)
             .StartAsync("Linting...", async ctx =>
             {
                 var linter = new TwmLinter();
                 linter.Exclusions = settings.Exclusions;
-                return await linter.CheckAsync(settings.Path);
+                return await linter.CheckAsync(settings.Path, settings.Strict);
             });
 
-        if (!issues.Any())
+        if (settings.Verbose)
+        {
+            AnsiConsole.MarkupLine("\n[yellow]MESSAGES[/]");
+            AnsiConsole.WriteLine();
+            foreach (var message in result.Messages)
+                AnsiConsole.WriteLine(message);
+
+            AnsiConsole.MarkupLine("\n[yellow]APPLIED RULES[/]");
+            var ruleTable = new Table();
+            ruleTable.Border = TableBorder.Simple;
+            ruleTable.AddColumns("" +
+                "[yellow]ID[/]",
+                "[yellow]Strict[/]",
+                "[yellow]Name[/]"
+            );
+
+            foreach (var rule in result.Rules)
+            {
+                string rowColor = rule.IsStrict ? "white" : "silver";
+                ruleTable.AddRow(
+                    $"[{rowColor}]{rule.Id.EscapeMarkup()}[/]",
+                    rule.IsStrict ? "[white]Yes[/]" : "No",
+                    $"[{rowColor}]{rule.Name.EscapeMarkup()}[/]"
+                );
+            }
+
+            AnsiConsole.Write(ruleTable);
+        }
+
+        if (!result.Issues.Any())
         {
             AnsiConsole.MarkupLineInterpolated($"No issues found in [blue]{settings.Path}[/].");
             return ExitCode.Ok;
@@ -52,7 +84,7 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
             "[yellow]Description[/]"
         );
 
-        foreach (var issue in issues)
+        foreach (var issue in result.Issues)
         {
             var color = IssueToColor(issue);
             table.AddRow(
@@ -64,10 +96,12 @@ sealed class LintCommand : AsyncCommand<LintCommand.Settings>
             );
         }
 
+        if (settings.Verbose)
+            AnsiConsole.MarkupLine("\n[yellow]ISSUES[/]");
+
         AnsiConsole.Write(table);
 
-        bool ignorable = !settings.Strict && issues.All(x => x.Severity == Linter.IssueSeverity.Minor);
-        return ignorable ? ExitCode.Ok : ExitCode.Canceled;
+        return result.Ignorable ? ExitCode.Ok : ExitCode.Canceled;
     }
 
     private static string IssueToColor(Linter.Issue issue)

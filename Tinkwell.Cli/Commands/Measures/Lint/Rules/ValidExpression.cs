@@ -4,20 +4,9 @@ using Tinkwell.Measures.Configuration.Parser;
 
 namespace Tinkwell.Cli.Commands.Measures.Lint.Rules;
 
-sealed class ValidExpression : Linter.Rule, ITwmLinterRule<MeasureDefinition>, ITwmLinterRule<SignalDefinition>
+abstract class ValidExpression : Linter.Rule
 {
-    public Linter.Issue? Apply(ITwmFile file, object? parent, MeasureDefinition item)
-    {
-        if (string.IsNullOrWhiteSpace(item.Expression))
-            return Ok();
-
-        return Validate(nameof(MeasureDefinition), item.Name, item.Expression);
-    }
-
-    public Linter.Issue? Apply(ITwmFile file, object? parent, SignalDefinition item)
-        => Validate(nameof(SignalDefinition), item.Name, item.When);
-
-    private Linter.Issue? Validate(string target, string name, string expression)
+    protected Linter.Issue? Validate(string target, string name, string expression)
     {
         try
         {
@@ -39,4 +28,21 @@ sealed class ValidExpression : Linter.Rule, ITwmLinterRule<MeasureDefinition>, I
 
         return Ok();
     }
+}
+
+sealed class MeasureValidExpression : ValidExpression, ITwmLinterRule<MeasureDefinition>
+{
+    public Linter.Issue? Apply(ITwmFile file, object? parent, MeasureDefinition item)
+    {
+        if (string.IsNullOrWhiteSpace(item.Expression))
+            return Ok();
+
+        return Validate(nameof(MeasureDefinition), item.Name, item.Expression);
+    }
+}
+
+sealed class SignalValidExpression : ValidExpression, ITwmLinterRule<SignalDefinition>
+{
+    public Linter.Issue? Apply(ITwmFile file, object? parent, SignalDefinition item)
+        => Validate(nameof(SignalDefinition), item.Name, item.When);
 }

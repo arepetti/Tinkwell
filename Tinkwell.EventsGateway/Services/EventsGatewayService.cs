@@ -54,7 +54,7 @@ sealed class EventsGatewayService : Tinkwell.Services.EventsGateway.EventsGatewa
                 if (!_regexCache.IsMatch(data.Subject, request.Subject))
                     return false;
 
-                if (!_regexCache.IsMatch(data.Verb, request.Verb.ToString()))
+                if (!_regexCache.IsMatch(data.Verb, request.Verb))
                     return false;
 
                 if (!_regexCache.IsMatch(data.Object, request.Object))

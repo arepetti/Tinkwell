@@ -2,7 +2,7 @@
 
 namespace Tinkwell.Cli.Commands.Measures.Lint.Rules;
 
-sealed class MinMax : Linter.Rule, ITwmLinterRule<MeasureDefinition>
+sealed class MeasureMinMax : Linter.Rule, ITwmLinterRule<MeasureDefinition>
 {
     public Linter.Issue? Apply(ITwmFile file, object? parent, MeasureDefinition item)
     {

@@ -157,13 +157,13 @@ sealed class Reactor : IAsyncDisposable
                     continue;
                 }
 
-                _logger.LogError(e, "Dependencies of {Name} not available. Measure disabled. Reason: {Message}", signal.Name, e.Message);
+                _logger.LogError(e, "Dependencies of {Name} not available. Signal disabled. Reason: {Message}", signal.Name, e.Message);
                 signal.Disabled = true;
                 return;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to recalculate {Name}. Measure disabled. Reason: {Message}", signal.Name, e.Message);
+                _logger.LogError(e, "Failed to recalculate {Name}. Signal disabled. Reason: {Message}", signal.Name, e.Message);
                 signal.Disabled = true;
                 return;
             }

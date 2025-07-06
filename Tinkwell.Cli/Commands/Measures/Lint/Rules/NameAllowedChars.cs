@@ -2,18 +2,9 @@
 
 namespace Tinkwell.Cli.Commands.Measures.Lint.Rules;
 
-sealed class NameAllowedChars : Linter.Rule, ITwmLinterRule<MeasureDefinition>, ITwmLinterRule<SignalDefinition>
+abstract class NameAllowedChars : Linter.Rule
 {
-    public Linter.Issue? Apply(ITwmFile file, object? parent, MeasureDefinition item)
-        => Validate(nameof(MeasureDefinition), item.Name);
-
-    public Linter.Issue? Apply(ITwmFile file, object? parent, SignalDefinition item)
-        => Validate(nameof(SignalDefinition), item.Name);
-
-    private static readonly string[] InvalidPrefixes = ["+", "-", "/", "__"];
-    private static readonly string[] InvalidCharacters = ["[", "]", "{", "}", "\\", "*", ":", ";", "\"", "'", "=", "!", "?"];
-
-    private Linter.Issue? Validate(string target, string name)
+    protected Linter.Issue? Validate(string target, string name)
     {
         if (string.IsNullOrWhiteSpace(name))
             return new Linter.Issue(Id, Linter.IssueSeverity.Error, target, name, $"Name cannot be empty");
@@ -26,4 +17,20 @@ sealed class NameAllowedChars : Linter.Rule, ITwmLinterRule<MeasureDefinition>, 
 
         return Ok();
     }
+
+    private static readonly string[] InvalidPrefixes = ["+", "-", "/", "__"];
+    private static readonly string[] InvalidCharacters = ["[", "]", "{", "}", "\\", "*", ":", ";", "\"", "'", "=", "!", "?"];
+}
+
+
+sealed class MeasureNameAllowedChars : NameAllowedChars, ITwmLinterRule<MeasureDefinition>
+{
+    public Linter.Issue? Apply(ITwmFile file, object? parent, MeasureDefinition item)
+        => Validate(nameof(MeasureDefinition), item.Name);
+}
+
+sealed class SignalNameAllowedChars : NameAllowedChars, ITwmLinterRule<SignalDefinition>
+{
+    public Linter.Issue? Apply(ITwmFile file, object? parent, SignalDefinition item)
+        => Validate(nameof(SignalDefinition), item.Name);
 }

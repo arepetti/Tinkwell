@@ -131,8 +131,7 @@ public static class MeasureListConfigParser
     private static TokenListParser<MeasureListConfigToken, object> ConfigEntryParser =>
         MeasureBlockParser.Select(m => (object)m)
         .Or(ImportDirectiveParser.Select(i => (object)i))
-        .Or(SignalBlockParser.Select(s => (object)s))
-        .Named("known entry");
+        .Or(SignalBlockParser.Select(s => (object)s));
 
     private static string Unquote(string s) =>
         s.Length >= 2 && s.StartsWith('"') && s.EndsWith('"') ? s[1..^1] : s;

@@ -1,5 +1,4 @@
 using Grpc.Net.Client;
-using Spectre.Console;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Services;
 
@@ -7,10 +6,10 @@ namespace Tinkwell.Cli.Commands;
 
 static class DiscoveryHelpers
 {
-    public static async Task<GrpcService<Tinkwell.Services.Discovery.DiscoveryClient>> FindDiscoveryServiceAsync(CommonSettings settings)
+    public static async Task<GrpcService<Discovery.DiscoveryClient>> FindDiscoveryServiceAsync(CommonSettings settings)
     {
         var channel = GrpcChannel.ForAddress(await ResolveDiscoveryServiceAddressAsync(settings));
-        var service = new Tinkwell.Services.Discovery.DiscoveryClient(channel);
+        var service = new Discovery.DiscoveryClient(channel);
         return new(channel, service);
     }
 
@@ -18,6 +17,13 @@ static class DiscoveryHelpers
     {
         var channel = GrpcChannel.ForAddress(await FindServiceAddressAsync(settings, Store.Descriptor.FullName));
         var service = new Store.StoreClient(channel);
+        return new(channel, service);
+    }
+
+    public static async Task<GrpcService<EventsGateway.EventsGatewayClient>> FindEventsGatewayServiceAsync(CommonSettings settings)
+    {
+        var channel = GrpcChannel.ForAddress(await FindServiceAddressAsync(settings, EventsGateway.Descriptor.FullName));
+        var service = new EventsGateway.EventsGatewayClient(channel);
         return new(channel, service);
     }
 

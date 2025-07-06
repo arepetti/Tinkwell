@@ -124,7 +124,7 @@ message SubscribeToMatchingEventsRequest {
     optional string subject = 2;
     // If specified the you're going to receive only events with this verb. The match is case sensitive.
     // Same wildcards described for topic can be used here.
-    optional Verb verb = 3;
+    optional string verb = 3;
     // If specified the you're going to receive only events with this object. The match is case sensitive.
     // Same wildcards described for topic can be used here.
     optional string object = 4;
