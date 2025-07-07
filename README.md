@@ -83,7 +83,8 @@ signal low_battery {
 That's enough to start experimenting, open a terminal and type this:
 
 ```bash
-# This will check the configuration file in search of common mistakes
+# This will check the configuration files in search of common mistakes
+./tw ensamble lint ./ensamble.twm
 ./tw measures lint ./config/measures.twm
 ```
 

@@ -78,6 +78,7 @@ Once the Supervisor is running, you can use the command-line interface (CLI) to 
 
 ```bash
 # If you changed the configuration manually then check if  it's correct:
+./tw ensamble lint ./ensamble.tw
 ./tw measures lint ./config/measures.twm
 
 # Check that all the basic runners are correctly loaded
