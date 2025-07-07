@@ -21,6 +21,8 @@ cd ./Examples/Python/PCA
 pip install -r requirements.txt
 ```
 
+Copy the configuration files (`ensamble.tw`, `measures.twm` and `constants.twm`) to the directory where you installed/copied/built Tinkwell (usually the same directory where `tw` is located).
+
 ## Configuration
 
 You can modify the following parameters directly in the `anomaly_detector.py` file:
