@@ -41,7 +41,9 @@ static class CommandAppExtensions
         var inThisAssembly = FindAllCommands(Assembly.GetExecutingAssembly());
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            var assembly = Assembly.LoadFrom($"{typeof(CommandAppExtensions).Namespace}.Windows.dll");
+            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
+            string windowsAssemblyPath = Path.Combine(path, $"{typeof(CommandAppExtensions).Namespace}.Windows.dll");
+            var assembly = Assembly.LoadFrom(windowsAssemblyPath);
             return Enumerable.Concat(inThisAssembly, FindAllCommands(assembly)).ToArray();
         }
 

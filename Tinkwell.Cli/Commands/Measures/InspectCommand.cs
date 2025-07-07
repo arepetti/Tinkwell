@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Tinkwell.Cli.Commands.Measures;
@@ -18,16 +19,22 @@ sealed class InspectCommand : AsyncCommand<InspectCommand.Settings>
         public bool Value { get; set; }
     }
 
-    public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
-        return ListCommand.List(new ListCommand.Settings
-        {
-            Search = settings.Name,
-            Machine = settings.Machine,
-            Pipe = settings.Pipe,
-            Timeout = settings.Timeout,
-            Values = settings.Value,
-            Verbose = true,
-        });
+        var request = new Services.StoreListRequest();
+        request.Query = settings.Name;
+        request.IncludeValues = settings.Value;
+
+        var store = await DiscoveryHelpers.FindStoreServiceAsync(settings);
+        var response = await store.Client.ListAsync(request);
+        var measure = response.Items.First();
+
+        if (settings.Value)
+            AnsiConsole.MarkupLineInterpolated($"[yellow]Value[/]={measure.Value}");
+
+        AnsiConsole.MarkupLineInterpolated($"[yellow]Minimum[/]={measure.Minimum}");
+        AnsiConsole.MarkupLineInterpolated($"[yellow]Maximum[/]={measure.Maximum}");
+
+        return ExitCode.Ok;
     }
 }

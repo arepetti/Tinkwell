@@ -302,7 +302,7 @@ List all the registered measures, optionally displaying their current value if `
 ```console
 tw measures inspect <name> [...shared...] [--host=<host>] [--value]
 ```
-List the details about a specific measure. It's a shortcut for `tw measures list <name> --verbose`.
+List some details about a specific measure. Its output is tool-friendly and can be used by a tool/program to inspect a measure's properties.
 
 ```console
 tw measures read <name> [...shared...] [--host=<host>]
