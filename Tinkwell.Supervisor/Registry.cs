@@ -21,8 +21,8 @@ sealed class Registry(ILogger<Registry> logger, IEnsambleFileReader reader, IChi
             RuntimeInformation.ProcessArchitecture);
 
         _logger.LogTrace("Loading ensamble definitions from {ConfigurationPath}", configurationPath);
-        var definitions = await _reader.ReadAsync(configurationPath, cancellationToken);
-        _items = [.. definitions.Select(_processBuilder.Create)];
+        var file = await _reader.ReadAsync(configurationPath, cancellationToken);
+        _items = [.. file.Runners.Select(_processBuilder.Create)];
 
         if (cancellationToken.IsCancellationRequested)
             return;

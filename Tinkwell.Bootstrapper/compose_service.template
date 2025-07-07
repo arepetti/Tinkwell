@@ -1,6 +1,0 @@
-runner "{{ name }}" "{{ host.grpc }}" {
-    service runner "__{{ name }}__health" "{{ firmlet.health_check }}" {}
-    service runner "__{{ name }}__firmlet" "{{ path }}" {
-        properties {{ properties }}
-    }
-}

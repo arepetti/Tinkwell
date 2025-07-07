@@ -1,7 +1,9 @@
 ﻿using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.Logging;
+using Spectre.Console;
 
-namespace Tinkwell.Cli.Commands;
+namespace Tinkwell.Cli.Commands.Lint;
 
 abstract class Linter
 {
@@ -100,10 +102,16 @@ abstract class Linter
         IEnumerable<Issue> IResult.Issues => Issues;
         
         IEnumerable<string> IResult.Messages => Messages;
+
+        public void Add(Issue? issue)
+        {
+            if (issue is not null)
+                Issues.Add(issue);
+        }
     }
 }
 
-abstract class Linter<TData> : Linter
+abstract class Linter<TData> : Linter, IFileLinter
 {    
     public async Task<IResult> CheckAsync(string path, bool strict)
     {
@@ -126,7 +134,7 @@ abstract class Linter<TData> : Linter
         catch (Exception e)
         {
             var result = new Result();
-            result.Issues.Add(new Issue("00000", IssueSeverity.Critical, "File", path, e.Message));
+            result.Issues.Add(new Issue("00000", IssueSeverity.Critical, typeof(TData).Name, path, e.Message));
             return result;
         }
     }

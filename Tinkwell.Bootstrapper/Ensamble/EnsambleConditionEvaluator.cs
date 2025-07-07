@@ -7,7 +7,7 @@ namespace Tinkwell.Bootstrapper.Ensamble;
 
 public sealed class EnsambleConditionEvaluator : IEnsambleConditionEvaluator
 {
-    public EnsambleConditionEvaluator(IConfiguration configuration, IExpressionEvaluator expressionEvaluator)
+    public EnsambleConditionEvaluator(IConfiguration? configuration, IExpressionEvaluator expressionEvaluator)
     {
         _configuration = configuration;
         _expressionEvaluator = expressionEvaluator;
@@ -62,6 +62,6 @@ public sealed class EnsambleConditionEvaluator : IEnsambleConditionEvaluator
         }
     }
 
-    private readonly IConfiguration _configuration;
+    private readonly IConfiguration? _configuration;
     private readonly IExpressionEvaluator _expressionEvaluator;
 }

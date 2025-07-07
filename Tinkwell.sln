@@ -73,6 +73,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CLI", "CLI", "{6195DDFB-31D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Cli.Windows", "Tinkwell.Cli.Windows\Tinkwell.Cli.Windows.csproj", "{1E0B9AB9-B7F5-432F-858D-127DD07336D7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Bootstrapper.Ensamble.Parser", "Tinkwell.Bootstrapper.Ensamble.Parser\Tinkwell.Bootstrapper.Ensamble.Parser.csproj", "{663BEBB0-D155-4CF0-AF36-25E42A2190A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -147,6 +149,10 @@ Global
 		{1E0B9AB9-B7F5-432F-858D-127DD07336D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E0B9AB9-B7F5-432F-858D-127DD07336D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E0B9AB9-B7F5-432F-858D-127DD07336D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{663BEBB0-D155-4CF0-AF36-25E42A2190A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{663BEBB0-D155-4CF0-AF36-25E42A2190A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{663BEBB0-D155-4CF0-AF36-25E42A2190A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{663BEBB0-D155-4CF0-AF36-25E42A2190A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

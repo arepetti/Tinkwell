@@ -23,17 +23,40 @@ If you're working with a machine without Tinkwell then you can use the script `D
     ```bash
     ./tw certs create --export-name=tinkwell
     ```
-* Install the certificate:
-    ```bash
-    sudo cp ./tinkwell-cert.pem /usr/local/share/ca-certificates/tinkwell.crt
-    sudo update-ca-certificates
-    ```
+
 * Add these lines to the bottom of your shell profile script (e.g. `~/.bashrc` or `~/.zshrc`):
     ```bash
     export TINKWELL_CERT_PATH="/absolute/path/to/tinkwell.pfx"
     export TINKWELL_CERT_PASS="your-password-here"
     ```
-* Restart your terminal.
+
+#### Debian (Ubuntu, Linux Mint, etc)
+
+```bash
+sudo cp ./tinkwell-cert.pem /usr/local/share/ca-certificates/tinkwell-cert.crt
+sudo update-ca-certificates
+```
+
+#### Red Hat (RHEL, CentOS, Fedora)
+
+```bash
+sudo cp ./tinkwell-cert.pem /etc/pki/ca-trust/source/anchors/tinkwell-cert.crt
+sudo update-ca-trust extract
+```
+
+#### Arch Linux
+
+```bash
+sudo cp ./tinkwell-cert.pem /etc/ca-certificates/trust-source/anchors/tinkwell-cert.crt
+sudo update-ca-trust extract
+```
+
+Alternatively:
+
+```bash
+mv ./tinkwell-cert.pem ./tinkwell-cert.crt
+sudo trust anchor --store ./tinkwell-cert.crt
+```
 
 ## 2. Understand the Ensemble Configuration
 

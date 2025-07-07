@@ -34,7 +34,6 @@ builder.WebHost.ConfigureKestrel(options =>
 
 builder.Services
     .AddTransient<IFileSystem, PhysicalFileSytem>()
-    .AddTransient<IEnsambleFileReader, EnsambleFileReader>()
     .AddTransient<IExpressionEvaluator, ExpressionEvaluator>()
     .AddTransient<INamedPipeClient, NamedPipeClient>()
     .AddSingleton<IRegistry, Registry>()

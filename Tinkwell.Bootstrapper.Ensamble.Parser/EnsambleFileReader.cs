@@ -1,5 +1,4 @@
 ﻿using Fluid;
-using Microsoft.Extensions.Configuration;
 using Superpower;
 using Tinkwell.Bootstrapper.IO;
 
@@ -13,14 +12,22 @@ public sealed class EnsambleFileReader : IEnsambleFileReader
         _evaluator  = evaluator;
     }
 
-    public async Task<IEnumerable<RunnerDefinition>> ReadAsync(string path, CancellationToken cancellationToken)
+    public async Task<IEnsambleFile> ReadAsync(string path, EnsambleFileReadOptions options, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
         try
         {
             string basePath = _fileSystem.GetDirectoryName(path) ?? _fileSystem.GetCurrentDirectory();
-            return _evaluator.Filter(await ReadWithoutErrorHandlingAsync(basePath, path, cancellationToken));
+            var file = new EnsambleFile
+            {
+                Runners = await ReadWithoutErrorHandlingAsync(basePath, path, cancellationToken)
+            };
+
+            if (!options.Unfiltered)
+                file.Runners = _evaluator.Filter(file.Runners);
+
+            return file;
         }
         catch (Fluid.ParseException e)
         {
@@ -30,6 +37,11 @@ public sealed class EnsambleFileReader : IEnsambleFileReader
         {
             throw new BootstrapperException($"Failed to parse ensamble file '{path}': {e.Message}", e);
         }
+    }
+
+    sealed class EnsambleFile : IEnsambleFile
+    {
+        public required IEnumerable<RunnerDefinition> Runners { get; set; }
     }
 
     private readonly IFileSystem _fileSystem;

@@ -1,8 +1,6 @@
-﻿using Tinkwell.Measures.Configuration.Parser;
+﻿namespace Tinkwell.Cli.Commands.Lint.Rules;
 
-namespace Tinkwell.Cli.Commands.Measures.Lint.Rules;
-
-abstract class NameAllowedChars : Linter.Rule
+abstract class NameAllowedCharsLinerRuleBase : Linter.Rule
 {
     protected Linter.Issue? Validate(string target, string name)
     {
@@ -20,16 +18,4 @@ abstract class NameAllowedChars : Linter.Rule
 
     private static readonly string[] InvalidPrefixes = ["+", "-", "/", "__"];
     private static readonly string[] InvalidCharacters = ["[", "]", "{", "}", "\\", "*", ":", ";", "\"", "'", "=", "!", "?"];
-}
-
-sealed class MeasureNameAllowedChars : NameAllowedChars, ITwmLinterRule<MeasureDefinition>
-{
-    public Linter.Issue? Apply(ITwmFile file, object? parent, MeasureDefinition item)
-        => Validate(nameof(MeasureDefinition), item.Name);
-}
-
-sealed class SignalNameAllowedChars : NameAllowedChars, ITwmLinterRule<SignalDefinition>
-{
-    public Linter.Issue? Apply(ITwmFile file, object? parent, SignalDefinition item)
-        => Validate(nameof(SignalDefinition), item.Name);
 }

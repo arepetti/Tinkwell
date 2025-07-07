@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Tinkwell.Cli.Commands.Lint;
 using Tinkwell.Measures.Configuration.Parser;
 
 namespace Tinkwell.Cli.Commands.Measures.Lint;
@@ -57,11 +58,7 @@ sealed class TwmLinter : Linter<ITwmFile>
         Debug.Assert(_rulesForFile is not null);
 
         foreach (var rule in _rulesForFile)
-        {
-            var issue = rule.Apply(file, null, file);
-            if (issue is not null)
-                result.Issues.Add(issue);
-        }
+            result.Add(rule.Apply(file, null, file));
     }
 
     private void ApplyRulesTo(ITwmFile file, MeasureDefinition measure, Result result)
@@ -71,11 +68,7 @@ sealed class TwmLinter : Linter<ITwmFile>
         ++_measureCount;
 
         foreach (var rule in _rulesForMeasures)
-        {
-            var issue = rule.Apply(file, null, measure);
-            if (issue is not null)
-                result.Issues.Add(issue);
-        }
+            result.Add(rule.Apply(file, null, measure));
 
         foreach (var signal in measure.Signals)
             ApplyRulesTo(file, measure, signal, result);
@@ -88,10 +81,6 @@ sealed class TwmLinter : Linter<ITwmFile>
         ++_signalCount;
 
         foreach (var rule in _rulesForSignals)
-        {
-            var issue = rule.Apply(file, parent, signal);
-            if (issue is not null)
-                result.Issues.Add(issue);
-        }
+            result.Add(rule.Apply(file, parent, signal));
     }
 }

@@ -285,7 +285,7 @@ tw measures read <name> [...shared...] [--host=<host>]
 tw measures write <name> <value> [...shared...] [--host=<host>]
 tw measures create <name> <type> <unit> [...shared...] [--host=<host>]
 tw measures subscribe <name>... [...shared...] [--host=<host>]
-tw measures lint <path> [--exclude=<rule>] [--strict]
+tw measures lint <path> [--exclude=<rule>] [--strict] [--verbose]
 ```
 
 ### DESCRIPTION
@@ -372,7 +372,7 @@ Include the measure current value in the output.
 **`--exclude=<rule>`** **`-x=<rule>`**
 
 Exclude the specified rule from the output. It's useful when `tw measures lint` is part of a build process and a non zero return value might stop the build/deployment. If you're absolutely sure that the flagged issue is not a problem then you can instruct the linter to exclude it. Use rule ID, not name! Use `--verbose` to see exactly which rules are applied.
-You can either exclude a specific rule using its ID or a group, using their category (use the `--verbose` flag to list all the applied measures, including their category).
+You can either exclude a specific rule using its ID or a group, using their category (use the `--verbose` flag to list all the applied rules, including their category).
 
 **`--strict`**
 
@@ -462,8 +462,8 @@ Manage self-signed certificates.
 ### SYNOPSIS
 
 ```console
-tw certs create [COMMON NAME] [--validity=<years>] [--export-name=<file name>] [--export-path=<path>] [--set-environment] [--export-pem]
-tw certs install [PATH]
+tw certs create [common name] [--validity=<years>] [--export-name=<file name>] [--export-path=<path>] [--set-environment] [--export-pem]
+tw certs install [path]
 ```
 
 ### DESCRIPTION
@@ -473,24 +473,24 @@ Use `tw certs` when you initially setup a machine to run Tinkwell and you need a
 ### COMMANDS
 
 ```console
-tw certs create [COMMON NAME] [--validity=<years>] [--export-name=<file name>] [--export-path=<path>] [--set-environment] [--export-pem]
+tw certs create [common name] [--validity=<years>] [--export-name=<file name>] [--export-path=<path>] [--set-environment] [--export-pem]
 ```
 Create a new self-signed certificate. Remember to store the PEM files (if generated) in a secure location!
 You're going to be prompted for a password.
 
 ```console
-tw certs install [PATH]
+tw certs install [path]
 ```
 Install and trust a self-signed certificate. This command is available only on Windows.
 You're going to be prompted for a password.
 
 ### ARGUMENTS
 
-**`[COMMON NAME]`**
+**`[common name]`**
 
 Common name `CN` (aka _Friendly name_) name for the certificate. If omitted then a generic one will be used.
 
-**`[PATH]`**
+**`[path]`**
 
 Path of the certificate file to install. If omitted then the same default value used in `tw certs create` and if the file it does not exist then it'll try to read the path from `TINKWELL_CERT_PATH` environment variable.
 
@@ -523,3 +523,43 @@ In a typical fresh Windows setup, all you need to do is:
 ./tw certs install
 ```
 ---
+
+##  `tw ensamble`
+
+Validate ensamble configuration files.
+
+### SYNOPSIS
+
+```console
+tw ensamble lint [path] [--strict] [--exclude<rule>] [--verbose]
+```
+
+### DESCRIPTION
+
+Use `tw ensamble` to manage the ensamble configuration files.
+
+### COMMANDS
+
+```console
+tw ensamble lint [path] [--strict] [--exclude<rule>] [--verbose]
+```
+Check the specified .tw (Tinkwell Ensamble configuration) file for errors or bad practices. The return code is non zero if the file contains any known issue. Use `--exclude` if you want to exclude a specific rule.
+
+### ARGUMENTS
+
+**`[path]`**
+
+Path of the configuration file to lint.
+
+**`--exclude=<rule>`** **`-x=<rule>`**
+
+Exclude the specified rule from the output. It's useful when `tw ensamble lint` is part of a build process and a non zero return value might stop the build/deployment. If you're absolutely sure that the flagged issue is not a problem then you can instruct the linter to exclude it. Use rule ID, not name! Use `--verbose` to see exactly which rules are applied.
+You can either exclude a specific rule using its ID or a group, using their category (use the `--verbose` flag to list all the applied rules, including their category).
+
+**`--strict`**
+
+Apply stricter rules and the exit code is not zero when all the issues are minor. Use `--verbose` to see exactly which rules are applied.
+
+**`--verbose`** **`-v`**
+
+Produce a detailed description of the linting process.
