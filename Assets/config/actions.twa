@@ -1,0 +1,17 @@
+when event signal {
+  verb: "triggered"
+
+  then {
+    http {
+      method: "POST"
+      url: "https://example.local/alerts"
+      body: {
+        sender: "Tinkwell"
+        sensor: $"{{ subject }}"
+        alert: $"{{ object }}"
+        severity: $"{{ data.severity }}"
+        timestamp: @"now()"
+      }
+    }
+  }
+}

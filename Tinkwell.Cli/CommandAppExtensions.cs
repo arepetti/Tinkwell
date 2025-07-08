@@ -3,6 +3,7 @@ using System.Data;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Spectre.Console.Cli;
+using Tinkwell.Bootstrapper.IO;
 
 namespace Tinkwell.Cli;
 
@@ -41,8 +42,8 @@ static class CommandAppExtensions
         var inThisAssembly = FindAllCommands(Assembly.GetExecutingAssembly());
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
-            string windowsAssemblyPath = Path.Combine(path, $"{typeof(CommandAppExtensions).Namespace}.Windows.dll");
+            string path = IoHelpers.GetEntryAssemblyDirectoryName();
+            string windowsAssemblyPath = Path.Combine(path, $"{typeof(CommandAppExtensions).Namespace}.{OSPlatform.Windows}.dll");
             var assembly = Assembly.LoadFrom(windowsAssemblyPath);
             return Enumerable.Concat(inThisAssembly, FindAllCommands(assembly)).ToArray();
         }
@@ -66,7 +67,7 @@ static class CommandAppExtensions
 
     private static ICommandConfigurator AddCommand(this IConfigurator<CommandSettings> configurator, string name, Type type)
     {
-        // Unfortunately Spectre.Console.Cli exposes only AddCommand<T>() and no AddCommand(Type) but we have a Type
+        // Unfortunately Spectre.Console.Cli exposes only AddCommand<T>() and no AddCommand(Type) but we have a Type,
         // because the whole point is to use Reflection instead of setting up all the commands by hand. Because of that
         // we need to invoke the AddCommand<T>() method via Reflection.
         var method = typeof(IConfigurator<CommandSettings>)

@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
-using Tinkwell.Bootstrapper.IO;
 using Tinkwell.Cli.Commands.Lint;
 
 namespace Tinkwell.Cli.Commands.Ensamble.Lint;
@@ -20,8 +19,8 @@ sealed class EnsambleLinter : Linter<IEnsambleFile>
         // if it's two runners with the same name are included but loaded on mutually exclusive conditions.
         // Unfortunately we cannot evaluate the conditions at this point.
         var conditionEvaluator = new EnsambleConditionEvaluator(null, new ExpressionEvaluator());
-        var reader = new EnsambleFileReader(new PhysicalFileSytem(), conditionEvaluator);
-        return reader.ReadAsync(path, new EnsambleFileReadOptions(true), CancellationToken.None);
+        var reader = new EnsambleFileReader(conditionEvaluator);
+        return reader.ReadAsync(path, new FileReaderOptions(true), CancellationToken.None);
     }
 
     protected override Result Lint(IEnsambleFile data)

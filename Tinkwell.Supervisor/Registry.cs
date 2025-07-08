@@ -8,7 +8,7 @@ using Tinkwell.Supervisor.Commands;
 
 namespace Tinkwell.Supervisor;
 
-sealed class Registry(ILogger<Registry> logger, IEnsambleFileReader reader, IChildProcessBuilder processBuilder) : IRegistry
+sealed class Registry(ILogger<Registry> logger, IConfigFileReader<IEnsambleFile> reader, IChildProcessBuilder processBuilder) : IRegistry
 {
     public IEnumerable<IChildProcess> Items => _items;
 
@@ -78,7 +78,7 @@ sealed class Registry(ILogger<Registry> logger, IEnsambleFileReader reader, IChi
     private const int WarningIfOperationOnProcessIsLongerThanMilliseconds = 10000;
 
     private readonly ILogger<Registry> _logger = logger;
-    private readonly IEnsambleFileReader _reader = reader;
+    private readonly IConfigFileReader<IEnsambleFile> _reader = reader;
     private readonly IChildProcessBuilder _processBuilder = processBuilder;
     private List<IChildProcess> _items = [];
 

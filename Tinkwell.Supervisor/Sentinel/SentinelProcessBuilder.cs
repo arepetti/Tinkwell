@@ -7,7 +7,7 @@ using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Supervisor.Sentinel;
 
-sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger, IFileSystem fileSystem) : IChildProcessBuilder
+sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger) : IChildProcessBuilder
 {
     public IChildProcess Create(RunnerDefinition definition)
     {
@@ -20,7 +20,7 @@ sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger, IFil
         {
             FileName = ResolveFileName(definition.Path),
             Arguments = definition.Arguments,
-            WorkingDirectory = _fileSystem.ResolveExecutableWorkingDirectory(definition.Path),
+            WorkingDirectory = IoHelpers.GetCurrentDirectoryButPreferSameAs(definition.Path),
         };
       
         psi.EnvironmentVariables[WellKnownNames.RunnerNameEnvironmentVariable] = definition.Name;
@@ -33,7 +33,6 @@ sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger, IFil
     }
 
     private readonly ILogger<SentinelProcessBuilder> _logger = logger;
-    private readonly IFileSystem _fileSystem = fileSystem;
 
     private static string ResolveFileName(string path)
     {

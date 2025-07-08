@@ -1,80 +1,38 @@
 ﻿using Fluid;
 using Superpower;
-using Tinkwell.Bootstrapper.IO;
 
 namespace Tinkwell.Bootstrapper.Ensamble;
 
-public sealed class EnsambleFileReader : IEnsambleFileReader
+public sealed class EnsambleFileReader : FileReaderWithImports<RunnerDefinition, IEnsambleFile>
 {
-    public EnsambleFileReader(IFileSystem fileSystem, IEnsambleConditionEvaluator evaluator)
+    public EnsambleFileReader(IEnsambleConditionEvaluator evaluator)
+        : base(evaluator)
     {
-        _fileSystem = fileSystem;
-        _evaluator  = evaluator;
+        _evaluator = evaluator;
     }
 
-    public async Task<IEnsambleFile> ReadAsync(string path, EnsambleFileReadOptions options, CancellationToken cancellationToken)
+    protected override async Task<(List<RunnerDefinition>, Queue<string>)> ParseFileAsync(string path, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
-        try
-        {
-            string basePath = _fileSystem.GetDirectoryName(path) ?? _fileSystem.GetCurrentDirectory();
-            var file = new EnsambleFile
-            {
-                Runners = await ReadWithoutErrorHandlingAsync(basePath, path, cancellationToken)
-            };
+        string rawContent = await File.ReadAllTextAsync(path, cancellationToken);
+        string source = RenderTemplate(rawContent);
+        var parser = new EnsambleParser();
+        var (imports, runners) = parser.ParseSource(source);
 
-            if (!options.Unfiltered)
-                file.Runners = _evaluator.Filter(file.Runners);
-
-            return file;
-        }
-        catch (Fluid.ParseException e)
-        {
-            throw new BootstrapperException($"Failed to pre-process ensamble file '{path}': {e.Message}", e);
-        }
-        catch (Superpower.ParseException e)
-        {
-            throw new BootstrapperException($"Failed to parse ensamble file '{path}': {e.Message}", e);
-        }
+        return ([.. runners], new Queue<string>(imports));
     }
 
-    sealed class EnsambleFile : IEnsambleFile
+    protected override IEnsambleFile CreateResult(IEnumerable<RunnerDefinition> definitions)
+        => new EnsambleFile { Runners = definitions };
+
+    private sealed class EnsambleFile : IEnsambleFile
     {
         public required IEnumerable<RunnerDefinition> Runners { get; set; }
     }
 
-    private readonly IFileSystem _fileSystem;
     private readonly IEnsambleConditionEvaluator _evaluator;
 
-    private async Task<IEnumerable<RunnerDefinition>> ReadWithoutErrorHandlingAsync(string basePath, string path, CancellationToken cancellationToken)
-    {
-        List<RunnerDefinition> result = new();
-        var (runners, imports) = await ParseFileAsync(path, cancellationToken);
-
-        while (imports.TryDequeue(out var import))
-        {
-            if (cancellationToken.IsCancellationRequested)
-                break;
-
-            result.AddRange(await ReadWithoutErrorHandlingAsync(basePath, import!, cancellationToken));
-        }
-        result.AddRange(runners);
-        return result;
-    }
-
-    private async Task<(List<RunnerDefinition>, Queue<string>)> ParseFileAsync(string path, CancellationToken cancellationToken)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(path);
-
-        string rawContent = await _fileSystem.ReadAllTextAsync(path, cancellationToken);
-        string source = RenderTemplate(rawContent);
-        var parser = new EnsambleParser();
-        var (runners, imports) = parser.ParseSource(source);
-
-        return ([.. imports], new Queue<string>(runners));
-    }
-    
     private string RenderTemplate(string content)
     {
         var context = new TemplateContext();

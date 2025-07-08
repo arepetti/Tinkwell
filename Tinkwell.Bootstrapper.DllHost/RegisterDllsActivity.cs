@@ -97,7 +97,7 @@ sealed class RegisterDllsActivity : IActivity
             .ToArray();
     }
 
-    sealed class HostProxy(IHostBuilder builder) : IDllHost
+    private sealed class HostProxy(IHostBuilder builder) : IDllHost
     {
         public required string RunnerName { get; internal init; }
 
@@ -109,7 +109,7 @@ sealed class RegisterDllsActivity : IActivity
         private readonly IHostBuilder _builder = builder;
     }
 
-    sealed record HostedDll(string Name, string Path, Dictionary<string, object> Properties)
+    private sealed record HostedDll(string Name, string Path, Dictionary<string, object> Properties)
     {
         public Assembly? Assembly { get; set; }
     }

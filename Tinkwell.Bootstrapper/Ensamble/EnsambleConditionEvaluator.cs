@@ -13,7 +13,8 @@ public sealed class EnsambleConditionEvaluator : IEnsambleConditionEvaluator
         _expressionEvaluator = expressionEvaluator;
     }
 
-    public IEnumerable<RunnerDefinition> Filter(IEnumerable<RunnerDefinition> definitions)
+    public IEnumerable<T> Filter<T>(IEnumerable<T> definitions)
+        where T : IConditionalDefinition
     {
         return definitions.Where(runner =>
         {
@@ -29,7 +30,7 @@ public sealed class EnsambleConditionEvaluator : IEnsambleConditionEvaluator
         var parameters = ReadFromConfiguration();
         parameters.TryAdd("os_architecture", RuntimeInformation.OSArchitecture.ToString());
         parameters.TryAdd("processor_architecture", RuntimeInformation.ProcessArchitecture.ToString());
-        parameters.TryAdd("platform", ResolvePlatform());
+        parameters.TryAdd("platform", HostingInformation.ResolvePlatform());
         parameters.TryAdd("session_id", Environment.ProcessId.ToString());
 
         return parameters;
@@ -42,23 +43,6 @@ public sealed class EnsambleConditionEvaluator : IEnsambleConditionEvaluator
             var section = _configuration.GetSection("Ensamble:Params");
             return section.GetChildren()
                 .ToDictionary(x => x.Key, x => x.Value);
-        }
-
-        static string ResolvePlatform()
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return "windows";
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return "linux";
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                return "osx";
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
-                return "bsd";
-
-            return "other";
         }
     }
 

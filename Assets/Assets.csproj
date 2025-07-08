@@ -32,6 +32,9 @@
 	  <None Update="config\constants.twm">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="config\actions.twa">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="ensamble.tw">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

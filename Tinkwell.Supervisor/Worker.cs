@@ -13,21 +13,20 @@ namespace Tinkwell.Supervisor;
 
 sealed class Worker : IHostedService
 {
-    public Worker(IHost host, ILogger<Worker> logger, IConfiguration configuration, IFileSystem fileSystem, IRegistry registry, ICommandServer commandServer)
+    public Worker(IHost host, ILogger<Worker> logger, IConfiguration configuration, IRegistry registry, ICommandServer commandServer)
     {
         _host = host;
         _logger = logger;
-        _fileSystem = fileSystem;
         _registry = registry;
         _commandServer = commandServer;
 
-        _ensambleFilePath = fileSystem.ResolveFullPath(
+        _ensambleFilePath = IoHelpers.ResolveFullPath(
             configuration.GetValue<string?>("Ensamble:Path") ?? "./ensamble.tw");
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        if (!await _fileSystem.FileExistsAsync(_ensambleFilePath, cancellationToken))
+        if (!File.Exists(_ensambleFilePath))
         {
             await PanicAsync($"Ensamble file not found: '{_ensambleFilePath}'.");
             return;
@@ -49,7 +48,6 @@ sealed class Worker : IHostedService
 
     private readonly IHost _host;
     private readonly ILogger<Worker> _logger;
-    private readonly IFileSystem _fileSystem;
     private readonly IRegistry _registry;
     private readonly ICommandServer _commandServer;
     private readonly string _ensambleFilePath;
@@ -70,8 +68,7 @@ static class WorkerExtensions
             services
                 .AddSingleton<IExpressionEvaluator, ExpressionEvaluator>()
                 .AddTransient<IEnsambleConditionEvaluator, EnsambleConditionEvaluator>()
-                .AddTransient<IFileSystem, PhysicalFileSytem>()
-                .AddTransient<IEnsambleFileReader, EnsambleFileReader>()
+                .AddTransient<IConfigFileReader<IEnsambleFile>, EnsambleFileReader>()
                 .AddSingleton<IRegistry, Registry>()
                 .AddTransient<IChildProcessBuilder, SentinelProcessBuilder>()
                 .AddTransient<INamedPipeServerFactory, NamedPipeServerFactory>()

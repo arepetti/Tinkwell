@@ -1,6 +1,6 @@
 ﻿namespace Tinkwell.Bootstrapper.Ensamble;
 
-public sealed class RunnerDefinition
+public sealed class RunnerDefinition : IConditionalDefinition
 {
     public required string Name { get; set; }
     public required string Path { get; set; }

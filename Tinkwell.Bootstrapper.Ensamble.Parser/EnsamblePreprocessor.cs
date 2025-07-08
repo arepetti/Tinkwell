@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
+using Tinkwell.Bootstrapper.IO;
 using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Bootstrapper.Ensamble;
@@ -50,11 +51,11 @@ static class EnsamblePreprocessor
     {
         try
         {
-            var location = Assembly.GetExecutingAssembly().Location;
+            var location = IoHelpers.GetEntryAssemblyDirectoryName();
             if (string.IsNullOrWhiteSpace(location))
                 return Directory.GetCurrentDirectory();
 
-            return Path.GetDirectoryName(location)!;
+            return location;
         }
         catch (NotSupportedException)
         {

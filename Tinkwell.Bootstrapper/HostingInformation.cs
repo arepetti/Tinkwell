@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Runtime.InteropServices;
+using Microsoft.Extensions.Configuration;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Ipc.Extensions;
 
@@ -30,7 +31,24 @@ public static class HostingInformation
         return _discoveryServiceAddress!;
     }
 
-    private const int NumberOfAttemptsOnError = 3;
+    public static string ResolvePlatform()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return "windows";
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return "linux";
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            return "osx";
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+            return "bsd";
+
+        return "other";
+    }
+
+    const int NumberOfAttemptsOnError = 3;
     private const int DelayBeforeRetryingOnError = 1000;
 
     private static string? _discoveryServiceAddress;

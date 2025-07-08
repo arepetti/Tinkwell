@@ -1,9 +1,13 @@
 ﻿
-namespace Tinkwell.Bootstrapper.Ensamble
+namespace Tinkwell.Bootstrapper.Ensamble;
+
+public interface IConditionalDefinition
 {
-    public interface IEnsambleConditionEvaluator
-    {
-        IEnumerable<RunnerDefinition> Filter(IEnumerable<RunnerDefinition> definitions);
-        Dictionary<string, string?> GetParameters();
-    }
+    string? Condition { get; }
+}
+
+public interface IEnsambleConditionEvaluator
+{
+    IEnumerable<T> Filter<T>(IEnumerable<T> definitions) where T : IConditionalDefinition;
+    Dictionary<string, string?> GetParameters();
 }

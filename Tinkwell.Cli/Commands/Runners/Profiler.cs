@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using Spectre.Console;
 using Tinkwell.Bootstrapper.Expressions;
 
-namespace Tinkwell.Cli.Commands;
+namespace Tinkwell.Cli.Commands.Runners;
 
 sealed class Profiler
 {

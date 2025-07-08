@@ -3,23 +3,10 @@ using Spectre.Console;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.Ipc;
 
-namespace Tinkwell.Cli.Commands;
+namespace Tinkwell.Cli.Commands.Runners;
 
 static class SupervisorHelpers
 {
-    public static async Task<(int ExitCode, string[] Runners)> FindAllRunners(NamedPipeClient client)
-    {
-        var reply = await client.SendCommandAndWaitReplyAsync("runners list") ?? "";
-
-        if (reply.StartsWith("Error:"))
-        {
-            Consoles.Error.MarkupLineInterpolated($"The Supervisor replied with: [red]{reply}[/]");
-            return (ExitCode.Error, []);
-        }
-
-        return (ExitCode.Ok, reply.Split(','));
-    }
-
     // name => address
     public static async Task<(int ExitCode, string Address)> QueryAddressAsync(NamedPipeClient client, string name)
     {
@@ -77,5 +64,18 @@ static class SupervisorHelpers
         }
 
         return (ExitCode.NoResults, "");
+    }
+
+    private static async Task<(int ExitCode, string[] Runners)> FindAllRunners(NamedPipeClient client)
+    {
+        var reply = await client.SendCommandAndWaitReplyAsync("runners list") ?? "";
+
+        if (reply.StartsWith("Error:"))
+        {
+            Consoles.Error.MarkupLineInterpolated($"The Supervisor replied with: [red]{reply}[/]");
+            return (ExitCode.Error, []);
+        }
+
+        return (ExitCode.Ok, reply.Split(','));
     }
 }
