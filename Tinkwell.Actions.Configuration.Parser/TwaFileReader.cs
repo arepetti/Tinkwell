@@ -3,7 +3,7 @@ using Tinkwell.Bootstrapper.Ensamble;
 
 namespace Tinkwell.Actions.Configuration.Parser;
 
-public sealed class TwaFileReader(EnsambleConditionEvaluator evaluator) : FileReaderWithImports<WhenDefinition, ITwaFile>(evaluator)
+public sealed class TwaFileReader(IEnsambleConditionEvaluator evaluator) : FileReaderWithImports<WhenDefinition, ITwaFile>(evaluator)
 {
     protected override async Task<(List<WhenDefinition>, Queue<string>)> ParseFileAsync(string path, CancellationToken cancellationToken)
     {

@@ -4,8 +4,11 @@ namespace Tinkwell.Cli.Commands.Lint.Rules;
 
 abstract class ValidExpression : Linter.Rule
 {
-    protected Linter.Issue? Validate(string target, string name, string expression)
+    protected Linter.Issue? Validate(string target, string name, string? expression)
     {
+        if (string.IsNullOrWhiteSpace(expression))
+            return Ok();
+
         try
         {
             var expr = new NCalc.Expression(expression);

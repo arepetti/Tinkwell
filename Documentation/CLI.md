@@ -290,7 +290,7 @@ tw measures lint <path> [--exclude=<rule>] [--strict] [--verbose]
 
 ### DESCRIPTION
 
-Use `tw measures` when you want to inspect the measures registered in the [system](./Glossary.md#system) or when you want to create, read or write their values.
+Use `tw measures` when you want to inspect the measures registered in the [system](./Glossary.md#system) or when you want to create, read or write their values. See also [how to setup derived measures](./Derived-measures.md).
 
 ### COMMANDS
 
@@ -531,29 +531,71 @@ Validate ensamble configuration files.
 ### SYNOPSIS
 
 ```console
-tw ensamble lint [path] [--strict] [--exclude<rule>] [--verbose]
+tw ensamble lint <path> [--strict] [--exclude<rule>] [--verbose]
 ```
 
 ### DESCRIPTION
 
-Use `tw ensamble` to manage the ensamble configuration files.
+Use `tw ensamble` to manage the ensamble configuration files. See also [how to setup an ensamble](./Ensamble.md).
 
 ### COMMANDS
 
 ```console
-tw ensamble lint [path] [--strict] [--exclude<rule>] [--verbose]
+tw ensamble lint <path> [--strict] [--exclude<rule>] [--verbose]
 ```
 Check the specified .tw (Tinkwell Ensamble configuration) file for errors or bad practices. The return code is non zero if the file contains any known issue. Use `--exclude` if you want to exclude a specific rule.
 
 ### ARGUMENTS
 
-**`[path]`**
+**`<path>`**
 
 Path of the configuration file to lint.
 
 **`--exclude=<rule>`** **`-x=<rule>`**
 
 Exclude the specified rule from the output. It's useful when `tw ensamble lint` is part of a build process and a non zero return value might stop the build/deployment. If you're absolutely sure that the flagged issue is not a problem then you can instruct the linter to exclude it. Use rule ID, not name! Use `--verbose` to see exactly which rules are applied.
+You can either exclude a specific rule using its ID or a group, using their category (use the `--verbose` flag to list all the applied rules, including their category).
+
+**`--strict`**
+
+Apply stricter rules and the exit code is not zero when all the issues are minor. Use `--verbose` to see exactly which rules are applied.
+
+**`--verbose`** **`-v`**
+
+Produce a detailed description of the linting process.
+
+---
+
+##  `tw actions`
+
+Validate .twa actions configuration files.
+
+### SYNOPSIS
+
+```console
+tw actions lint <path> [--strict] [--exclude<rule>] [--verbose]
+```
+
+### DESCRIPTION
+
+Use `tw actions` to manage the .twa actions configuration files. See also [how to configure actions](./Actions.md).
+
+### COMMANDS
+
+```console
+tw ensamble actions <path> [--strict] [--exclude<rule>] [--verbose]
+```
+Check the specified .twa (Tinkwell Actions configuration) file for errors or bad practices. The return code is non zero if the file contains any known issue. Use `--exclude` if you want to exclude a specific rule.
+
+### ARGUMENTS
+
+**`<path>`**
+
+Path of the configuration file to lint.
+
+**`--exclude=<rule>`** **`-x=<rule>`**
+
+Exclude the specified rule from the output. It's useful when `tw actions lint` is part of a build process and a non zero return value might stop the build/deployment. If you're absolutely sure that the flagged issue is not a problem then you can instruct the linter to exclude it. Use rule ID, not name! Use `--verbose` to see exactly which rules are applied.
 You can either exclude a specific rule using its ID or a group, using their category (use the `--verbose` flag to list all the applied rules, including their category).
 
 **`--strict`**

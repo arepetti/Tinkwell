@@ -4,6 +4,7 @@ namespace Tinkwell.Actions.Configuration.Parser;
 static class Keywords
 {
     public const string When = "when";
+    public const string Name = "name";
     public const string Event = "event";
     public const string If = "if";
     public const string Subject = "subject";

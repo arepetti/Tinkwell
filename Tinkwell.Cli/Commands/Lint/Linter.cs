@@ -49,6 +49,8 @@ abstract class Linter
         public string Category
             => GetType().GetCustomAttribute<RuleAttribute>()?.Category ?? "";
 
+        protected static IEnumerable<Issue?> None() => [];
+
         protected static Issue? Ok() => null;
 
         protected Issue Minor<TTarget>(string targetName, string message)
@@ -107,6 +109,12 @@ abstract class Linter
         {
             if (issue is not null)
                 Issues.Add(issue);
+        }
+
+        public void Add(IEnumerable<Issue?> issues)
+        {
+            foreach (var issue in issues.Where(x => x is not null))
+                Issues.Add(issue!);
         }
     }
 }

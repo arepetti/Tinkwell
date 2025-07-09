@@ -5,5 +5,5 @@ namespace Tinkwell.Cli.Commands.Ensamble.Lint;
 
 interface ITwaLinterRule<T>
 {
-    Linter.Issue? Apply(ITwaFile file, object? parent, T item);
+    IEnumerable<Linter.Issue?> Apply(ITwaFile file, object? parent, T item);
 }

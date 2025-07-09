@@ -6,6 +6,7 @@
 
 #### Agent
 A synonym for [firmlet](#firmlet), when it does not expose a gRPC service (but can consume them).
+**Note**: When used in the context of the [Executor](#executor) it represents the command that must be executed when it receives notification of a specific event.
 
 *See also:* [Firmlet](#firmlet), [gRPC host](#grpc-host), [DLL host](#dll-host)
 
@@ -38,6 +39,11 @@ The description of a set of [runners](#runner) and their options.
 A piece of information detailing something that happened in the system. It consists of a topic, which indicates the type of event, and a subject, verb, and object (plus an optional payload), which indicate who triggered the event and why. Subscribers can ask to receive notifications only for the topics or subjects/objects they're interested in.
 
 *See also:* [Events Gateway](#events-gateway), [Signal](#signal), [Reactor](#reactor)
+
+#### Executor
+An [agent](#agent) that listens for events and executes actions when those events occur.
+
+*See also:* [Events Gateway](#events-gateway), [Event](#event), [Reactor](#reactor), [How to configure actions](./Actions.md)
 
 #### Events Gateway
 A [service](#service) implementing the `Tinkwell.EventsGateway` contract. It accepts events published by a [firmlet](#firmlet) and broadcasts them to all its subscribers.

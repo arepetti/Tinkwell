@@ -90,6 +90,7 @@ sealed class ActionListConfigParser
                            from cond in QuotedString.Select(Unquote)
                            select cond).OptionalOrDefault()
         from ____ in Token.EqualTo(ActionListConfigToken.LBrace)
+        from name in SingleLineQuotedValue(ActionListConfigToken.NameKeyword)!.OptionalOrDefault()
         from subject in SingleLineQuotedValue(ActionListConfigToken.SubjectKeyword)!.OptionalOrDefault()
         from verb in SingleLineQuotedValue(ActionListConfigToken.VerbKeyword)!.OptionalOrDefault()
         from @object in SingleLineQuotedValue(ActionListConfigToken.ObjectKeyword)!.OptionalOrDefault()
@@ -99,6 +100,7 @@ sealed class ActionListConfigParser
         {
             Topic = topic,
             Condition = condition,
+            Name = name,
             Subject = subject,
             Verb = verb,
             Object = @object,

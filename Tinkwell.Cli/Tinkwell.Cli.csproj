@@ -24,6 +24,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Tinkwell.Actions.Configuration.Parser\Tinkwell.Actions.Configuration.Parser.csproj" />
+		<ProjectReference Include="..\Tinkwell.Actions.Executor\Tinkwell.Actions.Executor.csproj" />
 		<ProjectReference Include="..\Tinkwell.Bootstrapper.Ensamble.Parser\Tinkwell.Bootstrapper.Ensamble.Parser.csproj" />
 		<ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
 		<ProjectReference Include="..\Tinkwell.Measures.Configuration.Parser\Tinkwell.Measures.Configuration.Parser.csproj" />

@@ -16,6 +16,9 @@ service EventsGateway {
     rpc SubscribeTo(SubscribeToEventsRequest) returns (stream SubscribeEventsResponse);
     // Subscribe to all the events matching the criteria specified in the request.
     rpc SubscribeToMatching(SubscribeToMatchingEventsRequest) returns (stream SubscribeEventsResponse);
+    // Subscribe to all the events matching a set of criterias specified in the request.
+    // Callers can assign an ID to each match to determine which match caused the notification
+    rpc SubscribeToMatchingMany(SubscribeToMatchingManyEventsRequest) returns (stream SubscribeEventsResponse);
 }
 
 // Verbs for SVO events, describing what has happened.
@@ -130,6 +133,32 @@ message SubscribeToMatchingEventsRequest {
     optional string object = 4;
 }
 
+// Request of subscribing to a set of matching events.
+message SubscribeToMatchingManyEventsRequest {
+    message Match {
+        // If specified then you're going to receive only events matching this topic. The match is case sensitive.
+        // Wildcards such as * and ? are supported.
+        // For example "Alarm*" matches all the events that start with "Alarm".
+        // ? works as a single character wildcard. It suports groups as in "[Bb]lue", it matches both
+        // "Blue" and "blue". You can negate groups as as in "[^Bb]lue", it matches "Glue" but not "blue" or "Blue".
+        // You can also specify ranges "[a-zA-Z]".
+        optional string topic = 1;
+        // If specified the you're going to receive only events with this subject. The match is case sensitive.
+        // Same wildcards described for topic can be used here.
+        optional string subject = 2;
+        // If specified the you're going to receive only events with this verb. The match is case sensitive.
+        // Same wildcards described for topic can be used here.
+        optional string verb = 3;
+        // If specified the you're going to receive only events with this object. The match is case sensitive.
+        // Same wildcards described for topic can be used here.
+        optional string object = 4;
+        // An unique ID assigned to this match
+        string match_id = 5;
+    }
+    // A list of matches to subscribe to.
+    repeated Match matches = 1;
+}
+
 message SubscribeEventsResponse {
     // An unique UUID for this event.
     string id = 1;
@@ -147,4 +176,6 @@ message SubscribeEventsResponse {
     string correlation_id = 7;
     // The timestamp when the event occurred.
     google.protobuf.Timestamp occurred_at = 8;
+    // The match ID that caused this notification (if specified when creating the subscription).
+    optional string match_id = 9;
 }

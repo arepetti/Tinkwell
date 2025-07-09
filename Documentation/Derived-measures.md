@@ -7,125 +7,106 @@ This document describes the syntax for defining [derived measures](./Glossary.md
 A derived measure is defined using a `measure` block, which contains a set of key-value pairs. Lines starting with `//` are treated as comments and are ignored.
 
 ```tinkwell
-[import "<import path>"]
-...
+// Import other measures
+import "base_sensors.twm"
 
 // Define a new derived measure
-measure "<measure name>" {
-    [type: "<type>"]
-    [unit: "<unit>"] 
-    [expression: "<expression>"]
-    [minimum: "<minimum>"]
-    [maximum: "<maximum>"]
-    [precision: "<precision>"]
-    [description: "<description>"]
-    [category: "<category>"]
-    [tags: "<tags>"]
+measure my_derived_measure {
+    type: "ElectricalPower"
+    unit: "Watt"
+    expression: "voltage * current"
+    description: "A brief explanation of the measure."
+    minimum: 0
+    maximum: 10000
+    tags: "power, consumption"
 }
-...
 ```
 
-### String Values
+## The `measure` block
 
-All textual values, such as `type`, `unit`, and `description`, must be enclosed in double quotes (`"`).
+Each `measure` block defines a new derived measure. It is identified by a unique name, which can be a simple identifier or a quoted string. To avoid unexpected behavior, the name should not contain special characters or reserved keywords like `let`, `when`, or `then`.
 
-#### Multiline Strings
+`measure <measure_name> { ... }`
 
-For long strings, like `description` and `expression`, you can use a backslash (`\`) at the end of a line to continue the string on the next line:
+-	`<measure_name>`: The unique identifier for the measure. Its dependencies must be defined or imported before it is used.
+
+> **A Note on Naming**
+>
+> While names can be quoted strings to include spaces or dots, they must still adhere to certain rules.
+>
+> -   **Invalid Characters:** Names cannot contain `[`, `]`, `{`, `}`, `\`, `*`, `:`, `;`, `"`, `'`, `=`, `!`, or `?`.
+> -   **Invalid Prefixes:** Names cannot start with `+`, `-`, `/`, or `__` (two underscores).
+> -   **Discouraged Names:** To avoid conflicts, it is highly discouraged to use the following as names: `let`, `when`, `then`, `value`, `emit`.
+>
+> For simplicity, it is recommended to use [simple identifiers](./Glossary.md#simple-identifier). Simple identifiers do not need to be enclosed in double quotes. Furthermore, when used in an `expression`, they do not need to be enclosed in square brackets (`[]`).
+
+
+### Attributes
+
+Inside the `measure` block, you define the properties of the derived measure.
+
+| Attribute     | Type      | Required | Description                                                                                                                             |
+| :------------ | :-------- | :------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| `expression`  | String    | Yes      | A mathematical [expression](./Expressions.md) that calculates the measure's value. It can reference other measures by their name.         |
+| `type`        | String    | No       | The quantity type (e.g., `Temperature`). Defaults to `Scalar`. See the [list of supported types](./Units.md).                           |
+| `unit`        | String    | No       | The unit of measurement (e.g., `DegreeCelsius`). Must be valid for the specified `type`. See the [list of supported units](./Units.md). |
+| `description` | String    | No       | A free-text description of the measure.                                                                                                 |
+| `minimum`     | Number    | No       | The lower bound for the measure's value.                                                                                                |
+| `maximum`     | Number    | No       | The upper bound for the measure's value.                                                                                                |
+| `precision`   | Integer   | No       | The number of decimal places to round the value to.                                                                                     |
+| `category`    | String    | No       | A classification label for grouping related measures.                                                                                   |
+| `tags`        | String    | No       | A comma-separated list of keywords for organization and search.                                                                         |
+
+### Value Types
+
+All textual values must be enclosed in double quotes (`"`). For long strings, such as in `description` and `expression`, you can use a backslash (`\`) at the end of a line to continue the string on the next line:
 
 ```tinkwell
 description: "This is a long description \
               that spans multiple lines."
-
-expression: "[Zone1.Temperature] + \
-             [Zone2.Temperature]"
 ```
 
-### Reference
+## Signals
 
-#### `import`
-The `import` directive, which must appear at the top of the file, allows you to reference measures defined in other files. This is useful for organizing complex configurations.
+Signals are events emitted by the **Reducer** when certain conditions, based on the values of measures, are met. They are a powerful way to create alerts, trigger actions, or monitor the system's state.
 
-#### `measure`
-Each `measure` block defines a new derived measure. Its dependencies must be defined _before_ its definition. See also [`<measure name>`](#measure-name).
+A signal can be defined as a standalone entity or within the context of a specific `measure`.
 
-#### `<import path>`
-The path of the file to import, relative to the directory where the current file exists.
+### Syntax
 
-#### `<measure name>`
-
-The unique identifier for the measure. It can be a [simple identifier](./Glossary.md#simple-identifier) or a quoted string. When the name is quoted you can use alphanumeric characters (including numbers at the beginning), spaces, underscore and dots. Other symbols are not allowed even when quoted.
-
-There are no reserved keywords but — to avoid unexpected behaviours when using the reducer — the use of these names is highly discouraged: `let`, `when`, `then`, `value`, `emit`. Moreover, it must adhere to these rules (even if quoted):
-* It cannot contain `[`, `]`, `{`, `}`, `\`, `*`, `:`, `;`, `"` `'`, `=`, `!` and `?`. 
-* It cannot start with `+`, `-` or `/` or with two underscores.
-
-When in doubt it's better to stick with a simple identifier.
-
-#### `<expression>`
-
-A mathematical [expression](./Expressions.md) that calculates the value of the derived measure. It can reference other measures, which must be defined or imported before use.
+A signal is defined using the `signal` keyword, followed by a name and a block of attributes.
 
 ```tinkwell
-expression: "[Voltage] * [Current]"
+// Standalone signal
+signal <signal_name> {
+    when: "<condition>"
+    [with: { <payload_properties> }]
+}
+
+// Signal within a measure
+measure my_measure {
+    // ...
+    signal <signal_name> {
+        when: "<condition>"
+        [with: { <payload_properties> }]
+    }
+}
 ```
 
-#### `<type>`
+### Attributes
 
-Specifies the quantity type (e.g., `ElectricalPower`, `Temperature`). If omitted, it defaults to `Scalar`. Check out the [list of all supported types](./Units.md).
+| Attribute | Type      | Required | Description                                                                                             |
+| :-------- | :-------- | :------- | :------------------------------------------------------------------------------------------------------ |
+| `when`    | String    | Yes      | An [expression](./Expressions.md) that must evaluate to `true` for the signal to be emitted.            |
+| `with`    | Dictionary| No       | An optional block of key-value pairs that will be added to the payload of the emitted event.            |
 
-```tinkwell
-type: "ElectricalPower"
-```
+When a signal is defined inside a measure, the `when` condition can directly reference the measure's value by its name (e.g., `when: "value > 100"`).
 
-#### `<unit>`
+## Imports
 
-Defines the unit of measurement (e.g., `Watt`, `DegreeCelsius`). It must be a valid unit for the specified `type`. Defaults to an empty string. Check out the [list of all supported units](./Units.md).
+You can organize your measures by splitting them into multiple files and using the `import` directive to include them. The path is relative to the current file.
 
-```tinkwell
-unit: "Watt"
-```
-
-#### `<description>`
-
-A free-text description of the measure. Supports multiline strings.
-
-```tinkwell
-description: "Calculates the total power consumption."
-```
-
-#### `<minimum>` and `<maximum>`
-
-Numeric boundaries for the measure's value. If a calculated value falls outside this range, a runtime error will occur.
-
-```tinkwell
-minimum: 0.0
-maximum: 10000.0
-```
-
-#### `<tags>`
-
-A comma-separated list of keywords for organizing and searching for measures.
-
-```tinkwell
-tags: "energy, power, analytics"
-```
-
-#### `<category>`
-
-A classification label for grouping related measures.
-
-```tinkwell
-category: "Energy Management"
-```
-
-#### `<precision>`
-
-Specifies the number of decimal places to round the calculated value to. This affects the stored value, not just its presentation.
-
-```tinkwell
-precision: 2
-```
+`import "common_measures.twm"`
 
 ## Complete Example
 
@@ -133,44 +114,39 @@ precision: 2
 // File: /config/derived_measures.twm
 
 // Import base measures from another file
-import "./base_sensors.twm"
+import "base_sensors.twm"
 
-// Calculate electrical power
-measure "Electrical.Power" {
+// Calculate electrical power and define signals for it
+measure electrical_power {
     type: "ElectricalPower"
     unit: "Watt"
-    expression: "[Voltage] * [Current]"
-    description: "Calculates electrical power from voltage and current. \
-                This is fundamental for energy monitoring."
+    expression: "voltage * current"
+    description: "Calculates electrical power from voltage and current."
     minimum: 0.0
     maximum: 5000.0
-    tags: "electrical, power, energy, calculation"
+    tags: "electrical, power, energy"
     category: "Energy Management"
-    precision: 2
+
+    // Signal for high power consumption
+    signal high_load {
+      when: "value > 4500" // `value` refers to electrical_power
+      with {
+        severity: "critical"
+      }
+    }
+
+    // Signal for low power consumption
+    signal low_load {
+      when: "value < 100"
+    }
 }
 
-// Calculate average temperature
-measure "HVAC.AverageTemperature" {
-    type: "Temperature"
-    unit: "DegreeCelsius"
-    expression: "([Zone1.Temperature] + [Zone2.Temperature] + [Zone3.Temperature]) / 3"
-    description: "Computes the average temperature across three HVAC zones. \
-                Useful for overall building climate control."
-    minimum: 18.0
-    maximum: 25.0
-    tags: "hvac, temperature, average, climate"
-    category: "Building Automation"
-    precision: 1
-}
-
-// Convert uptime to a more readable format
-measure "System.UptimeHours" {
-    type: "Duration"
-    unit: "Hour"
-    expression: "[System.UptimeSeconds] / 3600"
-    description: "Converts system uptime from seconds to hours."
-    tags: "system, uptime, monitoring"
-    category: "IT Infrastructure"
-    precision: 0
+// Define a standalone signal for a general system alert
+signal low_battery {
+  when: "system_voltage < 24 and system_current < 10"
+  with {
+    subject: main_battery,
+    severity: "warning"
+  }
 }
 ```

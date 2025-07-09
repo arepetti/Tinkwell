@@ -18,6 +18,7 @@ public enum ActionListConfigToken
     LBrace,
     RBrace,
     WhenKeyword,
+    NameKeyword,
     EventKeyword,
     IfKeyword,
     SubjectKeyword,
@@ -44,6 +45,7 @@ static class ActionListConfigTokenizer
         .Match(Character.EqualTo('}'), ActionListConfigToken.RBrace)
         .Match(Character.EqualTo(':'), ActionListConfigToken.Colon)
         .Match(Keyword(Keywords.When), ActionListConfigToken.WhenKeyword)
+        .Match(Keyword(Keywords.Name), ActionListConfigToken.NameKeyword)
         .Match(Keyword(Keywords.Event), ActionListConfigToken.EventKeyword)
         .Match(Keyword(Keywords.If), ActionListConfigToken.IfKeyword)
         .Match(Keyword(Keywords.Subject), ActionListConfigToken.SubjectKeyword)

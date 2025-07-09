@@ -1,4 +1,6 @@
-﻿namespace Tinkwell.Actions.Configuration.Parser;
+﻿using Tinkwell.Bootstrapper.Expressions;
+
+namespace Tinkwell.Actions.Configuration.Parser;
 
 public enum ActionPropertyStringKind
 {
@@ -9,7 +11,7 @@ public enum ActionPropertyStringKind
 
 public sealed record ActionPropertyString(ActionPropertyStringKind Kind, string Value)
 {
-    public string ToString(object data)
+    public string ToString(object? data)
     {
         return Kind switch
         {
@@ -20,13 +22,11 @@ public sealed record ActionPropertyString(ActionPropertyStringKind Kind, string 
         };
     }
 
-    private string EvaluateTemplate(string value, object data)
+    private string EvaluateTemplate(string value, object? data)
     {
-        return Value; // TODO
+        return new TemplateRenderer().Render(value, data);
     }
 
-    private string EvaluateExpression(string value, object data)
-    {
-        return Value; // TODO
-    }
+    private string EvaluateExpression(string value, object? data)
+        => new ExpressionEvaluator().EvaluateString(value, data);
 }

@@ -39,7 +39,11 @@ sealed class EventsGatewayService : Tinkwell.Services.EventsGateway.EventsGatewa
     public override async Task SubscribeTo(SubscribeToEventsRequest request, IServerStreamWriter<SubscribeEventsResponse> responseStream, ServerCallContext context)
     {
         await HandleSubscription(
-            responseStream, context, data => data.Topic.Equals(request.Topic, StringComparison.Ordinal), $"topic = {request.Topic}");
+            responseStream,
+            context,
+            data => data.Topic.Equals(request.Topic, StringComparison.Ordinal) ? OneMatchWithoutId : NoMatch,
+            $"topic = {request.Topic}"
+        );
     }
 
     public override async Task SubscribeToMatching(SubscribeToMatchingEventsRequest request, IServerStreamWriter<SubscribeEventsResponse> responseStream, ServerCallContext context)
@@ -49,18 +53,18 @@ sealed class EventsGatewayService : Tinkwell.Services.EventsGateway.EventsGatewa
             var filter = (EventData data) =>
             {
                 if (!_regexCache.IsMatch(data.Topic, request.Topic))
-                    return false;
+                    return NoMatch;
 
                 if (!_regexCache.IsMatch(data.Subject, request.Subject))
-                    return false;
+                    return NoMatch;
 
                 if (!_regexCache.IsMatch(data.Verb, request.Verb))
-                    return false;
+                    return NoMatch;
 
                 if (!_regexCache.IsMatch(data.Object, request.Object))
-                    return false;
+                    return NoMatch;
 
-                return true;
+                return OneMatchWithoutId;
             };
 
             await HandleSubscription(responseStream, context, filter, $"pattern/conditional");
@@ -76,6 +80,46 @@ sealed class EventsGatewayService : Tinkwell.Services.EventsGateway.EventsGatewa
         }
     }
 
+    public override async Task SubscribeToMatchingMany(SubscribeToMatchingManyEventsRequest request, IServerStreamWriter<SubscribeEventsResponse> responseStream, ServerCallContext context)
+    {
+        try
+        {
+            var filter = (EventData data) =>
+            {
+                return request.Matches.Where(match =>
+                {
+                    if (!_regexCache.IsMatch(data.Topic, match.Topic))
+                        return false;
+
+                    if (!_regexCache.IsMatch(data.Subject, match.Subject))
+                        return false;
+
+                    if (!_regexCache.IsMatch(data.Verb, match.Verb))
+                        return false;
+
+                    if (!_regexCache.IsMatch(data.Object, match.Object))
+                        return false;
+
+                    return true;
+                })
+                .Select(x => x.MatchId)
+                .ToArray();
+            };
+
+            await HandleSubscription(responseStream, context, filter, $"patterns/conditional");
+        }
+        catch (ArgumentException e)
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, $"Invalid matching pattern: {e.Message}"));
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Call to SubscribeToMatchingMany() failed ({Exception}): {Reason}", e.GetType().Name, e.Message);
+            throw new RpcException(new Status(StatusCode.Internal, "An unexpected error occurred."));
+        }
+    }
+    private static readonly string[] NoMatch = [];
+    private static readonly string[] OneMatchWithoutId = [""];
     private readonly ILogger<EventsGatewayService> _logger;
     private readonly IBroker _broker;
     private readonly RegexCache _regexCache = new();
@@ -83,7 +127,7 @@ sealed class EventsGatewayService : Tinkwell.Services.EventsGateway.EventsGatewa
     private async Task HandleSubscription(
         IServerStreamWriter<SubscribeEventsResponse> responseStream,
         ServerCallContext context,
-        Func<EventData, bool> filter,
+        Func<EventData, string[]> filter,
         string subscriptionIdentifier)
     {
         _logger.LogDebug("Client subscribed to '{Subscription}'", subscriptionIdentifier);
@@ -93,24 +137,27 @@ sealed class EventsGatewayService : Tinkwell.Services.EventsGateway.EventsGatewa
 
             EventHandler<EnqueuedEventArgs> handler = async (_, args) =>
             {
-                if (!filter(args.Data))
-                    return;
-
                 try
                 {
-                    var response = new SubscribeEventsResponse
+                    foreach (var matchId in filter(args.Data))
                     {
-                        Id = args.Data.Id,
-                        Topic = args.Data.Topic,
-                        Subject = args.Data.Subject,
-                        Verb = System.Enum.TryParse<Verb>(args.Data.Verb, out var verb) ? verb : Verb.Acted,
-                        Object = args.Data.Object,
-                        Payload = args.Data.Payload,
-                        CorrelationId = args.Data.CorrelationId,
-                        OccurredAt = Timestamp.FromDateTime(args.Data.OccurredAt)
-                    };
+                        var response = new SubscribeEventsResponse
+                        {
+                            Id = args.Data.Id,
+                            Topic = args.Data.Topic,
+                            Subject = args.Data.Subject,
+                            Verb = System.Enum.TryParse<Verb>(args.Data.Verb, out var verb) ? verb : Verb.Acted,
+                            Object = args.Data.Object,
+                            Payload = args.Data.Payload,
+                            CorrelationId = args.Data.CorrelationId,
+                            OccurredAt = Timestamp.FromDateTime(args.Data.OccurredAt),
+                        };
 
-                    await responseStream.WriteAsync(response);
+                        if (!string.IsNullOrWhiteSpace(matchId))
+                            response.MatchId = matchId;
+
+                        await responseStream.WriteAsync(response);
+                    }
                 }
                 catch (Exception ex)
                 {

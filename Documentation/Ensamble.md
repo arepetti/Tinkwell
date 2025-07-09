@@ -1,115 +1,50 @@
-# Ensemble File Syntax Overview
+# Ensamble Configuration
 
-The Ensemble DSL defines how services are composed and hosted within a system. Each file describes a tree of runners, services, and their properties, used to orchestrate process startup, configuration, and inter-process coordination.
+This document describes the Ensamble DSL, which defines how services and agents are composed and hosted within a Tinkwell system. Each file (typically with a `.tw` extension) describes a tree of runners, services, and their properties, used by the **Supervisor** to orchestrate process startup and configuration.
 
-## Syntax
+## Syntax Overview
 
-```text
-[import "<import path>"]
-...
+The most common way to define the system composition is by using the `compose` directive. You can also include other files with `import`.
 
-runner ["<name>"] "<path>" [if "<condition>"] {
-    [arguments: "<arguments>"]
-    [properties {
-        [keep_alive: true|false]
-        <option>: <value>
-        ...
-    }]
-    [service runner ["<name>" "<path>"] [if "<condition">] {
-        [properties {
-            <option>: <value>
-            ...
-        }]
-    }]
-    ...
+```tinkwell
+// Import other definitions
+import "shared_services.tw"
+
+// Compose a standard service
+compose service store "Tinkwell.Store.dll"
+
+// Compose an agent with properties
+compose agent reducer "Tinkwell.Reducer.dll" {
+    path: "./config/measures.twm"
 }
-...
-
-compose <kind> "<name>" "<path>" [{
-    <key>: <value>
-}]
-...
 ```
 
-Where:
+## Preprocessor Directives
 
-#### `<import path>`
+The preprocessor evaluates certain directives before the main parser runs, allowing for more flexible and maintainable configurations.
 
-The `import` directive must always be at the beginning of the file, before `runner` definitions. Declaration order matters when there are dependencies between [runners](./Glossary.md#runner); imported definitions are bootstrapped before others.
+### The `compose` directive
 
-The path is relative to the current file. For example:
+The `compose` directive is a high-level abstraction for running standard Tinkwell services and agents without needing to write a full `runner` definition. It uses predefined templates to generate the underlying configuration.
 
-```text
-// This is the main ensemble.tw file
-import "./config/plumbing.tw"
-...
+`compose <kind> <name> "<path>" [if "<condition>"] [{ <properties> }]`
 
-// This is ./config/plumbing.tw
-import "./watchdog.tw"
-...
-```
+-   `<kind>`: The type of component to compose. Built-in kinds are `service` and `agent`.
+-   `<name>`: A unique name for the component.
+-   `<path>`: The path to the component's DLL.
+-   `if "<condition>"`: An optional expression for conditional loading (see `runner` attributes below).
+-   `<properties>`: An optional block of key-value pairs to configure the component.
 
-When importing `watchdog.tw` from `plumbing.tw`, the path is relative to the directory where `plumbing.tw` is located.
+For example, this high-level configuration:
 
-#### `<name>`
-A memorable name for the [runner](./Glossary.md#runner) or [firmlet](./Glossary.md#firmlet). If it's a [simple identifier](./Glossary.md#simple-identifier) (e.g., `my_runner`), it doesn't need to be enclosed in double quotes; otherwise, they are required (e.g., `"my runner"`). If omitted, the [Supervisor](./Glossary.md#supervisor) assigns a UUID. If specified, it must be unique across the [system](./Glossary.md#system) (no two runners/firmlets can have the same name) and it must follows the following rules (even when quoted):
-* It cannot contain `[`, `]`, `{`, `}`, `\`, `*`, `:`, `;`, `"` `'`, `=`, `!` and `?`. 
-* It cannot start with `+`, `-` or `/` or with two underscores.
-
-When in doubt it's better to stick with a simple identifier.
-
-#### `<path>`
-The path (full or relative to the working directory) of the executable or library to load. On Windows, the `.exe` extension is optional.
-
-#### `<condition>`
-An [expression](./Expressions.md) that evaluates to a boolean value to determine if the runner/firmlet should be loaded. The expression must be enclosed in double quotes, like `if "platform == 'windows'"`.
-The following parameters are available:
-* All key/value pairs specified in the `Ensemble:Params` section of `appsettings.json`.
-* `os_architecture`: A string describing the OS architecture.
-* `cpu_architecture`: A string describing the CPU architecture.
-* `platform`: The OS where Tinkwell is running, one of `"windows"`, `"linux"`, `"osx"`, or `"bsd"`.
-
-#### `<arguments>`
-Command-line arguments passed to the executable upon startup. For default Tinkwell [hosts](./Glossary.md#host), you can override configuration settings without modifying `appsettings.json`: `arguments: "--Supervisor:CommandServer:ServerName=another_machine"`.
-
-#### `keep_alive`
-If `true`, the Supervisor restarts the runner if it exits unexpectedly (with an exit code greater than zero). The default is `true`. Set it to `false` if your process should not be restarted.
-
-#### `<option>` and `<value>`
-Additional properties passed to the runner. Their content depends on the specific runner.
-
-#### `service runner`
-Used when the outer `runner` is a host for one or more `firmlets` (the inner `service runner` definitions). Note that not every runner is a host. Firmlets loaded within the same host share the same process and can even share DI services. Sharing a process offers performance benefits (especially for gRPC services) but scales poorly and should be used with caution to prevent a buggy firmlet from disrupting others.
-
-### Preprocessor
-
-To simplify configuration and avoid boilerplate, you can use the `compose` directive which replaces a few commonly used parameters with a template:
-
-```text
-compose <kind> "<name>" "<path>" [{
-    <key>: <value>
-}]
-```
-
-Where:
-
-#### `<kind>`
-
-Indicates the type of host: `service` (to host a service) or `agent` (to host an agent). You can define your own _kind_ creating a custom template (see [Customization](#customization)).
-
-### Examples
-
-This configuration:
-
-```text
+```tinkwell
 compose service store "Tinkwell.Store.dll"
 compose agent reducer "Tinkwell.Reducer.dll" { path: "./config/measures.twm" }
-compose agent reactor "Tinkwell.Reactor.dll" { path: "./config/measures.twm" }
 ```
 
-Is equivalent to:
+...is expanded by the preprocessor into this full `runner` configuration:
 
-```text
+```tinkwell
 runner store "Tinkwell.Bootstrapper.GrpcHost" {
     service runner "Tinkwell.Store.dll" {}
     service runner "Tinkwell.HealthCheck.dll" {}
@@ -122,34 +57,110 @@ runner reducer "Tinkwell.Bootstrapper.DllHost" {
         }
     }
 }
+```
 
-runner reactor "Tinkwell.Bootstrapper.DllHost" {
-    service runner "Tinkwell.Reactor.dll" {
-        properties {
-            path: "./config/measures.twm"
-        }
+## Imports
+
+The `import` directive allows you to include definitions from other files, which is useful for organizing complex systems. It must appear at the top of the file. The path is relative to the directory of the current file.
+
+`import "./path/to/another_file.tw"`
+
+## Common Hosts and Firmlets
+
+While the `runner` block is generic, a typical Tinkwell system is built by composing a set of standard hosts and firmlets.
+
+### Hosts
+
+Hosts are special runners designed to load and manage one or more firmlets, providing a shared environment.
+
+-   **`Tinkwell.Bootstrapper.DllHost`**: A general-purpose host for loading firmlets (typically agents) packaged as .NET DLLs. It does not expose any network services on its own.
+-   **`Tinkwell.Bootstrapper.GrpcHost`**: A host designed specifically for hosting firmlets that expose gRPC services. It manages the gRPC server lifecycle.
+
+### Firmlets
+
+Firmlets are the core components that provide the application's logic. They are loaded by hosts.
+
+-   **`Tinkwell.Orchestrator`**: A service that exposes commands to manage runners and the supervisor itself.
+-   **`Tinkwell.Store`**: A service that acts as the central database for all measures, handling storage, unit conversion, and broadcasting changes.
+-   **`Tinkwell.EventsGateway`**: A service that provides a publish/subscribe message bus for system-wide events.
+-   **`Tinkwell.Executor`**: An agent that executes actions based on event triggers. It requires a `path` property pointing to an actions configuration file (`.twa`).
+    ```tinkwell
+    compose agent executor "Tinkwell.Actions.Executor.dll" {
+        path: "./config/actions.twa"
     }
+    ```
+-   **`Tinkwell.Reducer`**: An agent that calculates derived measures based on a configuration file. It requires a `path` property pointing to a measures configuration file (`.twm`).
+    ```tinkwell
+    compose agent reducer "Tinkwell.Reducer.dll" {
+        path: "./config/measures.twm"
+    }
+    ```
+-   **`Tinkwell.Reactor`**: An agent that monitors the Store for changes and emits signals when conditions are met. It also requires a `path` to a measures configuration file (`.twm`) where signals are defined.
+    ```tinkwell
+    compose agent reactor "Tinkwell.Reactor.dll" {
+        path: "./config/measures.twm"
+    }
+    ```
+-   **`Tinkwell.HealthCheck`**: A service that provides basic health monitoring for the host it's running in. It's automatically included by the `compose service` directive.
+-   **`Tinkwell.Watchdog`**: A firmlet that periodically queries all health check services and reports on their status.
+
+## Advanced: The `runner` block
+
+The `runner` block is the underlying, low-level syntax for defining a process to be managed by the Supervisor. The `compose` directive is a simplified frontend for this block.
+
+`runner ["<name>"] "<path>" [if "<condition>"] { ... }`
+
+> **A Note on Naming**
+>
+> While names can be quoted strings to include spaces or dots, they must still adhere to certain rules.
+>
+> -   **Invalid Characters:** Names cannot contain `[`, `]`, `{`, `}`, `\`, `*`, `:`, `;`, `"`, `'`, `=`, `!`, or `?`.
+> -   **Invalid Prefixes:** Names cannot start with `+`, `-`, `/`, or `__` (two underscores).
+> -   **Discouraged Names:** To avoid conflicts, it is highly discouraged to use the following as names: `let`, `when`, `then`, `value`, `emit`.
+>
+> For simplicity, it is recommended to use [simple identifiers](./Glossary.md#simple-identifier). Simple identifiers do not need to be enclosed in double quotes. Furthermore, when used in an `expression`, they do not need to be enclosed in square brackets (`[]`).
+
+
+### Attributes
+
+| Attribute | Type | Description |
+| :--- | :--- | :--- |
+| `name` | String | A unique name for the runner. Optional, but recommended. |
+| `path` | String | The path (full or relative) to the executable or library to load. |
+| `if "<condition>"` | String | **Conditional Loading:** An expression evaluated when the file is loaded. If `false`, the runner is ignored. Available parameters include `platform`, `os_architecture`, `cpu_architecture`, and any custom key/value pairs from `appsettings.json`. |
+| `arguments` | String | Command-line arguments to pass to the executable upon startup. |
+| `properties` | Dictionary | A block of key-value pairs specific to the runner. A common property is `keep_alive: true` (the default), which tells the Supervisor to restart the runner if it exits unexpectedly. |
+
+### Nested Firmlets
+
+A `runner` can act as a host for one or more `firmlets` (defined with `service runner`). Firmlets loaded within the same host share the same process, which can improve performance but reduces isolation.
+
+```tinkwell
+// A gRPC host runner containing two firmlets
+runner rpc_host "Tinkwell.Bootstrapper.GrpcHost" {
+    service runner "Tinkwell.Store.dll" {}
+    service runner "Tinkwell.HealthCheck.dll" {}
 }
 ```
 
-#### Customization
+## Customization
 
-You can define your own reusable templates:
+You can define your own reusable templates for the `compose` directive.
 
-* Pick a name, not already in use, for `<kind>`. For example `wasm`.
-* Create a file, distributed with the application, named `"compose_wasm.template"`.
-* Edit the file with the text replacement you want. You will have these available parameters:
-    * `{{ name }}`: replaced with `<name>` (without quotes, even if used).
-    * `{{ path }}`: replaced with `<path>` (without quotes).
-    * `{{ properties }}`: replaced with all the `<key>` and `<value>` pairs, including `{` and `}`. If not specified then it's `{}`.
-    * `{{ host.grpc }}`: replaced with the name of the default runner to host [services](./Glossary.md#service) packaged as libraries.
-    * `{{ host.dll }}`: replaced with the name of the default runner to host [agents](./Glossary.md#agent) packaged as libraries.
-    * `{{ firmlet.health_check }}`: replaced with the name of the assembly implementing the [Health Check service](./Glossary.md#health-check-service). See [Health monitoring](./Health-monitoring.md) for the overall configuration.
-    * `{{ address.supervisor }}`: replaced with the named pipe used to communicate directly with the [Supervisor](./Glossary.md#supervisor) without using the [Orchestrator](./Glossary.md#orchestrator-service).
-    
-For example, this is the template used for `service`:
+-   Pick a name for your new kind, for example, `wasm`.
+-   Create a file named `compose_wasm.template` and distribute it with your application.
+-   Edit the file with the `runner` definition you want to generate. You can use the following parameters for substitution:
+    -   `{{ name }}`: The `<name>` provided to the `compose` directive.
+    -   `{{ path }}`: The `<path>` provided to the `compose` directive.
+    -   `{{ properties }}`: The entire properties block (`{...}`) provided to the `compose` directive. Defaults to `{}` if omitted.
+    -   `{{ host.grpc }}`: The name of the default runner for hosting gRPC services.
+    -   `{{ host.dll }}`: The name of the default runner for hosting agents and other DLL-based components.
+    -   `{{ firmlet.health_check }}`: The name of the Health Check service assembly.
+    -   `{{ address.supervisor }}`: The named pipe for direct communication with the Supervisor.
 
-```text
+For example, this is the built-in template for the `service` kind:
+
+```tinkwell
 runner "{{ name }}" "{{ host.grpc }}" {
   service runner "__{{ name }}___health_check__" "{{ firmlet.health_check }}" {}
   service runner "__{{ name }}___firmlet__" "{{ path }}" {
@@ -158,4 +169,47 @@ runner "{{ name }}" "{{ host.grpc }}" {
 }
 ```
 
-Keep in mind that the preprocessor performs a simple text substitution!
+> **Note:** The preprocessor performs a simple text substitution before the file is parsed.
+
+## Complete Example
+
+```tinkwell
+// File: /etc/tinkwell/ensemble.tw
+
+// Import shared definitions, which might contain the 'store' service
+import "shared_services.tw"
+
+// Conditionally compose the watchdog service only on linux
+compose service watchdog "Tinkwell.Watchdog.dll" if "platform == 'linux'"
+
+// Compose agents
+compose agent reducer "Tinkwell.Reducer.dll" {
+    path: "./config/measures.twm"
+}
+
+compose agent reactor "Tinkwell.Reactor.dll" {
+    path: "./config/measures.twm"
+}
+
+// Use the advanced runner syntax for a custom, non-Tinkwell process
+runner "data_importer" "/usr/bin/data-importer" {
+    arguments: "--source /var/data/source --interval 300"
+    properties {
+        keep_alive: true
+    }
+}
+```
+
+## Default Configuration
+
+The following is the standard `ensamble.tw` configuration file that is included with a default Tinkwell installation. It composes all the core services and agents needed for a fully functional system.
+
+```tinkwell
+compose service orchestrator "Tinkwell.Orchestrator.dll"
+compose service store "Tinkwell.Store.dll"
+compose service events "Tinkwell.EventsGateway.dll"
+compose agent executor "Tinkwell.Actions.Executor.dll" { path: "./config/actions.twa" }
+compose agent reducer "Tinkwell.Reducer.dll" { path: "./config/measures.twm" }
+compose agent reactor "Tinkwell.Reactor.dll" { path: "./config/measures.twm" }
+compose agent watchdog "Tinkwell.Watchdog.dll"
+```

@@ -6,26 +6,31 @@ namespace Tinkwell.Bootstrapper.Expressions;
 
 public sealed class ExpressionEvaluator : IExpressionEvaluator
 {
-    public bool EvaluateBool(string expression, object? parameters)
+    public object? Evaluate(string expression, object? parameters)
     {
         var expr = new Expression(expression);
         expr.CultureInfo = CultureInfo.InvariantCulture;
 
-        if (parameters is not null)
-        {
-            if (parameters is System.Collections.IDictionary dictionary)
-                ImportParametersFromDictionary(dictionary, expr);
-            else
-                ImportParametersFromObject(parameters, expr);
-        }
+        ImportParameters(parameters, expr);
 
         try
         {
-            return Convert.ToBoolean(expr.Evaluate(), CultureInfo.InvariantCulture);
+            return expr.Evaluate();
         }
         catch (NCalcException e)
         {
             throw new BootstrapperException($"Error evaluating an expression: {e.Message}", e);
+        }
+    }
+
+    public string EvaluateString(string expression, object? parameters)
+        => Convert.ToString(Evaluate(expression, parameters), CultureInfo.InvariantCulture) ?? "";
+
+    public bool EvaluateBool(string expression, object? parameters)
+    {
+        try
+        {
+            return Convert.ToBoolean(Evaluate(expression, parameters), CultureInfo.InvariantCulture);
         }
         catch (FormatException e)
         {
@@ -37,10 +42,21 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
         }
     }
 
-    private static void ImportParametersFromDictionary(System.Collections.IDictionary parameters, Expression expr)
+    private static void ImportParameters(object? parameters, Expression expr)
+    {
+        if (parameters is not null)
+        {
+            if (parameters is System.Collections.IDictionary dictionary)
+                ImportParametersFromDictionary("", dictionary, expr);
+            else
+                ImportParametersFromObject(parameters, expr);
+        }
+    }
+
+    private static void ImportParametersFromDictionary(string prefix, System.Collections.IDictionary parameters, Expression expr)
     {
         foreach (System.Collections.DictionaryEntry kvp in parameters)
-            expr.Parameters[Convert.ToString(kvp.Key, CultureInfo.InvariantCulture)!] = kvp.Value;
+            expr.Parameters[prefix + Convert.ToString(kvp.Key, CultureInfo.InvariantCulture)!] = kvp.Value;
     }
 
     private static void ImportParametersFromObject(object parameters, Expression expr)
@@ -49,7 +65,12 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
         {
             var value = property.GetValue(parameters);
             if (value is not null)
-                expr.Parameters[property.Name] = value;
+            {
+                if (value is System.Collections.IDictionary dictionary)
+                    ImportParametersFromDictionary($"{property.Name}.", dictionary, expr);
+                else
+                    expr.Parameters[property.Name] = value;
+            }
         }
     }
 }
