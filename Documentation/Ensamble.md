@@ -103,6 +103,8 @@ Firmlets are the core components that provide the application's logic. They are 
     ```
 -   **`Tinkwell.HealthCheck`**: A service that provides basic health monitoring for the host it's running in. It's automatically included by the `compose service` directive.
 -   **`Tinkwell.Watchdog`**: A firmlet that periodically queries all health check services and reports on their status.
+-   **`Tinkwell.Bridge.MqttClient`**: An agent that receives MQTT messages from a broker and write sensor data into the store. See [MQTT Bridge](./MQTT-Bridge.md) for all the configuration options.
+-   **`Tinkwell.Bridge.MqttServer`**: An agent that implements a super simple MQTT broker for local development and testing. See [MQTT Server](./MQTT-Server.md) for all the configuration options.
 
 ## Advanced: The `runner` block
 

@@ -102,6 +102,17 @@ public sealed class StoreService : Tinkwell.Services.Store.StoreBase
         });
     }
 
+    public override Task<StoreSetReply> Set(StoreSetRequest request, ServerCallContext context)
+    {
+        return RunWithErrorHandling(() =>
+        {
+            var metadata = _registry.Find(request.Name);
+            QuantityValue value = (double)request.Value;
+            _registry.Update(request.Name, UnitHelpers.From(metadata.QuantityType, metadata.Unit, request.Value));
+            return new StoreSetReply();
+        });
+    }
+
     public override Task<GetResponse> Get(GetRequest request, ServerCallContext context)
     {
         return RunWithErrorHandling(() =>

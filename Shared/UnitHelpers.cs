@@ -56,6 +56,14 @@ internal static class UnitHelpers
         return valueWithTargetUnit;
     }
 
+    public static global::UnitsNet.IQuantity From(string quantityType, string? unit, double value)
+    {
+        var quantityTypeType = FindQuantityInfoByName(quantityType, throwIfNotFound: true)!.ValueType;
+        var unitType = ParseUnit(quantityType, unit);
+        global::UnitsNet.QuantityValue quantityValue = value;
+        return global::UnitsNet.Quantity.From(value, unitType!);
+    }
+
     public static bool TryGetQuantityValue(object value, out global::UnitsNet.QuantityValue quantityValue)
     {
         quantityValue = global::UnitsNet.QuantityValue.Zero;

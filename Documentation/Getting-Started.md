@@ -80,6 +80,7 @@ Once the Supervisor is running, you can use the command-line interface (CLI) to 
 # If you changed the configuration manually then check if  it's correct:
 ./tw ensamble lint ./ensamble.tw
 ./tw measures lint ./config/measures.twm
+./tw actions lint ./config/actions.twa
 
 # Check that all the basic runners are correctly loaded
 ./tw runners list
