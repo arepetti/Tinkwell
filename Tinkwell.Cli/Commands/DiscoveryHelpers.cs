@@ -6,28 +6,28 @@ namespace Tinkwell.Cli.Commands;
 
 static class DiscoveryHelpers
 {
-    public static async Task<GrpcService<Discovery.DiscoveryClient>> FindDiscoveryServiceAsync(CommonSettings settings)
+    public static async Task<GrpcService<Discovery.DiscoveryClient>> FindDiscoveryServiceAsync(LiveInstanceCommonSettings settings)
     {
         var channel = GrpcChannel.ForAddress(await ResolveDiscoveryServiceAddressAsync(settings));
         var service = new Discovery.DiscoveryClient(channel);
         return new(channel, service);
     }
 
-    public static async Task<GrpcService<Store.StoreClient>> FindStoreServiceAsync(CommonSettings settings)
+    public static async Task<GrpcService<Store.StoreClient>> FindStoreServiceAsync(LiveInstanceCommonSettings settings)
     {
         var channel = GrpcChannel.ForAddress(await FindServiceAddressAsync(settings, Store.Descriptor.FullName));
         var service = new Store.StoreClient(channel);
         return new(channel, service);
     }
 
-    public static async Task<GrpcService<EventsGateway.EventsGatewayClient>> FindEventsGatewayServiceAsync(CommonSettings settings)
+    public static async Task<GrpcService<EventsGateway.EventsGatewayClient>> FindEventsGatewayServiceAsync(LiveInstanceCommonSettings settings)
     {
         var channel = GrpcChannel.ForAddress(await FindServiceAddressAsync(settings, EventsGateway.Descriptor.FullName));
         var service = new EventsGateway.EventsGatewayClient(channel);
         return new(channel, service);
     }
 
-    public static async Task<string> ResolveDiscoveryServiceAddressAsync(CommonSettings settings)
+    public static async Task<string> ResolveDiscoveryServiceAddressAsync(LiveInstanceCommonSettings settings)
     {
         using var client = new NamedPipeClient();
         await client.ConnectAsync(settings.Machine, settings.Pipe, TimeSpan.FromSeconds(settings.Timeout));
@@ -48,7 +48,7 @@ static class DiscoveryHelpers
         }
     }
 
-    private static async Task<string> FindServiceAddressAsync(CommonSettings settings, string name)
+    private static async Task<string> FindServiceAddressAsync(LiveInstanceCommonSettings settings, string name)
     {
         await using var discovery = await FindDiscoveryServiceAsync(settings);
         var response = await discovery.Client.FindAsync(new() { Name = name });

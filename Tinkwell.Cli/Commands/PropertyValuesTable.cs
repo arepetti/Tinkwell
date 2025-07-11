@@ -27,18 +27,18 @@ sealed class PropertyValuesTable : IRenderable
         return this;
     }
 
-    public PropertyValuesTable AddEntry(string key, object? value, int indentation = 0)
+    public PropertyValuesTable AddEntry(string key, IRenderable value, int indentation = 0)
     {
         string prefix = new string(' ', indentation * 2);
-        string str = value is not null ? Convert.ToString(value, CultureInfo.InvariantCulture) ?? "" : "";
-
         string nameColor = indentation == 0 ? "yellow" : "silver";
+        _table.AddRow(new Markup($"[{nameColor}]{prefix}{key.EscapeMarkup()}[/]"), value);
+        return this;
+    }
 
-        if (IsEmptyEntry(value))
-            _table.AddRow($"[{nameColor}]{key.EscapeMarkup()}[/]", $"[italic grey]None[/]");
-        else
-            _table.AddRow($"[{nameColor}]{prefix}{key.EscapeMarkup()}[/]", str.EscapeMarkup());
-
+    public PropertyValuesTable AddEntry(string key, object? value, int indentation = 0)
+    {
+        string str = value is not null ? Convert.ToString(value, CultureInfo.InvariantCulture) ?? "" : "";
+        AddEntry(key, IsEmptyEntry(value) ? new Markup($"[italic grey]None[/]") : new Text(str.EscapeMarkup()), indentation);
         return this;
     }
 

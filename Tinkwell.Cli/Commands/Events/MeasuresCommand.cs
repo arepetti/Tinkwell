@@ -7,7 +7,7 @@ namespace Tinkwell.Cli.Commands.Events;
 [Description("Publish and listen to events.")]
 sealed class EventsCommand : Command<EventsCommand.Settings>
 {
-    public class Settings : CommonSettings
+    public class Settings : LiveInstanceCommonSettings
     {
     }
 

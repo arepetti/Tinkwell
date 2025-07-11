@@ -7,7 +7,7 @@ namespace Tinkwell.Cli.Commands.Runners;
 [Description("Manage the active runners.")]
 sealed class RunnersCommand : Command<RunnersCommand.Settings>
 {
-    public class Settings : CommonSettings
+    public class Settings : LiveInstanceCommonSettings
     {
     }
 
