@@ -5,14 +5,28 @@ using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell;
 
+/// <summary>
+/// Helper class that encapsulate searching for gRPC services.
+/// </summary>
 public sealed class ServiceLocator : IAsyncDisposable, IDisposable
 {
+    /// <summary>
+    /// Creates a new instance of the <see cref="ServiceLocator"/> class.
+    /// </summary>
+    /// <param name="configuration">Configuration.</param>
+    /// <param name="pipeClient">Client to use for communication using named pipes.</param>
     public ServiceLocator(IConfiguration configuration, INamedPipeClient pipeClient)
     {
         _configuration = configuration;
         _pipeClient = pipeClient;
     }
 
+    /// <summary>
+    /// Obtains the <see cref="Services.Discovery.DiscoveryClient"/>.
+    /// </summary>
+    /// <param name="cancellationToken">A token that can be used to request cancellation of the operation.</param>
+    /// <returns>An instance of the <c>DiscoveryClient</c> service.</returns>
+    /// <exception cref="InvalidOperationException">If the address of the service cannot be resolved.</exception>
     public async Task<Services.Discovery.DiscoveryClient> FindDiscoveryAsync(CancellationToken cancellationToken)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -33,6 +47,14 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
         return _discovery.Client;
     }
 
+    /// <summary>
+    /// Fnd a gRPC service by its name.
+    /// </summary>
+    /// <typeparam name="T">Type of the service to locate.</typeparam>
+    /// <param name="name">Full name (or family name or alias) of the service to locate.</param>
+    /// <param name="factory">Factory function that creates an instance of the service, give the channel.</param>
+    /// <param name="cancellationToken">A token that can be used to request cancellation of the operation.</param>
+    /// <returns>A container for the required service and its channel. It must be disposed when the service is not used anymore.</returns>
     public async Task<GrpcService<T>> FindServiceAsync<T>(string name, Func<GrpcChannel, T> factory, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -45,6 +67,11 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
         return new GrpcService<T>(channel, factory(channel));
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="cancellationToken">A token that can be used to request cancellation of the operation.</param>
+    /// <returns></returns>
     public async Task<GrpcService<Services.Store.StoreClient>> FindStoreAsync(CancellationToken cancellationToken = default)
     {
         // Note that we are intentionally using Descriptor.Name instead of Descriptor.FullName. This is because it's possible,
@@ -55,15 +82,22 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
         return await FindServiceAsync(Services.Store.Descriptor.Name, c => new Services.Store.StoreClient(c), cancellationToken);
     }
 
+    /// <summary>
+    /// Finds the <see cref="Services.EventsGateway.EventsGatewayClient"/> service.
+    /// </summary>
+    /// <param name="cancellationToken">A token that can be used to request cancellation of the operation.</param>
+    /// <returns>A container for the required service and its channel. It must be disposed when the service is not used anymore.</returns>
     public async Task<GrpcService<Services.EventsGateway.EventsGatewayClient>> FindEventsGatewayAsync(CancellationToken cancellationToken = default)
         => await FindServiceAsync(Services.EventsGateway.Descriptor.FullName, c => new Services.EventsGateway.EventsGatewayClient(c), cancellationToken);
 
+    /// <inheritdoc />
     public void Dispose()
     {
         DisposeAsync(disposing: true).GetAwaiter().GetResult();
         GC.SuppressFinalize(this);
     }
 
+    /// <inheritdoc />
     public ValueTask DisposeAsync()
         => DisposeAsync(true);
 

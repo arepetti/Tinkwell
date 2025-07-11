@@ -1,8 +1,11 @@
-﻿using System.IO;
-using Tinkwell.Bootstrapper.Ensamble;
+﻿using Tinkwell.Bootstrapper.Ensamble;
 
 namespace Tinkwell.Actions.Configuration.Parser;
 
+/// <summary>
+/// Parse Actions Configuration Files.
+/// </summary>
+/// <param name="evaluator">Evaluator used to evaluate conditional loading expressions.</param>
 public sealed class TwaFileReader(IEnsambleConditionEvaluator evaluator) : FileReaderWithImports<WhenDefinition, ITwaFile>(evaluator)
 {
     protected override async Task<(List<WhenDefinition>, Queue<string>)> ParseFileAsync(string path, CancellationToken cancellationToken)

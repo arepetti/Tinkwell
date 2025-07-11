@@ -38,8 +38,8 @@ sealed class MatchCommand : Command<MatchCommand.Settings>
 
         var (firstRun, average, matches) = TimeIt(() => parser.Parse(settings.Topic, settings.Message).ToList());
         AnsiConsole.MarkupLine($"Found [blueviolet]{matches.Count}[/] match(es)");
-        AnsiConsole.MarkupLine($"First execution speed [blueviolet]{firstRun}[/] ms");
-        AnsiConsole.MarkupLine($"Average execution speed [blueviolet]{average}[/] ms");
+        AnsiConsole.MarkupLine($"First execution time [blueviolet]{firstRun}[/] ms");
+        AnsiConsole.MarkupLine($"Average execution time [blueviolet]{average}[/] ms");
 
         PropertyValuesTable table = new PropertyValuesTable()
             .AddGroupTitle("MESSAGE")

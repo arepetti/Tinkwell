@@ -2,8 +2,20 @@
 
 namespace Tinkwell.Bootstrapper.Reflection;
 
+/// <summary>
+/// Provides shallow cloning utilities for copying public properties between objects.
+/// </summary>
 public static class ShallowCloner
 {
+    /// <summary>
+    /// Copies all public properties from the source object to the target object.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the source object.</typeparam>
+    /// <typeparam name="TTarget">The type of the target object.</typeparam>
+    /// <param name="source">The source object.</param>
+    /// <param name="target">The target object.</param>
+    /// <returns>The target object with copied properties.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if source or target is null.</exception>
     public static TTarget CopyAllPublicProperties<TSource, TTarget>(TSource source, TTarget target)
     {
         ArgumentNullException.ThrowIfNull(source, nameof(source));

@@ -3,6 +3,9 @@ using System.Text;
 
 namespace Tinkwell.Bootstrapper.Expressions;
 
+/// <summary>
+/// Helper class for converting wildcard patterns to regular expressions.
+/// </summary>
 public static class TextHelpers
 {
     /// <summary>

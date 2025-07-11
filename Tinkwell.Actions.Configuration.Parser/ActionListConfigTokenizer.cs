@@ -5,7 +5,7 @@ using Superpower.Tokenizers;
 
 namespace Tinkwell.Actions.Configuration.Parser;
 
-public enum ActionListConfigToken
+enum ActionListConfigToken
 {
     None,
     Identifier,

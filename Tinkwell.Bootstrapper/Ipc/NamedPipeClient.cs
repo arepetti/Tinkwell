@@ -4,12 +4,22 @@ using System.Text;
 
 namespace Tinkwell.Bootstrapper.Ipc;
 
+/// <summary>
+/// Implements a named pipe client for inter-process communication.
+/// </summary>
 public sealed class NamedPipeClient : INamedPipeClient
 {
+    /// <summary>
+    /// Gets a value indicating whether the client is connected.
+    /// </summary>
     [MemberNotNullWhen(true, nameof(_client), nameof(_reader), nameof(_writer))]
     public bool IsConnected
         => _client is not null && _client.IsConnected;
 
+    /// <summary>
+    /// Gets the stream reader for the pipe.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if not connected.</exception>
     public StreamReader Reader
     {
         get
@@ -21,6 +31,10 @@ public sealed class NamedPipeClient : INamedPipeClient
         }
     }
 
+    /// <summary>
+    /// Gets the stream writer for the pipe.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if not connected.</exception>
     public StreamWriter Writer
     {
         get
@@ -32,6 +46,11 @@ public sealed class NamedPipeClient : INamedPipeClient
         }
     }
 
+    /// <summary>
+    /// Connects to the specified server and pipe.
+    /// </summary>
+    /// <param name="serverName">The server name.</param>
+    /// <param name="pipeName">The pipe name.</param>
     public void Connect(string serverName, string pipeName)
     {
         if (_disposed)
@@ -48,6 +67,13 @@ public sealed class NamedPipeClient : INamedPipeClient
         _writer.AutoFlush = true;
     }
 
+    /// <summary>
+    /// Asynchronously connects to the specified server and pipe.
+    /// </summary>
+    /// <param name="serverName">The server name.</param>
+    /// <param name="pipeName">The pipe name.</param>
+    /// <param name="timeout">The connection timeout.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     public async Task ConnectAsync(string serverName, string pipeName, TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         if (_disposed)
@@ -64,9 +90,16 @@ public sealed class NamedPipeClient : INamedPipeClient
         _writer.AutoFlush = true;
     }
 
+    /// <summary>
+    /// Connects to the specified pipe on the local server.
+    /// </summary>
+    /// <param name="pipeName">The pipe name.</param>
     public void Connect(string pipeName)
         => Connect(".", pipeName);
 
+    /// <summary>
+    /// Disconnects the client from the pipe.
+    /// </summary>
     public void Disconnect()
     {
         if (_client is null || _disposed)
@@ -90,6 +123,10 @@ public sealed class NamedPipeClient : INamedPipeClient
         _client = null;
     }
 
+    /// <summary>
+    /// Sends a command to the server.
+    /// </summary>
+    /// <param name="command">The command to send.</param>
     public void SendCommand(string command)
     {
         if (_disposed)
@@ -101,6 +138,11 @@ public sealed class NamedPipeClient : INamedPipeClient
         _writer!.WriteLine(command);
     }
 
+    /// <summary>
+    /// Asynchronously sends a command to the server.
+    /// </summary>
+    /// <param name="command">The command to send.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     public Task SendCommandAsync(string command, CancellationToken cancellationToken = default)
     {
         if (_disposed)
@@ -112,18 +154,37 @@ public sealed class NamedPipeClient : INamedPipeClient
         return _writer!.WriteLineAsync(command.AsMemory(), cancellationToken);
     }
 
+    /// <summary>
+    /// Sends a command and waits for a reply from the server.
+    /// </summary>
+    /// <param name="command">The command to send.</param>
+    /// <returns>The reply as a string.</returns>
     public string? SendCommandAndWaitReply(string command)
     {
         SendCommand(command);
         return _reader!.ReadLine();
     }
 
+    /// <summary>
+    /// Asynchronously sends a command and waits for a reply from the server.
+    /// </summary>
+    /// <param name="command">The command to send.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The reply as a string.</returns>
     public async Task<string?> SendCommandAndWaitReplyAsync(string command, CancellationToken cancellationToken = default)
     {
         await SendCommandAsync(command, cancellationToken);
         return await _reader!.ReadLineAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Asynchronously sends a command and waits for a reply from the server, deserializing the reply to the specified type.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the reply to.</typeparam>
+    /// <param name="command">The command to send.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The reply deserialized to type <typeparamref name="T"/>.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if deserialization fails.</exception>
     public async Task<T> SendCommandAndWaitReplyAsync<T>(string command, CancellationToken cancellationToken = default)
     {
         await SendCommandAsync(command, cancellationToken);
@@ -139,6 +200,9 @@ public sealed class NamedPipeClient : INamedPipeClient
         return result;
     }
 
+    /// <summary>
+    /// Releases all resources used by the <see cref="NamedPipeClient"/>.
+    /// </summary>
     public void Dispose()
     {
         Dispose(disposing: true);

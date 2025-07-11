@@ -5,7 +5,7 @@ using Superpower.Tokenizers;
 
 namespace Tinkwell.Bootstrapper.Ensamble;
 
-public enum EnsambleToken
+enum EnsambleToken
 {
     None,
     Identifier,
@@ -24,7 +24,7 @@ public enum EnsambleToken
     False
 }
 
-public static class EnsambleTokenizer
+static class EnsambleTokenizer
 {
     private static TextParser<TextSpan> Identifier =
         Span.Regex(@"[A-Za-z_][A-Za-z0-9_]*");

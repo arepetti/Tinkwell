@@ -5,14 +5,28 @@ using Tinkwell.Bootstrapper.Expressions;
 
 namespace Tinkwell.Bootstrapper.Ensamble;
 
+/// <summary>
+/// Evaluates conditions for ensamble runner definitions and provides parameter values for evaluation.
+/// </summary>
 public sealed class EnsambleConditionEvaluator : IEnsambleConditionEvaluator
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EnsambleConditionEvaluator"/> class.
+    /// </summary>
+    /// <param name="configuration">The configuration to use for parameters.</param>
+    /// <param name="expressionEvaluator">The expression evaluator to use for condition evaluation.</param>
     public EnsambleConditionEvaluator(IConfiguration? configuration, IExpressionEvaluator expressionEvaluator)
     {
         _configuration = configuration;
         _expressionEvaluator = expressionEvaluator;
     }
 
+    /// <summary>
+    /// Filters the provided definitions based on their conditions.
+    /// </summary>
+    /// <typeparam name="T">The type of definition, must implement <see cref="IConditionalDefinition"/>.</typeparam>
+    /// <param name="definitions">The definitions to filter.</param>
+    /// <returns>The filtered definitions.</returns>
     public IEnumerable<T> Filter<T>(IEnumerable<T> definitions)
         where T : IConditionalDefinition
     {
@@ -25,6 +39,10 @@ public sealed class EnsambleConditionEvaluator : IEnsambleConditionEvaluator
         });
     }
 
+    /// <summary>
+    /// Gets the parameters used for condition evaluation.
+    /// </summary>
+    /// <returns>A dictionary of parameter names and values.</returns>
     public Dictionary<string, string?> GetParameters()
     {
         var parameters = ReadFromConfiguration();

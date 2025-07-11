@@ -3,8 +3,15 @@ using Superpower;
 
 namespace Tinkwell.Bootstrapper.Ensamble;
 
+/// <summary>
+/// Reads ensamble configuration files and produces an <see cref="IEnsambleFile"/> result.
+/// </summary>
 public sealed class EnsambleFileReader : FileReaderWithImports<RunnerDefinition, IEnsambleFile>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EnsambleFileReader"/> class.
+    /// </summary>
+    /// <param name="evaluator">The condition evaluator to use for filtering.</param>
     public EnsambleFileReader(IEnsambleConditionEvaluator evaluator)
         : base(evaluator)
     {

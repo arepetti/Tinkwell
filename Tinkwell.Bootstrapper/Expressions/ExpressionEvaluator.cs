@@ -6,10 +6,20 @@ using System.Reflection;
 
 namespace Tinkwell.Bootstrapper.Expressions;
 
+/// <summary>
+/// Evaluates expressions using the NCalc engine and supports custom functions and parameter import.
+/// </summary>
 public sealed class ExpressionEvaluator : IExpressionEvaluator
 {
     internal static readonly object Null = new object();
 
+    /// <summary>
+    /// Evaluates the specified expression with optional parameters.
+    /// </summary>
+    /// <param name="expression">The expression to evaluate.</param>
+    /// <param name="parameters">Optional parameters for the expression.</param>
+    /// <returns>The result of the evaluation.</returns>
+    /// <exception cref="BootstrapperException">Thrown if evaluation fails.</exception>
     public object? Evaluate(string expression, object? parameters)
     {
         var expr = new Expression(expression);
@@ -29,9 +39,22 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
         }
     }
 
+    /// <summary>
+    /// Evaluates the specified expression and returns the result as a string.
+    /// </summary>
+    /// <param name="expression">The expression to evaluate.</param>
+    /// <param name="parameters">Optional parameters for the expression.</param>
+    /// <returns>The result as a string.</returns>
     public string EvaluateString(string expression, object? parameters)
         => Convert.ToString(Evaluate(expression, parameters), CultureInfo.InvariantCulture) ?? "";
 
+    /// <summary>
+    /// Evaluates the specified expression and returns the result as a boolean.
+    /// </summary>
+    /// <param name="expression">The expression to evaluate.</param>
+    /// <param name="parameters">Optional parameters for the expression.</param>
+    /// <returns>The result as a boolean.</returns>
+    /// <exception cref="BootstrapperException">Thrown if casting fails.</exception>
     public bool EvaluateBool(string expression, object? parameters)
     {
         try

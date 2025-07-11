@@ -3,8 +3,17 @@ using System.IO.Pipes;
 
 namespace Tinkwell.Bootstrapper.Ipc;
 
+/// <summary>
+/// Implements a named pipe server handler for inter-process communication.
+/// </summary>
 sealed class Pipe
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Pipe"/> class.
+    /// </summary>
+    /// <param name="pipeName">The name of the pipe.</param>
+    /// <param name="maxInstances">The maximum number of instances.</param>
+    /// <param name="abortTokenSource">The cancellation token source for aborting.</param>
     public Pipe(string pipeName, int maxInstances, CancellationTokenSource abortTokenSource)
     {
         _pipeName = pipeName;
@@ -12,9 +21,21 @@ sealed class Pipe
         _maxInstances = maxInstances;
     }
 
+    /// <summary>
+    /// Occurs when a client is connected.
+    /// </summary>
     public event EventHandler? Connected;
+    /// <summary>
+    /// Occurs when a client is disconnected.
+    /// </summary>
     public event EventHandler? Disconnected;
+    /// <summary>
+    /// Occurs when an error occurs in the pipe server.
+    /// </summary>
     public event EventHandler<NamedPipeServerErrorEventArgs>? Error;
+    /// <summary>
+    /// Occurs when a process event is triggered.
+    /// </summary>
     public event EventHandler<NamedPipeServerProcessEventArgs>? Process;
 
     public void Start()

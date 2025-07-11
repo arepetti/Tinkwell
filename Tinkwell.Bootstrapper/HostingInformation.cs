@@ -5,11 +5,24 @@ using Tinkwell.Bootstrapper.Ipc.Extensions;
 
 namespace Tinkwell.Bootstrapper;
 
+/// <summary>
+/// Provides information and utilities related to the hosting environment for Tinkwell runners and services.
+/// </summary>
 public static class HostingInformation
 {
+    /// <summary>
+    /// Gets the name of the current runner from environment variables.
+    /// </summary>
     public static string RunnerName
         => Environment.GetEnvironmentVariable(WellKnownNames.RunnerNameEnvironmentVariable) ?? "";
 
+    /// <summary>
+    /// Resolves the address of the Discovery Service asynchronously.
+    /// </summary>
+    /// <param name="configuration">The configuration to use for resolving the address.</param>
+    /// <param name="client">An optional named pipe client to use for communication.</param>
+    /// <returns>The resolved address as a string.</returns>
+    /// <exception cref="BootstrapperException">Thrown if the address cannot be resolved.</exception>
     public static async Task<string> ResolveDiscoveryServiceAddressAsync(IConfiguration configuration, INamedPipeClient? client = default)
     {
         if (_discoveryServiceAddress is null)
@@ -31,6 +44,10 @@ public static class HostingInformation
         return _discoveryServiceAddress!;
     }
 
+    /// <summary>
+    /// Resolves the platform identifier for the current operating system.
+    /// </summary>
+    /// <returns>A string representing the platform (e.g., "windows", "linux", "osx", "bsd", "other").</returns>
     public static string ResolvePlatform()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
