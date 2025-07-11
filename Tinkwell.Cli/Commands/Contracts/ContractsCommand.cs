@@ -7,7 +7,7 @@ namespace Tinkwell.Cli.Commands.Contracts;
 [Description("Query registered services.")]
 sealed class ContractsCommand : Command<ContractsCommand.Settings>
 {
-    public class Settings : CommonSettings
+    public class Settings : LiveInstanceCommonSettings
     {
     }
 

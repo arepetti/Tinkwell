@@ -1,21 +1,24 @@
 using System.ComponentModel;
+using System.Text;
 using MQTTnet;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Tinkwell.Cli.Commands.Mqtt;
 
-[CommandFor("send", parent: typeof(MqttCommand))]
-[Description("Send an MQTT message.")]
-sealed class SendMessageCommand : AsyncCommand<SendMessageCommand.Settings>
+[CommandFor("replay", parent: typeof(MqttCommand))]
+[Description("Replay a set of messages.")]
+sealed class ReplayCommand : AsyncCommand<ReplayCommand.Settings>
 {
     public sealed class Settings : MqttCommand.Settings
     {
-        [CommandArgument(0, "<TOPIC>")]
-        public string Topic { get; set; } = "";
+        [CommandArgument(0, "<PATH>")]
+        [Description("Path to the file containing the messages to replay.")]
+        public string Path { get; set; } = "";
 
-        [CommandArgument(1, "<PAYLOAD>")]
-        public string Message { get; set; } = "";
+        [CommandOption("--delay")]
+        [Description("Delay between messages in milliseconds.")]
+        public int Delay { get; set; } = 1000;
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
@@ -44,19 +47,28 @@ sealed class SendMessageCommand : AsyncCommand<SendMessageCommand.Settings>
                 ctx.Status("Connecting...");
                 var result = await mqttClient.ConnectAsync(options.Build());
 
-                ctx.Status("Publishing...");
-                var message = new MqttApplicationMessageBuilder()
-                    .WithTopic(settings.Topic)
-                    .WithPayload(settings.Message)
-                    .Build();
+                string[] messages = await File.ReadAllLinesAsync(settings.Path);
+                for (int i=0; i < messages.Length; ++i)
+                {
+                    ctx.Status($"Publishing message {i + 1} of {messages.Length}...");
+                    var parts = messages[i]
+                        .Split(',', 2)
+                        .Select(x => Encoding.UTF8.GetString(Convert.FromBase64String(x)))
+                        .ToArray();
 
-                await mqttClient.PublishAsync(message);
+                    var message = new MqttApplicationMessageBuilder()
+                        .WithTopic(parts[0])
+                        .WithPayload(parts[1])
+                        .Build();
+
+                    await mqttClient.PublishAsync(message);
+                    ctx.Status($"Published message {i + 1} of {messages.Length}...");
+                    await Task.Delay(settings.Delay);
+                }
 
                 ctx.Status("Disconnecting...");
                 await mqttClient.DisconnectAsync();
             });
-
-        AnsiConsole.MarkupLine($"[green]Message sent to {settings.Topic}: {settings.Message}[/]");
 
         return ExitCode.Ok;
     }

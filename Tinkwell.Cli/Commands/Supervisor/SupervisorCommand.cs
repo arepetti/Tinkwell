@@ -7,7 +7,7 @@ namespace Tinkwell.Cli.Commands.Supervisor;
 [Description("Low level interface to the supervisor.")]
 sealed class SupervisorCommand : Command<SupervisorCommand.Settings>
 {
-    public class Settings : CommonSettings
+    public class Settings : LiveInstanceCommonSettings
     {
         [CommandOption("-y|--confirm")]
         [Description("Performs the operation without asking for confirmation.")]

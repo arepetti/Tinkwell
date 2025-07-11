@@ -1,6 +1,6 @@
-namespace Tinkwell.Bridge.MqttClient;
+namespace Tinkwell.Bridge.MqttClient.Internal;
 
-sealed class MqttBridgeOptions
+public sealed class MqttBridgeOptions
 {
     public const string DefaultBrokerAddress = "localhost";
     public const int DefaultBrokerPort = 1883;
@@ -9,9 +9,9 @@ sealed class MqttBridgeOptions
     public const int DefaultNumberOfRetriesOnError = 3;
     public const int DefaultRetryDelayInMilliseconds = 2000;
 
-    public required string BrokerAddress { get; init; } = DefaultBrokerAddress;
+    public string BrokerAddress { get; init; } = DefaultBrokerAddress;
     public int BrokerPort { get; init; } = DefaultBrokerPort;
-    public required string TopicFilter { get; init; } = DefaultTopicFilter;
+    public string TopicFilter { get; init; } = DefaultTopicFilter;
     public string ClientId { get; init; } = DefaultClientId;
     public string? Username { get; init; }
     public string? Password { get; init; }

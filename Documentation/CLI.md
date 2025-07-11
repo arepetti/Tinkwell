@@ -6,9 +6,9 @@ All the sub-commands are accessible with the `tw` command.
 
 **Initial setup**: [`tw certs`](#tw-certs), [`tw ensamble`](#tw-ensamble), [`tw measures`](#tw-measures)
 
-**Measures and alarms**: [`tw measures`](#tw-measures), [`tw events`](#tw-events), [`tw executor`](#tw-executor)
+**Measures and alarms**: [`tw measures`](#tw-measures), [`tw events`](#tw-events), [`tw actions`](#tw-actions)
 
-**Events**: [`tw events`](#tw-events), [`tw executor`](#tw-executor)
+**Events**: [`tw events`](#tw-events), [`tw actions`](#tw-actions)
 
 **Integrations**: [`tw supervisor`](#tw-supervisor), [`tw contracts`](#tw-contracts), [`tw mqtt`](#tw-mqtt)
 
@@ -611,12 +611,15 @@ Produce a detailed description of the linting process.
 
 ##  `tw mqtt`
 
-Debug the MQTT bridge.
+Debug the MQTT bridge configuration.
 
 ### SYNOPSIS
 
 ```console
-tw mqtt send <topic> <message> [--address=<address>] [--port=<port>] [--client-id=<id>] [--username=<username>]
+tw mqtt match <topic> <payload> [--rules=<path>] [--json]
+tw mqtt send <topic> <payload> [--address=<address>] [--port=<port>] [--client-id=<id>] [--username=<username>]
+tw mqtt subscribe <topic> [--address=<address>] [--port=<port>] [--client-id=<id>] [--username=<username>] [--output=<path>]
+tw mqtt replay <path> [--address=<address>] [--port=<port>] [--client-id=<id>] [--username=<username>] [--delay=<milliseconds>]
 ```
 
 ### DESCRIPTION
@@ -626,9 +629,26 @@ Use `tw mqtt` to help debugging/testing the [MQTT Bridge](./MQTT-Bridge.md).
 ### COMMANDS
 
 ```console
-tw mqtt send <topic> <message> [--address=<address>] [--port=<port>] [--client-id=<id>] [--username=<username>]
+tw mqtt match <topic> <payload> [--rules=<path>] [--json]
 ```
-Send the specified message to the specified topic. All the default options match with a default setup of the [internal MQTT Broker](./MQTT-Server.md).
+
+Check which measures the rules in the specified rule file (if using `--rules` otherwise it'll use the default rules) produce against the specified MQTT message. This command assumes you're using the internal MQTT Bridge (but you can use any MQTT Broker you want).
+It outputs all the measures that the specified message will be updated.
+
+```console
+tw mqtt send <topic> <payload> [--address=<address>] [--port=<port>] [--client-id=<id>] [--username=<username>]
+```
+Send the specified message. All the default options match [internal MQTT Broker](./MQTT-Server.md) default setup. Note that you can use this command with any broker, not necessarily the internal one.
+
+```console
+tw mqtt subscribe <topic> [--address=<address>] [--port=<port>] [--client-id=<id>] [--username=<username>] [--output=<path>]
+```
+Subscribe to all the messages for the specified topic. `<topic>` is a standard MQTT topic filter. 
+
+```console
+tw mqtt replay <path> [--address=<address>] [--port=<port>] [--client-id=<id>] [--username=<username>] [--delay=<milliseconds>]
+```
+Publishes all the messages recorded in the specified replay file. Use `tw mqtt subscribe` with the `--output` option to save a replay file for all the messages that has been received. This is extremely useful to reproduce issues visible in another machine when a specific sequence of messages occur, or to stress test an installation.
 
 ### ARGUMENTS
 
@@ -636,9 +656,13 @@ Send the specified message to the specified topic. All the default options match
 
 Topic of the message.
 
-**`<message>`**
+**`<payload>`**
 
-Message to send.
+Payload of the message.
+
+**`<path>`**
+
+Path of the replay file, created with `tw mqtt subscribe`, to be replayed with `tw mqtt replay`.
 
 **`--address=<address>`**
 
@@ -650,8 +674,45 @@ Port where the MQTT Broker is listening. Default is `1883`.
 
 **`--client-id=<id>`**
 
-ID of the client used to connect to the broker. Default is `TinkwellCliMqttClient`.
+ID of the client used to connect to the broker. Default is `TinkwellCliMqttClient-` to which is appended an UUID. Remember that there can be only one client with the same name, if you specify your own name it has to be unique if you're running mutiple parallel instances of `tw mqtt`.
 
 **`--username=<username>`**
 
 If specified then the connection requires credentials. `tw` will look for the password in the environment variable `TINKWELL_MQTT_PASSWORD` and if not present then it'll prompt the user for a password.
+
+**`--rules=<path>`**, **`-r=<path>`**
+
+Path to the rule file containing the rule to match against the message specified in `<topic>` and `<payload>`. If not specified then the default matching rules are applied (see [MQTT Bridge](./MQTT-Bridge.md#default-behavior)).
+
+**`--json`**, **`-j`**
+
+Indicates that the payload is a JSON string. This does not affect how the message is parsed or how the rules are matched but it validates the given payload (to prevent mistakes!) and use the appropriate colorization.
+
+**`--output=<path>`**
+
+Path of the file where all the received messages must be recorded. You can use this file to replay them in sequence with `tw mqtt replay`.
+
+**`--delay=<milliseconds>`**
+
+Delay, in milliseconds, between each message to replay.
+
+### EXAMPLES
+
+You can create a set of artificial messages to replay, for example to simulate devices you do not yet have:
+
+```bash
+# Run this in a separate terminal to record all the messages
+tw mqtt subscribe "sensor/+" --output=messages.csv
+
+# In your terminal send multiple messages like this:
+tw mqtt send "sensor/living_room" '{ "temp": 21, "humidity": 30 }'
+
+# Close the first terminal, now you can replay them with:
+tw mqtt replay messages.csv
+```
+
+In Powershell it's more portable (and easier) to escape the JSON payload like this:
+
+```powershell
+tw mqtt match "sensor/temperature" --rules=mapping.twrules --json --% "{ \"temperature\": \"12 °C\" }"
+```

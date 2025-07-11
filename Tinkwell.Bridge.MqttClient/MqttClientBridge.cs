@@ -4,6 +4,7 @@ using MQTTnet;
 using MQTTnet.Protocol;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using Tinkwell.Bridge.MqttClient.Internal;
 
 namespace Tinkwell.Bridge.MqttClient;
 
@@ -110,7 +111,7 @@ sealed class MqttClientBridge : IAsyncDisposable
         var topicFilter = new MqttTopicFilterBuilder()
             .WithTopic(_options.TopicFilter)
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
-        .Build();
+            .Build();
 
         await _mqttClient.SubscribeAsync(topicFilter);
         _logger.LogDebug("Subscribed to MQTT topic: {TopicFilter}", _options.TopicFilter);

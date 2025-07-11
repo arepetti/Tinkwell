@@ -2,6 +2,8 @@
 
 The MQTT Bridge is an [agent](./Glossary.md#agent) that connects to an MQTT broker, subscribes to topics, and translates incoming messages into Tinkwell measures. This allows for seamless integration of IoT devices and other systems that use MQTT into the Tinkwell ecosystem.
 
+Use [`tw mqtt`](./CLI.md#tw-mqtt) to monitor, record and replay MQTT messages for debugging purposes.
+
 ## Ensamble Configuration
 
 To use the MQTT Bridge, you need to compose it as an agent in your `ensamble.tw` file. The agent is packaged in `Tinkwell.Bridge.MqttClient.dll`.
@@ -33,6 +35,8 @@ The agent's behavior is configured through properties within the `compose` block
 The mapping file defines how incoming MQTT messages are translated into Tinkwell measures. It's a simple text file where each line represents a parsing rule. If no mapping file is provided via the `mapping` property, a default behavior is applied. Lines starting with `//` or `#` are treated as comments and ignored.
 
 Note that **all the rules matching the topic are executed** and produce a value for a measure!
+
+Use [`tw mqtt match`](CLI.md#tw-mqtt) to check if the rules you're writing correctly match the messages you're expecting.
 
 ### Default Behavior
 

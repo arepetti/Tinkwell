@@ -16,7 +16,7 @@ public sealed class MqttCommand : Command<MqttCommand.Settings>
         public int BrokerPort { get; set; } = 1883;
 
         [CommandOption("--client-id")]
-        public string ClientId { get; set; } = "TinkwellCliMqttClient";
+        public string ClientId { get; set; } = $"TinkwellCliMqttClient-{Guid.NewGuid()}";
 
         [CommandOption("--username")]
         public string? Username { get; set; }
