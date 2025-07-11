@@ -8,6 +8,13 @@ using Tinkwell.Bridge.MqttClient.Internal;
 
 namespace Tinkwell.Bridge.MqttClient;
 
+enum PublishMessageResult
+{
+    Ok,
+    NoSubscribers,
+    Error,
+}
+
 sealed class MqttClientBridge : IAsyncDisposable
 {
     public MqttClientBridge(ILogger<MqttClientBridge> logger, ServiceLocator locator, MqttMessageParser messageParser, MqttBridgeOptions options)
@@ -31,6 +38,28 @@ sealed class MqttClientBridge : IAsyncDisposable
 
     public async Task StopAsync(CancellationToken cancellationToken)
         => await DisposeAsync();
+
+    public async Task<PublishMessageResult> PublishAsync(string topic, string payload, CancellationToken cancellationToken)
+    {
+        if (_mqttClient is null)
+            throw new InvalidOperationException("MQTT client is not initialized. Please start the bridge first.");
+
+        var message = new MqttApplicationMessageBuilder()
+            .WithTopic(topic)
+            .WithPayload(payload)
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+            .Build();
+
+        _logger.LogTrace("Publishing MQTT message on topic '{Topic}': {Payload}", topic, payload);
+        var result = await _mqttClient.PublishAsync(message, cancellationToken);
+
+        return result.ReasonCode switch
+        {
+            MqttClientPublishReasonCode.Success => PublishMessageResult.Ok,
+            MqttClientPublishReasonCode.NoMatchingSubscribers => PublishMessageResult.NoSubscribers,
+            _ => PublishMessageResult.Error
+        };
+    }
 
     public async ValueTask DisposeAsync()
     {
@@ -71,7 +100,7 @@ sealed class MqttClientBridge : IAsyncDisposable
     private readonly ServiceLocator _locator;
     private readonly MqttBridgeOptions _options;
     private readonly MqttMessageParser _messageParser;
-    private GrpcService<Services.Store.StoreClient>? _store;
+    private GrpcService<Tinkwell.Services.Store.StoreClient>? _store;
     private IMqttClient? _mqttClient;
     private MqttClientOptions? _clientOptions;
     private readonly ConcurrentBag<string> _unregisteredMeasures = new();

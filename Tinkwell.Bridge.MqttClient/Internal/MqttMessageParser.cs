@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Reflection.Metadata.Ecma335;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Tinkwell.Bootstrapper.Expressions;
 
@@ -116,9 +118,57 @@ public sealed class MqttMessageParser
         if (double.TryParse(payload, CultureInfo.InvariantCulture, out var value))
             return value;
 
-        // If the payload is not a number, we return it as a string assuming it
-        // might contain a unit. It's naive but it's the default behavior and the user
-        // can customize it when it's wrong.
-        return payload;
+        // If the payload is not a number, we try to parse it as JSON. If it contains
+        // only ONE value then we could assume that this is the value we want.
+        // If not then the default behavior is to return the payload as-is (which
+        // is probably wrong and callers will need to setup a proper manual mapping).
+        return TryExtractSingleValueFromJson(payload) ?? payload;
+    }
+
+    private static object? TryExtractSingleValueFromJson(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            // If it's an empty element then we do not even need to parse it
+            if (!IsEmpty(root))
+            {
+                var properties = root.EnumerateObject();
+                if (properties.MoveNext())
+                {
+                    var prop = properties.Current;
+                    if (!properties.MoveNext()) // There must be no next property!
+                    {
+                        return prop.Value.ValueKind switch
+                        {
+                            JsonValueKind.String => prop.Value.GetString(),
+                            JsonValueKind.Number => prop.Value.TryGetInt64(out var i) ? i : prop.Value.GetDouble(),
+                            _ => null
+                        };
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Ignore parsing errors, return null
+        }
+
+        return null;
+
+        bool IsEmpty(JsonElement element)
+        {
+            // An empty object {}
+            if (element.ValueKind == JsonValueKind.Object && element.GetRawText().Length <= 2)
+                return true;
+
+            // An empty array []
+            if (element.ValueKind == JsonValueKind.Array && element.GetRawText().Length <= 2)
+                return true;
+
+            return false;
+        }
     }
 }

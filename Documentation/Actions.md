@@ -6,7 +6,7 @@ This document describes the syntax for defining automated actions in Tinkwell's 
 
 An actions file consists of one or more `when` blocks, each defining a listener for a specific type of event and the actions to perform when that event occurs. The file can also contain `import` directives to include definitions from other files. Lines starting with `//` are treated as comments.
 
-```tinkwell
+```text
 // Import actions from another file
 import "shared_actions.twa"
 
@@ -49,7 +49,7 @@ Inside the `when` block, you can specify attributes to further filter the events
 
 The `then` block contains a list of one or more actions to be executed when a matching event is received. The actions are executed in the order they are defined.
 
-```tinkwell
+```text
 then {
     // action 1
     // action 2
@@ -87,7 +87,7 @@ You can organize your action files by splitting them into multiple files and usi
 
 ## Complete Example
 
-```tinkwell
+```text
 // File: /etc/tinkwell/actions.twa
 
 import "email_notifications.twa"
@@ -145,7 +145,18 @@ when event system_mode_changed {
 
 ## Supported Agents
 
-This section lists the built-in agents available for use in `then` blocks.
+This section lists the built-in agents available for use in `then` blocks. Note that, where supported, the `require` property allows you to skip a step even if the event has been published. This condition is evaluated at runtime. Also note that to use the data from the payload you need to interpolate the string (using `$`) with the values you need then, to compare string values, you have to do it inside quotes. See the example for `log`. 
+
+### pass
+
+A no-op (no operation) agent that does nothing. It can be used as a placeholder in a `then` block when no action is required, or for testing event matching without side effects. It has no properties.
+
+**Example**
+```text
+then {
+    pass {}
+}
+```
 
 ### log
 
@@ -155,24 +166,65 @@ Writes a message to the system log. This agent is useful for debugging and monit
 
 | Property  | Type   | Required | Description                                                                    |
 | :-------- | :----- | :------- | :----------------------------------------------------------------------------- |
+| `require` | String | No       | An [expression](./Expressions.md) that needs to be satisfied to execute this step. |
 | `message` | String | Yes      | The log message. It can be a literal string or a [template](#property-value-types) to include event data. |
 
 **Example**
-```tinkwell
+```text
 then {
     log {
+        require: $"'{{ payload.severity }}' == 'critical'"
         message: $"A high temperature of {{ payload.value }} was detected on {{ payload.subject }}."
     }
 }
 ```
 
-### pass
+### set_measure
 
-A no-op (no operation) agent that does nothing. It can be used as a placeholder in a `then` block when no action is required, or for testing event matching without side effects. It has no properties.
+Sets the value of a measure. This command is available only if the service `Tinkwell.Store.dll` has been included in the configuration and the measure you want to set has been already registered.
+
+**Properties**
+
+| Property  | Type   | Required | Description                                                                    |
+| :-------- | :----- | :------- | :----------------------------------------------------------------------------- |
+| `require` | String | No       | An [expression](./Expressions.md) that needs to be satisfied to execute this step. |
+| `name`    | String | Yes      | The name of the measure you want to set. |
+| `value`   | Number | Yes      | The new value to write to the measure. |
 
 **Example**
-```tinkwell
-then {
-    pass {}
+
+```text
+when event high_temperature {
+    then {
+        measure_set {
+            name: "roasting"
+            value: 1
+        }
+    }
+}
+```
+
+### mqtt_publish
+
+Publishes an MQTT message to the specified topic. It logs an error if the operation failed. This command is available only if the service `Tinkwell.Bridge.Mqtt.dll` has been included in the configuration (see [MQTT Bridge](./MQTT-Bridge.md)).
+
+**Properties**
+
+| Property  | Type   | Required | Description                                                                    |
+| :-------- | :----- | :------- | :----------------------------------------------------------------------------- |
+| `require` | String | No       | An [expression](./Expressions.md) that needs to be satisfied to execute this step. |
+| `topic`   | String | Yes      | The topic you want to publish to. |
+| `payload` | String | Yes      | The message you want to publish. |
+
+**Example**
+
+```text
+when event high_temperature {
+    then {
+        mqtt_send {
+            topic: "home/ac/living_room/set"
+            payload: "{ \"power\": \"ON\" }"
+        }
+    }
 }
 ```

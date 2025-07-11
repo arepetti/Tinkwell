@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option csharp_namespace = "Tinkwell.Services";
+
+package Tinkwell;
+
+// Service to send MQTT messages.
+service MqttClient {
+    // List all the measures currently stored.
+    rpc Publish (PublishMqttMessageRequest) returns (PublishMqttMessageResponse);
+}
+
+// Request for MqttClient.Publish().
+message PublishMqttMessageRequest {
+     // The topic to publish the message to.
+    string topic = 1;
+    // The message to publish.
+    string payload = 2;
+}
+
+// Response of MqttClient.Publish().
+message PublishMqttMessageResponse {
+    enum Status {
+        // The message was published successfully.
+        OK = 0;
+        // The message could not be published because there are no subscribers.
+        NO_SUBSCRIBERS = 1;
+        // The message could not be published.
+        ERROR = 2;
+    }
+    Status status = 1;
+}

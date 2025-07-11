@@ -13,6 +13,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.64.0" />
 	</ItemGroup>
 
 	<ItemGroup>
