@@ -1,4 +1,6 @@
 ﻿using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Net;
 
 namespace Tinkwell.Bootstrapper.Expressions.CustomFunctions;
 
@@ -87,4 +89,16 @@ sealed class RegexExtract : TernaryFunction<string, string, int>
         var match = Regex.Match(text, pattern);
         return match.Success ? match.Groups[group].Value : null;
     }
+}
+
+sealed class JsonEncode : UnaryFunction<string?>
+{
+    protected override object? Call(string? arg)
+        => JsonSerializer.Serialize(arg);
+}
+
+sealed class UrlEncode : UnaryFunction<string?>
+{
+    protected override object? Call(string? arg)
+        => WebUtility.UrlEncode(arg);
 }

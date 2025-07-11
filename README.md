@@ -31,10 +31,8 @@ First, we compose our MQTT client bridge in `ensamble.tw`:
 
 ```tinkwell
 // ensamble.tw
-compose agent mqtt_bridge "Tinkwell.Bridge.MqttClient.dll" {
-    broker_address: "your_mqtt_broker"
-    broker_port: 1883
-    topic_filter: "sensor/+" // Subscribe to sensor data
+compose service mqtt_bridge "Tinkwell.Bridge.MqttClient.dll" {
+    topic_filter: "sensor/+"
 }
 ```
 
@@ -45,13 +43,9 @@ Next, we define our measures and a signal in `measures.twm`. The MQTT bridge wil
 measure temperature_sensor_1 {
     type: "Temperature"
     unit: "DegreeCelsius"
-    expression: "value" // Direct input from MQTT
-}
 
-signal high_temperature_alert {
-    when: "temperature_sensor_1 > 30"
-    with {
-        severity: "warning"
+    signal high_temperature {
+        when: "value > 30"
     }
 }
 ```
@@ -60,11 +54,11 @@ Finally, we define an action in `actions.twa` to log the alert:
 
 ```tinkwell
 // actions.twa
-when event high_temperature_alert {
-    name: "Log high temperature alert"
+when event high_temperature {
     then {
-        log {
-            message: $"High temperature detected: {{ payload.value }}°C on {{ payload.subject }}"
+        mqtt_send {
+            topic: "home/ac/living_room/set"
+            payload: "{ \"power\": \"ON\" }"
         }
     }
 }

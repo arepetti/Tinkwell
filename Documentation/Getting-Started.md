@@ -68,9 +68,9 @@ The `ensamble.tw` file is the heart of your application's configuration, definin
 ## 3. Start the Supervisor
 
 The Supervisor is the main entry point of your application.
-
--   Launch the `Tinkwell.Supervisor` project from your deployment directory (or Visual Studio if you're in development mode).
--   The Supervisor will read the `ensamble.tw` file and start all the configured runners.
+- Check your firewall, Tinkwell hosts should be allowed to receive data on the ports they're listening to! Whenever possible Tinkwell will try to open the ports for you but if you have any communication problem then it's the first thing to check.
+- Launch the `Tinkwell.Supervisor` project from your deployment directory (or Visual Studio if you're in development mode).
+- The Supervisor will read the `ensamble.tw` file and start all the configured runners.
 
 ## 4. Verify the System
 

@@ -1,7 +1,7 @@
-using Grpc.Core;
 using Tinkwell.Services;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Logging;
+using Grpc.Core;
 
 namespace Tinkwell.EventsGateway.Services;
 
