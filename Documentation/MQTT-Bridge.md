@@ -47,13 +47,15 @@ This default is useful for simple sensors that publish a numeric value to a uniq
 
 Each rule in the mapping file follows this structure:
 
-`<topic_pattern>=<name_definition>[:<value_definition>]`
+```text
+map <topic_pattern> [to <value_definition>] as <name_definition>
+```
 
--   `<topic_pattern>`: A wildcard pattern that is matched against the incoming MQTT topic. It uses Git-like wildcards (`*` for any sequence, `?` for a single character).
--   `<name_definition>`: Defines the name of the Tinkwell measure. This can be a static name or a dynamic [expression](./Expressions.md).
+-   `<topic_pattern>`: A wildcard pattern that is matched against the incoming MQTT topic. It uses Git-like wildcards (`*` for any sequence, `?` for a single character). Quotes are optional.
 -   `<value_definition>`: An optional [expression](./Expressions.md) that is evaluated to extract the value from the message.
+-   `<name_definition>`: Defines the name of the Tinkwell measure. This can be a static name or a dynamic [expression](./Expressions.md). If it's enclosed in double quotes then it's an expression, unquoted words are literal names. When you need quotes because the name is not a [simple identifier](./Glossary.md#simple-identifier) then you can use an expression to return a string: `"'measure with spaces in the name'"`.
 
-The expressions has access to two variables:
+The expressions have access to two variables:
 *   `topic`: The full topic of the MQTT message (e.g., `"sensor/temperature"`).
 *   `payload`: The payload of the MQTT message as a string (e.g., `"{ "value": 21.5 }"`)
 
@@ -62,12 +64,12 @@ The expressions has access to two variables:
 The measure name can be defined in two ways:
 
 *  **Static Name:** A simple, unquoted string.
-    ```
-    sensor/temperature=living_room_temp
+    ```text
+    map sensor/temperature as living_room_temp
     ```
 *  **Dynamic Expression:** A quoted string that is evaluated as an [expression](./Expressions.md). This is useful for extracting the name from the topic or payload. The expression has access to `topic` and `payload` variables.
-    ```
-    sensor/temperature/data="concat('living_room_', segment_at(topic, '/', 1))"
+    ```text
+    map sensor/temperature/data as "concat('living_room_', segment_at(topic, '/', 1))"
     ```
 
 #### Value Definition
@@ -84,13 +86,13 @@ Consider an MQTT broker where devices publish JSON data to topics like `devices/
 -   **Topic:** `devices/thermostat-01/data`
 -   **Payload:** `{"temp": 22.4, "humidity": 45.8, "battery": 98.1}`
 
-**Mapping File (`mqtt_mapping.ini`):**
+**Mapping File (`mqtt_mapping.twmap`):**
 
-```
+```text
 // Note that we have two matches because we want to produce two measures from
 // the same payload!
-devices/thermostat-01/data=temperature:"json_get_value(payload, 'temp')"
-devices/thermostat-01/data=humidity:"json_get_value(payload, 'humidity')"
+map devices/thermostat-01/data to json_get_value(payload, 'temp') as temperature
+map devices/thermostat-01/data to json_get_value(payload, 'humidity') as humidity
 ```
 
 **Resulting Measures:**

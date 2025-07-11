@@ -605,3 +605,53 @@ Apply stricter rules and the exit code is not zero when all the issues are minor
 **`--verbose`** **`-v`**
 
 Produce a detailed description of the linting process.
+
+---
+
+
+##  `tw mqtt`
+
+Debug the MQTT bridge.
+
+### SYNOPSIS
+
+```console
+tw mqtt send <topic> <message> [--address=<address>] [--port=<port>] [--client-id=<id>] [--username=<username>]
+```
+
+### DESCRIPTION
+
+Use `tw mqtt` to help debugging/testing the [MQTT Bridge](./MQTT-Bridge.md).
+
+### COMMANDS
+
+```console
+tw mqtt send <topic> <message> [--address=<address>] [--port=<port>] [--client-id=<id>] [--username=<username>]
+```
+Send the specified message to the specified topic. All the default options match with a default setup of the [internal MQTT Broker](./MQTT-Server.md).
+
+### ARGUMENTS
+
+**`<topic>`**
+
+Topic of the message.
+
+**`<message>`**
+
+Message to send.
+
+**`--address=<address>`**
+
+Address where the MQTT Broker is listening. Default is `localhost`.
+
+**`--port=<port>`**
+
+Port where the MQTT Broker is listening. Default is `1883`.
+
+**`--client-id=<id>`**
+
+ID of the client used to connect to the broker. Default is `TinkwellCliMqttClient`.
+
+**`--username=<username>`**
+
+If specified then the connection requires credentials. `tw` will look for the password in the environment variable `TINKWELL_MQTT_PASSWORD` and if not present then it'll prompt the user for a password.

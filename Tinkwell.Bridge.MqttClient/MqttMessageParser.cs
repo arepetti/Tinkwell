@@ -32,10 +32,11 @@ sealed class MqttMessageParser
 
     private readonly static Mapping DefaultMapping = new Mapping(new Regex(TextHelpers.GitLikeWildcardToRegex("*")), ExtractDefaultMeasureName, ExtractDefaultValue);
     private static readonly Regex _ruleParser = new Regex(
-        @"^(?<topic>[^\s=]+)=" +
-        @"(?:(?<expression>""[^""]+"")|(?<name>[^"":]+))" +
-        @"(?::(?:(?<quotedValue>""[^""]+"")|(?<value>[^""]+)))?$",
-        RegexOptions.CultureInvariant| RegexOptions.IgnoreCase);
+        @"^map\s+" +
+        @"(?:(?<topic>""[^""]+"")|(?<topic>[^\s""=]+))\s+" +
+        @"(?:to\s+(?<expression>""[^""]+""|[^\s""]+)\s+)?" +
+        @"as\s+(?:(?<quotedName>""[^""]+"")|(?<literalName>[^\s""]+))$",
+        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
     private readonly MqttBridgeOptions? _options;
     private readonly IEnumerable<Mapping> _mappings;
@@ -54,21 +55,22 @@ sealed class MqttMessageParser
             if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//") || line.StartsWith("#"))
                 continue;
 
+            // Syntax:
+            //   map <topic> [to <expression>] as <name>
+            // Where <topic> is a git-like wildcard, <expression> is an optional NCalc expression, quotes
+            // can be omitted when not necessary. <name> is required and with or without quotes have different
+            // meanings: with quotes for expressions, without for literal names.
             var match = _ruleParser.Match(line);
-            if (!match.Groups["topic"].Success || (!match.Groups["name"].Success && !!match.Groups["expression"].Success))
+            if (!match.Groups["topic"].Success || (!match.Groups["literalName"].Success && !!match.Groups["quotedName"].Success))
                 throw new InvalidOperationException($"Invalid mapping rule: {line}");
 
-            var rawValue = match.Groups["quotedValue"].Success
-                    ? match.Groups["quotedValue"].Value.Trim('"')
-                    : (match.Groups["value"].Success ? match.Groups["value"].Value : null);
-
-            Regex topic = new(TextHelpers.GitLikeWildcardToRegex(match.Groups["topic"].Value), RegexOptions.CultureInvariant | RegexOptions.Compiled);
-            Func<string, string, string> name = match.Groups["name"].Success
-                ? ((_, _) => match.Groups["name"].Value)
-                : ((topic, payload) => evaluator.EvaluateString(match.Groups["expression"].Value, new { topic, payload }));
-            Func<string, string, object?> value = string.IsNullOrEmpty(rawValue)
-                ? ExtractDefaultValue
-                : ((topic, payload) => evaluator.Evaluate(rawValue, new { topic, payload }));
+            Regex topic = new(TextHelpers.GitLikeWildcardToRegex(match.Groups["topic"].Value.Trim('"')), RegexOptions.CultureInvariant | RegexOptions.Compiled);
+            Func<string, string, object?> value = match.Groups["expression"].Success
+                ? ((topic, payload) => evaluator.Evaluate(match.Groups["expression"].Value.Trim('"'), new { topic, payload }))
+                : ExtractDefaultValue;
+            Func<string, string, string> name = match.Groups["literalName"].Success
+                ? ((_, _) => match.Groups["literalName"].Value)
+                : ((topic, payload) => evaluator.EvaluateString(match.Groups["quotedName"].Value.Trim('"'), new { topic, payload }));
 
             mappings.Add(new(topic, name, value));
         }

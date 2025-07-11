@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.Extensions.Logging;
 using MQTTnet.Server;
 
@@ -16,6 +17,8 @@ sealed class MqttBroker : IAsyncDisposable
         _logger.LogInformation("Starting MQTT broker on port {Port}...", _options.Port);
 
         var serverOptions = new MqttServerOptionsBuilder()
+            .WithDefaultEndpoint()
+            .WithDefaultEndpointBoundIPAddress(IPAddress.Any)
             .WithDefaultEndpointPort(_options.Port)
             .Build();
 

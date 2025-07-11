@@ -5,6 +5,7 @@ using MQTTnet;
 using MQTTnet.Protocol;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Tinkwell.Bridge.MqttClient;
 
@@ -20,14 +21,13 @@ sealed class MqttClientBridge : IAsyncDisposable
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        if (Interlocked.CompareExchange(ref _disposed, true, false) == true)
+        if (Interlocked.CompareExchange(ref _disposed, true, true) == true)
             throw new ObjectDisposedException(nameof(MqttClientBridge));
 
         _logger.LogDebug("Starting MQTT client");
         _store = await _locator.FindStoreAsync(cancellationToken);
 
-        CreateMqttClient();
-        await ConnectAsync(cancellationToken);
+        await CreateMqttClientAndConnectAsync(cancellationToken);
 
         _logger.LogInformation("MQTT client started successfully");
     }
@@ -84,15 +84,14 @@ sealed class MqttClientBridge : IAsyncDisposable
     private readonly ConcurrentDictionary<string, bool> _unregisteredMeasures = new();
     private bool _disposed;
 
-    private void CreateMqttClient()
+    private async Task CreateMqttClientAndConnectAsync(CancellationToken cancellationToken)
     {
         var mqttFactory = new MqttClientFactory();
         _mqttClient = mqttFactory.CreateMqttClient();
 
         var clientOptionsBuilder = new MqttClientOptionsBuilder()
             .WithClientId(_options.ClientId)
-            .WithTcpServer(_options.BrokerAddress, _options.BrokerPort)
-            .WithCleanSession();
+            .WithTcpServer(_options.BrokerAddress, _options.BrokerPort);
 
         if (_options.UseCredentials)
         {
@@ -105,8 +104,10 @@ sealed class MqttClientBridge : IAsyncDisposable
         _clientOptions = clientOptionsBuilder.Build();
 
         _mqttClient.ConnectedAsync += HandleClientConnectedAsync;
-        _mqttClient.DisconnectedAsync += HandleClientDissconnectedAsync;
         _mqttClient.ApplicationMessageReceivedAsync += HandleApplicationMessageReceivedAsync;
+
+        await ConnectAsync(cancellationToken);
+        _mqttClient.DisconnectedAsync += HandleClientDissconnectedAsync;
     }
 
     private async Task HandleClientConnectedAsync(MqttClientConnectedEventArgs e)
@@ -123,7 +124,7 @@ sealed class MqttClientBridge : IAsyncDisposable
         _logger.LogDebug("Subscribed to MQTT topic: {TopicFilter}", _options.TopicFilter);
     }
 
-    private async Task HandleClientDissconnectedAsync(MqttClientDisconnectedEventArgs e)
+    private Task HandleClientDissconnectedAsync(MqttClientDisconnectedEventArgs e)
     {
         Debug.Assert(_mqttClient is not null);
         Debug.Assert(_clientOptions is not null);
@@ -131,13 +132,19 @@ sealed class MqttClientBridge : IAsyncDisposable
         if (CanReconnect())
         {
             _logger.LogWarning("MQTT client disconnected from broker. Reason: {Reason}", e.Reason);
-            await ConnectAsync(CancellationToken.None);
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(_options.RetryDelayInMilliseconds, CancellationToken.None);
+                await ConnectAsync(CancellationToken.None);
+            });
         }
         else
         {
             _logger.LogError("MQTT client disconnected from broker. Reason: {Reason}. Reconnection is not allowed.",
                 e.Reason);
         }
+
+        return Task.CompletedTask;
 
         bool CanReconnect()
         {
@@ -161,13 +168,14 @@ sealed class MqttClientBridge : IAsyncDisposable
         Debug.Assert(_mqttClient is not null);
         Debug.Assert(_clientOptions is not null);
 
+
         for (int i = 0; i < _options.NumberOfRetriesOnError; ++i)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            _logger.LogTrace("Connecting to MQTT broker (attempt {Attempt}/{TotalAttempts})...",
-                i + 1, _options.NumberOfRetriesOnError);
+            _logger.LogInformation("Connecting to MQTT broker {Address}:{Port} (attempt {Attempt}/{TotalAttempts})...",
+                _options.BrokerAddress, _options.BrokerPort, i + 1, _options.NumberOfRetriesOnError);
 
             try
             {
@@ -178,8 +186,8 @@ sealed class MqttClientBridge : IAsyncDisposable
             {
                 if (i < _options.NumberOfRetriesOnError - 1)
                 {
-                    _logger.LogWarning(e, "Failed to connect to MQTT broker. Retrying in {Delay}ms...",
-                        _options.RetryDelayInMilliseconds);
+                    _logger.LogWarning("Failed to connect to MQTT broker ({Reason)}. Retrying in {Delay}ms...",
+                        e.Message, _options.RetryDelayInMilliseconds);
 
                     await Task.Delay(_options.RetryDelayInMilliseconds, cancellationToken);
                 }

@@ -16,8 +16,10 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
     <PackageReference Include="MQTTnet" Version="5.0.1.1416" />
   </ItemGroup>
-
-  <ItemGroup>
+	<PropertyGroup>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	</PropertyGroup>
+	<ItemGroup>
     <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
     <ProjectReference Include="..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
   </ItemGroup>

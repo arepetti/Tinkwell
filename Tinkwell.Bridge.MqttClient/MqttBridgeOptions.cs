@@ -7,7 +7,7 @@ sealed class MqttBridgeOptions
     public const string DefaultTopicFilter = "sensor/+";
     public const string DefaultClientId = "TinkwellMqttClient";
     public const int DefaultNumberOfRetriesOnError = 3;
-    public const int DefaultRetryDelayInMilliseconds = 1000;
+    public const int DefaultRetryDelayInMilliseconds = 2000;
 
     public required string BrokerAddress { get; init; } = DefaultBrokerAddress;
     public int BrokerPort { get; init; } = DefaultBrokerPort;

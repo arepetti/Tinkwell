@@ -5,3 +5,6 @@ compose agent executor "Tinkwell.Actions.Executor.dll" { path: "./config/actions
 compose agent reducer "Tinkwell.Reducer.dll" { path: "./config/measures.twm" }
 compose agent reactor "Tinkwell.Reactor.dll" { path: "./config/measures.twm" }
 compose agent watchdog "Tinkwell.Watchdog.dll"
+
+compose agent mqtt_server "Tinkwell.Bridge.MqttServer.dll" {}
+compose agent mqtt_client "Tinkwell.Bridge.MqttClient.dll" {}
