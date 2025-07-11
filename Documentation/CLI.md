@@ -10,9 +10,9 @@ All the sub-commands are accessible with the `tw` command.
 
 **Events**: [`tw events`](#tw-events), [`tw executor`](#tw-executor)
 
-**Integrations**: [`tw supervisor`](#tw-supervisor), [`tw contracts`](#tw-contracts)
+**Integrations**: [`tw supervisor`](#tw-supervisor), [`tw contracts`](#tw-contracts), [`tw mqtt`](#tw-mqtt)
 
-**Debug**: [`tw supervisor`](#tw-supervisor), [`tw runners`](#tw-runners), [`tw contracts`](#tw-contracts)
+**Debug**: [`tw supervisor`](#tw-supervisor), [`tw runners`](#tw-runners), [`tw contracts`](#tw-contracts), [`tw mqtt`](#tw-mqtt)
 
 ---
 

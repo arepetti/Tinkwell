@@ -1,11 +1,9 @@
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Protocol;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Threading;
 
 namespace Tinkwell.Bridge.MqttClient;
 
@@ -26,9 +24,7 @@ sealed class MqttClientBridge : IAsyncDisposable
 
         _logger.LogDebug("Starting MQTT client");
         _store = await _locator.FindStoreAsync(cancellationToken);
-
         await CreateMqttClientAndConnectAsync(cancellationToken);
-
         _logger.LogInformation("MQTT client started successfully");
     }
 
@@ -60,9 +56,6 @@ sealed class MqttClientBridge : IAsyncDisposable
                 _mqttClient.Dispose();
             }
 
-            if (_locator is not null)
-                await _locator.DisposeAsync();
-
             if (_store is not null)
                 await _store.DisposeAsync();
         }
@@ -70,7 +63,6 @@ sealed class MqttClientBridge : IAsyncDisposable
         {
             _mqttClient = null;
             _store = null;
-            _disposed = true;
         }
     }
 
@@ -81,7 +73,7 @@ sealed class MqttClientBridge : IAsyncDisposable
     private GrpcService<Services.Store.StoreClient>? _store;
     private IMqttClient? _mqttClient;
     private MqttClientOptions? _clientOptions;
-    private readonly ConcurrentDictionary<string, bool> _unregisteredMeasures = new();
+    private readonly ConcurrentBag<string> _unregisteredMeasures = new();
     private bool _disposed;
 
     private async Task CreateMqttClientAndConnectAsync(CancellationToken cancellationToken)
@@ -124,7 +116,7 @@ sealed class MqttClientBridge : IAsyncDisposable
         _logger.LogDebug("Subscribed to MQTT topic: {TopicFilter}", _options.TopicFilter);
     }
 
-    private Task HandleClientDissconnectedAsync(MqttClientDisconnectedEventArgs e)
+    private async Task HandleClientDissconnectedAsync(MqttClientDisconnectedEventArgs e)
     {
         Debug.Assert(_mqttClient is not null);
         Debug.Assert(_clientOptions is not null);
@@ -132,11 +124,8 @@ sealed class MqttClientBridge : IAsyncDisposable
         if (CanReconnect())
         {
             _logger.LogWarning("MQTT client disconnected from broker. Reason: {Reason}", e.Reason);
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(_options.RetryDelayInMilliseconds, CancellationToken.None);
-                await ConnectAsync(CancellationToken.None);
-            });
+            await Task.Delay(_options.RetryDelayInMilliseconds, CancellationToken.None);
+            await ConnectAsync(CancellationToken.None);
         }
         else
         {
@@ -144,19 +133,17 @@ sealed class MqttClientBridge : IAsyncDisposable
                 e.Reason);
         }
 
-        return Task.CompletedTask;
-
         bool CanReconnect()
         {
             return e.Reason switch
             {
-                MqttClientDisconnectReason.SessionTakenOver => true,
+                MqttClientDisconnectReason.ConnectionRateExceeded => true,
                 MqttClientDisconnectReason.ImplementationSpecificError => true,
                 MqttClientDisconnectReason.MaximumConnectTime => true,
                 MqttClientDisconnectReason.MessageRateTooHigh => true,
-                MqttClientDisconnectReason.QuotaExceeded => true,
                 MqttClientDisconnectReason.ReceiveMaximumExceeded => true,
                 MqttClientDisconnectReason.ServerBusy => true,
+                MqttClientDisconnectReason.ServerShuttingDown => true, // Hopefully it'll restart
                 MqttClientDisconnectReason.UnspecifiedError => true,
                 _ => false
             };
@@ -168,13 +155,12 @@ sealed class MqttClientBridge : IAsyncDisposable
         Debug.Assert(_mqttClient is not null);
         Debug.Assert(_clientOptions is not null);
 
-
         for (int i = 0; i < _options.NumberOfRetriesOnError; ++i)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            _logger.LogInformation("Connecting to MQTT broker {Address}:{Port} (attempt {Attempt}/{TotalAttempts})...",
+            _logger.LogDebug("Connecting to MQTT broker {Address}:{Port} (attempt {Attempt}/{TotalAttempts})...",
                 _options.BrokerAddress, _options.BrokerPort, i + 1, _options.NumberOfRetriesOnError);
 
             try
@@ -199,44 +185,22 @@ sealed class MqttClientBridge : IAsyncDisposable
 
     private async Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
     {
-        Debug.Assert(_store is not null);
-
         var topic = arg.ApplicationMessage.Topic;
         var payload = arg.ApplicationMessage.ConvertPayloadToString();
         _logger.LogTrace("Received MQTT message on topic '{Topic}': {Payload}", topic, payload);
 
-        var measures = ExtractMeasures(topic, payload);
-        if (measures is null)
-            return;
-
-        foreach (var measure in measures.Where(x => !_unregisteredMeasures.ContainsKey(x.Name)))
-        {
-            try
-            {
-                await _store.Client.SetAsync(new Services.StoreSetRequest
-                {
-                    Name = measure.Name,
-                    Value = (double)measure.Value // TODO: support text strings with unit of measure!!!
-                });
-                _logger.LogTrace("Updated measure '{MeasureName}' with value {Value}.", measure.Name, measure.Value);
-            }
-            catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
-            {
-                _logger.LogWarning("Measure '{MeasureName}' not found in Store. We will NOT try again in future.", measure.Name);
-                _unregisteredMeasures.TryAdd(measure.Name, true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to update measure '{MeasureName}' in Store.", measure.Name);
-            }
-        }
+        foreach (var measure in ExtractMeasures(topic, payload))
+            await WriteMeasureAsync(measure);
     }
 
-    private IEnumerable<MqttMeasure>? ExtractMeasures(string topic, string payload)
+    private IEnumerable<MqttMeasure> ExtractMeasures(string topic, string payload)
     {
         try
         {
-            return _messageParser.Parse(topic, payload);
+            return _messageParser
+                .Parse(topic, payload)
+                .Where(x => !_unregisteredMeasures.Contains(x.Name, StringComparer.Ordinal))
+                .ToList();
         }
         catch (Exception e)
         {
@@ -244,6 +208,42 @@ sealed class MqttClientBridge : IAsyncDisposable
                 topic, payload, e.Message);
         }
 
-        return null;
+        return [];
+    }
+
+    private async Task WriteMeasureAsync(MqttMeasure measure)
+    {
+        Debug.Assert(_store is not null);
+
+        try
+        {
+            if (measure.IsNumeric)
+            {
+                await _store.Client.SetAsync(new()
+                {
+                    Name = measure.Name,
+                    Value = measure.AsDouble()
+                });
+            }
+            else
+            {
+                await _store.Client.UpdateAsync(new()
+                {
+                    Name = measure.Name,
+                    Value = measure.AsString()
+                });
+
+            }
+            _logger.LogTrace("Updated measure '{MeasureName}' with value {Value}.", measure.Name, measure.Value);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            _logger.LogWarning("Measure '{MeasureName}' not found in Store. We will NOT try again in future.", measure.Name);
+            _unregisteredMeasures.Add(measure.Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update measure '{MeasureName}' in Store.", measure.Name);
+        }
     }
 }

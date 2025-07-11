@@ -14,7 +14,7 @@ sealed class MqttBroker : IAsyncDisposable
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting MQTT broker on port {Port}...", _options.Port);
+        _logger.LogDebug("Starting MQTT broker on port {Port}...", _options.Port);
 
         var serverOptions = new MqttServerOptionsBuilder()
             .WithDefaultEndpoint()

@@ -5,7 +5,29 @@ using Tinkwell.Bootstrapper.Expressions;
 
 namespace Tinkwell.Bridge.MqttClient;
 
-sealed record MqttMeasure(string Name, object Value);
+sealed record MqttMeasure(string Name, object Value)
+{
+    public bool IsNumeric
+    {
+        get
+        {
+            if (Value is null)
+                return false;
+
+            // Note that we explicitely ignore IConvertible. A measure might return something
+            // that could be reduced to a primitive value but, in that case, we'd expect also a
+            // proper string representation containing its unit (for example when it's IQuantity).
+            var type = Value.GetType();
+            return (type.IsPrimitive && type != typeof(char)) || type == typeof(decimal);
+        }
+    }
+
+    public double AsDouble()
+        => (double)Convert.ChangeType(Value, typeof(double), CultureInfo.InvariantCulture);
+
+    public string AsString()
+        => Convert.ToString(Value, CultureInfo.InvariantCulture) ?? string.Empty;
+}
 
 sealed class MqttMessageParser
 {
@@ -30,13 +52,14 @@ sealed class MqttMessageParser
 
     private sealed record Mapping(Regex Topic, Func<string, string, string> MeasureName, Func<string, string, object?> Value);
 
-    private readonly static Mapping DefaultMapping = new Mapping(new Regex(TextHelpers.GitLikeWildcardToRegex("*")), ExtractDefaultMeasureName, ExtractDefaultValue);
+    private readonly static Mapping DefaultMapping
+        = new Mapping(new Regex(TextHelpers.GitLikeWildcardToRegex("*")), ExtractDefaultMeasureName, ExtractDefaultValue);
     private static readonly Regex _ruleParser = new Regex(
         @"^map\s+" +
         @"(?:(?<topic>""[^""]+"")|(?<topic>[^\s""=]+))\s+" +
         @"(?:to\s+(?<expression>""[^""]+""|[^\s""]+)\s+)?" +
         @"as\s+(?:(?<quotedName>""[^""]+"")|(?<literalName>[^\s""]+))$",
-        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private readonly MqttBridgeOptions? _options;
     private readonly IEnumerable<Mapping> _mappings;
@@ -49,10 +72,10 @@ sealed class MqttMessageParser
             return [DefaultMapping];
 
         List<Mapping> mappings = new();
-        ExpressionEvaluator evaluator = new ExpressionEvaluator();
+        ExpressionEvaluator evaluator = new();
         foreach (var line in File.ReadAllLines(_options.Mapping))
         {
-            if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//") || line.StartsWith("#"))
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//") || line.StartsWith('#'))
                 continue;
 
             // Syntax:
@@ -60,7 +83,7 @@ sealed class MqttMessageParser
             // Where <topic> is a git-like wildcard, <expression> is an optional NCalc expression, quotes
             // can be omitted when not necessary. <name> is required and with or without quotes have different
             // meanings: with quotes for expressions, without for literal names.
-            var match = _ruleParser.Match(line);
+            var match = _ruleParser.Match(line.Trim());
             if (!match.Groups["topic"].Success || (!match.Groups["literalName"].Success && !!match.Groups["quotedName"].Success))
                 throw new InvalidOperationException($"Invalid mapping rule: {line}");
 
@@ -87,5 +110,13 @@ sealed class MqttMessageParser
     }
 
     private static object ExtractDefaultValue(string topic, string payload)
-        => double.Parse(payload, CultureInfo.InvariantCulture);
+    {
+        if (double.TryParse(payload, CultureInfo.InvariantCulture, out var value))
+            return value;
+
+        // If the payload is not a number, we return it as a string assuming it
+        // might contain a unit. It's naive but it's the default behavior and the user
+        // can customize it when it's wrong.
+        return payload;
+    }
 }
