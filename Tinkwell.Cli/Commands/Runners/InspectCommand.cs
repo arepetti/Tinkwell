@@ -81,7 +81,7 @@ sealed class InspectCommand : AsyncCommand<InspectCommand.Settings>
 
         if (info.Properties.Count == 0)
         {
-            table.AddEntry("Properties", null);
+            table.AddEntry("Properties", (string?)null);
         }
         else
         {

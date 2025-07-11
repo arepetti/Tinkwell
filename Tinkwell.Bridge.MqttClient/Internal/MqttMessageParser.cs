@@ -139,7 +139,7 @@ public sealed class MqttMessageParser
                 if (properties.MoveNext())
                 {
                     var prop = properties.Current;
-                    if (!properties.MoveNext())
+                    if (!properties.MoveNext()) // There must be no next property!
                     {
                         return prop.Value.ValueKind switch
                         {

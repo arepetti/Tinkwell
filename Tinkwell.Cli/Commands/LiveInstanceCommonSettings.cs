@@ -4,7 +4,7 @@ using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Cli.Commands;
 
-public abstract class CommonSettings : CommandSettings
+public abstract class LiveInstanceCommonSettings : CommandSettings
 {
     [CommandOption("--machine <MACHINE_NAME>")]
     [Description("The name of the machine where the Supervisor is listening.")]

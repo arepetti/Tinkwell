@@ -13,13 +13,18 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
-
+	<Target Name="CopyRuntimeConfig" AfterTargets="CoreCompile">
+		<Message Importance="High" Text="Copying runtimeconfig from: $(OutputPath)$(AssemblyName).runtimeconfig.json" />
+		<Copy SourceFiles="$(OutputPath)$(AssemblyName).runtimeconfig.json" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+	</Target>
 	<ItemGroup>
 		<PackageReference Include="NCalcSync" Version="5.4.2" />
 		<PackageReference Include="Spectre.Console" Version="0.50.0" />
 		<PackageReference Include="Spectre.Console.Cli" Version="0.50.0" />
 		<PackageReference Include="Google.Protobuf" Version="3.31.1" />
 		<PackageReference Include="Grpc.Net.Client" Version="2.64.0" />
+		<PackageReference Include="MQTTnet" Version="5.0.1.1416" />
+		<PackageReference Include="Spectre.Console.Json" Version="0.50.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -27,6 +32,7 @@
 		<ProjectReference Include="..\Tinkwell.Actions.Executor\Tinkwell.Actions.Executor.csproj" />
 		<ProjectReference Include="..\Tinkwell.Bootstrapper.Ensamble.Parser\Tinkwell.Bootstrapper.Ensamble.Parser.csproj" />
 		<ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
+		<ProjectReference Include="..\Tinkwell.Bridge.MqttClient\Tinkwell.Bridge.MqttClient.csproj" />
 		<ProjectReference Include="..\Tinkwell.Measures.Configuration.Parser\Tinkwell.Measures.Configuration.Parser.csproj" />
 		<ProjectReference Include="..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
 	</ItemGroup>

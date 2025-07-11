@@ -7,7 +7,7 @@ namespace Tinkwell.Cli.Commands.Measures;
 [Description("Manage and inspect measures and conditions.")]
 sealed class MeasuresCommand : Command<MeasuresCommand.Settings>
 {
-    public class Settings : CommonSettings
+    public class Settings : LiveInstanceCommonSettings
     {
     }
 

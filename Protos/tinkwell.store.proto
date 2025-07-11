@@ -16,8 +16,15 @@ service Store {
     rpc Register (StoreRegisterRequest) returns (StoreRegisterReply);
 
     // Update a measure with a new value, you need to call Register() before
-    // you can set a value for a measure.
+    // you can set a value for a measure. This method reqires a unit of measure and
+    // perfirns the necessary conversions if the registereed unit is different from the one specified.
+    // Use Store.Set() if you have a floating point number already expresses with the correct unit.
     rpc Update (StoreUpdateRequest) returns (StoreUpdateReply);
+
+    // Update a measure with a new value, you need to call Register() before
+    // you can set a value for a measure. Use Store.Update() if you have a unit of measure and it might
+    // be different from the one you registered.
+    rpc Set (StoreSetRequest) returns (StoreSetReply);
 
     // Gets the current value of a single measure.
     rpc Get(GetRequest) returns (GetResponse);
@@ -143,8 +150,19 @@ message StoreUpdateRequest {
     string value = 2;
 }
 
+// Request message for Store.Set().
+message StoreSetRequest {
+    // Name of the measure to update, it must be registered before using Store.Register().
+    string name = 1;
+    // New value for this measure.
+    double value = 2;
+}
+
 // Response message for Store.Update().
 message StoreUpdateReply {}
+
+// Response message for Store.Set().
+message StoreSetReply {}
 
 // Request for Store.Get().
 message GetRequest {

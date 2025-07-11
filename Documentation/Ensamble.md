@@ -103,6 +103,8 @@ Firmlets are the core components that provide the application's logic. They are 
     ```
 -   **`Tinkwell.HealthCheck`**: A service that provides basic health monitoring for the host it's running in. It's automatically included by the `compose service` directive.
 -   **`Tinkwell.Watchdog`**: A firmlet that periodically queries all health check services and reports on their status.
+-   **`Tinkwell.Bridge.MqttClient`**: An agent that receives MQTT messages from a broker and write sensor data into the store. See [MQTT Bridge](./MQTT-Bridge.md) for all the configuration options.
+-   **`Tinkwell.Bridge.MqttServer`**: An agent that implements a super simple MQTT broker for local development and testing. See [MQTT Server](./MQTT-Server.md) for all the configuration options.
 
 ## Advanced: The `runner` block
 
@@ -116,9 +118,8 @@ The `runner` block is the underlying, low-level syntax for defining a process to
 >
 > -   **Invalid Characters:** Names cannot contain `[`, `]`, `{`, `}`, `\`, `*`, `:`, `;`, `"`, `'`, `=`, `!`, or `?`.
 > -   **Invalid Prefixes:** Names cannot start with `+`, `-`, `/`, or `__` (two underscores).
-> -   **Discouraged Names:** To avoid conflicts, it is highly discouraged to use the following as names: `let`, `when`, `then`, `value`, `emit`.
 >
-> For simplicity, it is recommended to use [simple identifiers](./Glossary.md#simple-identifier). Simple identifiers do not need to be enclosed in double quotes. Furthermore, when used in an `expression`, they do not need to be enclosed in square brackets (`[]`).
+> For simplicity, it is recommended to use [simple identifiers](./Glossary.md#simple-identifier).
 
 
 ### Attributes
@@ -127,7 +128,7 @@ The `runner` block is the underlying, low-level syntax for defining a process to
 | :--- | :--- | :--- |
 | `name` | String | A unique name for the runner. Optional, but recommended. |
 | `path` | String | The path (full or relative) to the executable or library to load. |
-| `if "<condition>"` | String | **Conditional Loading:** An expression evaluated when the file is loaded. If `false`, the runner is ignored. Available parameters include `platform`, `os_architecture`, `cpu_architecture`, and any custom key/value pairs from `appsettings.json`. |
+| `if "<condition>"` | String | **Conditional Loading:** An [expression](./Expressions.md) evaluated when the file is loaded. If `false`, the runner is ignored. Available parameters include `platform`, `os_architecture`, `cpu_architecture`, and any custom key/value pairs from `appsettings.json`. |
 | `arguments` | String | Command-line arguments to pass to the executable upon startup. |
 | `properties` | Dictionary | A block of key-value pairs specific to the runner. A common property is `keep_alive: true` (the default), which tells the Supervisor to restart the runner if it exits unexpectedly. |
 
@@ -136,9 +137,11 @@ The `runner` block is the underlying, low-level syntax for defining a process to
 A `runner` can act as a host for one or more `firmlets` (defined with `service runner`). Firmlets loaded within the same host share the same process, which can improve performance but reduces isolation.
 
 ```tinkwell
-// A gRPC host runner containing two firmlets
-runner rpc_host "Tinkwell.Bootstrapper.GrpcHost" {
+// A gRPC host runner containing multiple firmlets
+runner measures "Tinkwell.Bootstrapper.GrpcHost" {
     service runner "Tinkwell.Store.dll" {}
+    service runner "Tinkwell.Reducer.dll" {}
+    service runner "Tinkwell.Reactor.dll" {}
     service runner "Tinkwell.HealthCheck.dll" {}
 }
 ```
