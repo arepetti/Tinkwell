@@ -130,7 +130,7 @@ sealed class Worker(
         
         var measureName = await GetOrRegisterMeasureNameAsync(runnerName, cancellationToken);
         var value = Convert.ToString((int)status, CultureInfo.InvariantCulture) ?? "";
-        await _store.Client.UpdateAsync(new() { Name = measureName, Value = value }, cancellationToken: cancellationToken);
+        await _store.Client.SetMeasureValueAsync(new() { Name = measureName, ValueString = value }, cancellationToken: cancellationToken);
     }
 
     private async Task<string> GetOrRegisterMeasureNameAsync(string runnerName, CancellationToken cancellationToken)
@@ -144,9 +144,12 @@ sealed class Worker(
         var newMeasureName = _options.NamePattern.Replace("{{ name }}", runnerName);
         await _store.Client.RegisterAsync(new()
         {
-            Name = newMeasureName,
-            QuantityType = "Scalar",
-            Unit = "",
+            Definition =
+            {
+                Type = StoreDefinition.Types.Type.String,
+                Attributes = 4, // System generated
+                Name = newMeasureName,
+            }
         }, cancellationToken: cancellationToken);
 
         _nameMap.TryAdd(runnerName, newMeasureName);
