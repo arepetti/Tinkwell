@@ -25,12 +25,12 @@ sealed class WriteCommand : AsyncCommand<WriteCommand.Settings>
             .Spinner(Spinner.Known.Default)
             .StartAsync("Writing...", async ctx =>
             {
-                var request = new Services.StoreUpdateRequest();
+                var request = new Services.SetMeasureValueRequest();
                 request.Name = settings.Name;
-                request.Value = settings.Value;
+                request.ValueString = settings.Value;
 
                 var store = await DiscoveryHelpers.FindStoreServiceAsync(settings);
-                await store.Client.UpdateAsync(request);
+                await store.Client.SetMeasureValueAsync(request);
             });
 
         return ExitCode.Ok;

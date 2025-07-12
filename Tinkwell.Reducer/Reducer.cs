@@ -204,7 +204,10 @@ sealed class Reducer : IAsyncDisposable
             var request = new Services.StoreUpdateRequest()
             {
                 Name = measure.Name,
-                Value = { NumberValue = result.Value }
+                Value = { 
+                    Timestamp = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow),
+                    NumberValue = result.Value
+                }
             };
             await _store.Client.UpdateAsync(request, cancellationToken: cancellationToken);
         }

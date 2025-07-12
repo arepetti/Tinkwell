@@ -20,14 +20,14 @@ sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
-        var request = new GetManyRequest();
+        var request = new StoreReadManyRequest();
         request.Names.AddRange(settings.Names);
 
         var store = await DiscoveryHelpers.FindStoreServiceAsync(settings);
-        var response = await store.Client.GetManyAsync(request);
+        var response = await store.Client.ReadManyAsync(request);
 
-        foreach (var value in response.Values)
-            Print(value.Key, value.Value);
+        foreach (var value in response.Items)
+            Print(value.Name, value.Value);
 
         await SubscribeAsync(store, settings);
 
@@ -36,21 +36,18 @@ sealed class SubscribeCommand : AsyncCommand<SubscribeCommand.Settings>
 
     private async Task SubscribeAsync(GrpcService<Store.StoreClient> store, Settings settings)
     {
-        var request = new SubscribeToSetRequest();
+        var request = new SubscribeManyRequest();
         request.Names.AddRange(settings.Names);
 
-        using var call = store.Client.SubscribeToSet(request);
+        using var call = store.Client.SubscribeMany(request);
         await foreach (var response in call.ResponseStream.ReadAllAsync())
-        {
-            foreach (var change in response.Changes)
-                Print(change.Name, change.NewValue);
-        }
+            Print(response.Name, response.NewValue);
     }
 
-    private static void Print(string name, Quantity value)
+    private static void Print(string name, StoreValue value)
     {
-        bool isNumeric = value.ValueCase == Quantity.ValueOneofCase.Number;
-        string valueText = isNumeric ? value.Number.ToString("G", CultureInfo.InvariantCulture) : value.Text;
+        bool isNumeric = value.HasNumberValue;
+        string valueText = isNumeric ? value.NumberValue.ToString("G", CultureInfo.InvariantCulture) : value.StringValue;
         AnsiConsole.MarkupLineInterpolated($"[cyan]{name}[/]={valueText}");
     }
 }

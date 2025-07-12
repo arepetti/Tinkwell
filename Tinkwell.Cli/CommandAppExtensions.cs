@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Spectre.Console.Cli;
 using Tinkwell.Bootstrapper;
-using Tinkwell.Bootstrapper.IO;
 
 namespace Tinkwell.Cli;
 
