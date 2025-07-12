@@ -163,6 +163,16 @@ public class StoreService : Tinkwell.Services.Store.StoreBase
         });
     }
 
+    public override async Task<StoreValueList> ReadMany(StoreReadManyRequest request, ServerCallContext context)
+    {
+        return await RunWithErrorHandling(async () =>
+        {
+            var measures = await _registry.FindAllAsync(request.Names, context.CancellationToken);
+            var items = measures.Select(x => new StoreValueList.Types.Item { Name = x.Name, Value = ToStoreValue(x.Value) });
+            return new StoreValueList { Items = { items } };
+        });
+    }
+
     public override async Task Subscribe(SubscribeRequest request, IServerStreamWriter<StoreValueChange> responseStream, ServerCallContext context)
     {
         await RunWithErrorHandling(async () =>

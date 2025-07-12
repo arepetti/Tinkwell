@@ -40,6 +40,11 @@ service Store {
     // Searches for measures matching the specified criteria.
     rpc Search(SearchRequest) returns (stream SearchResponse);
 
+    // Read the current value of a set of measures.
+    // It's lighter thand FindAll() but this function does NOT return a stream,
+    // use only when you need the current value of a very small number of measures.
+    rpc ReadMany(StoreReadManyRequest) returns (StoreValueList);
+
     // Subscribes to value changes for a single measure.
     rpc Subscribe(SubscribeRequest) returns (stream StoreValueChange);
 
@@ -58,6 +63,17 @@ message StoreMeasure {
     StoreMetadata metadata = 2;
     // The current value of the measure.
     StoreValue value = 3;
+}
+
+// Represents a set of measures with their value.
+message StoreValueList {
+    message Item {
+        // The definition of the measure.
+        string name = 1;
+        // The current value of the measure.
+        StoreValue value = 2;
+    }
+    repeated Item items = 1;
 }
 
 // Represents a measure without its value, for when only definition and metadata are needed.
@@ -200,6 +216,12 @@ message StoreFindRequest {
 // Request to find all measures, with an optional filter by name.
 message StoreFindAllRequest {
     // If empty, find all measures. Otherwise, find only the measures with the specified names.
+    repeated string names = 1;
+}
+
+// Request to read the value of a set of measures.
+message StoreReadManyRequest {
+    // List of names of the measures to include in the response.
     repeated string names = 1;
 }
 

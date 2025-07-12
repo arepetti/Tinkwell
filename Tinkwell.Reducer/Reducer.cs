@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Reflection;
+using Tinkwell.Measures;
 using Tinkwell.Measures.Configuration.Parser;
 
 namespace Tinkwell.Reducer;
@@ -218,28 +219,13 @@ sealed class Reducer : IAsyncDisposable
     {
         Debug.Assert(_store is not null);
 
-        var response = _store.Client.FindAll(
-            new Services.StoreFindAllRequest() { Names = { measure.Dependencies } },
+        var response = await _store.Client.ReadManyAsync(
+            new Services.StoreReadManyRequest() { Names = { measure.Dependencies } },
             cancellationToken: cancellationToken);
 
-        var dependenciesValues = await response.ResponseStream
-            .ReadAllAsync(cancellationToken)
-            .ConsumeAllAsync();
-
-        if (dependenciesValues is null)
-        {
-            _logger.LogWarning("No values found for dependencies of {Name}. Measure disabled.", measure.Name);
-            return null;
-        }
-
         var expression = new NCalc.Expression(measure.Expression);
-        foreach (var dependency in dependenciesValues)
-        {
-            expression.Parameters[dependency.Definition.Name] = 
-                dependency.Value.HasNumberValue 
-                ? dependency.Value.NumberValue
-                : dependency.Value.StringValue;
-        }
+        foreach (var dependency in response.Items)
+            expression.Parameters[dependency.Name] = dependency.Value.ToObject();
 
         var result = expression.Evaluate();
         if (result is null)
