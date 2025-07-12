@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Hosting;
+using Tinkwell.Measures;
 using Tinkwell.Store.Services;
 
 namespace Tinkwell.Store;

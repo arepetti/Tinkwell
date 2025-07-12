@@ -14,7 +14,7 @@ public interface IRegistry
     /// share the same <c>IStorage</c> instance.
     /// Changes made directly in the storage (or outside!) will not trigger this event.
     /// </remarks>
-    event EventHandler<ValueChangedEventArgs<MeasureValue>>? ValueChanged;
+    event EventHandler<ValueChangedEventArgs>? ValueChanged;
 
     /// <summary>
     /// Registers a new measure.

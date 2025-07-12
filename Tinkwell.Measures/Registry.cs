@@ -6,7 +6,7 @@ namespace Tinkwell.Measures;
 public sealed class Registry(IStorage storage) : IRegistry
 {
     /// <inheritdoc />
-    public event EventHandler<ValueChangedEventArgs<MeasureValue>>? ValueChanged
+    public event EventHandler<ValueChangedEventArgs>? ValueChanged
     {
         add => _storage.ValueChanged += value;
         remove => _storage.ValueChanged -= value;

@@ -13,7 +13,7 @@ public interface IStorage
     /// only when the value has been changes using its own instance, external changes
     /// go unnoticed (as far as <c>IStorage</c> is concerned).
     /// </remarks>
-    event EventHandler<ValueChangedEventArgs<MeasureValue>>? ValueChanged;
+    event EventHandler<ValueChangedEventArgs>? ValueChanged;
 
     /// <summary>
     /// Gets a value indicating whether the storage provider supports transactions.

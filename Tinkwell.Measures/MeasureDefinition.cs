@@ -12,10 +12,12 @@ public enum MeasureType
     /// The measure type is dynamic: it can change type at run-time.
     /// </summary>
     Dynamic,
+
     /// <summary>
     /// The measure is a numeric value (its type cannot change after its creation).
     /// </summary>
     Number,
+
     /// <summary>
     /// The measure is a string value (its type cannot change after its creation).
     /// </summary>
@@ -32,14 +34,21 @@ public enum MeasureAttributes
     /// No attributes.
     /// </summary>
     None = 0,
+
     /// <summary>
     /// The measure is constant and cannot be changed after it has been set once.
     /// </summary>
     Constant = 1 << 0,
+
     /// <summary>
     /// The measure is derived from other measures.
     /// </summary>
     Derived  = 1 << 1,
+
+    /// <summary>
+    /// The measure is generated automatically by the system.
+    /// </summary>
+    System = 1 << 2,
 }
 
 /// <summary>

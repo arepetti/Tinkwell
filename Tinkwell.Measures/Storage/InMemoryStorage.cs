@@ -8,12 +8,12 @@ namespace Tinkwell.Measures.Storage;
 public sealed class InMemoryStorage : IStorage
 {
     /// <inheritdoc />
-    public event EventHandler<ValueChangedEventArgs<MeasureValue>>? ValueChanged;
+    public event EventHandler<ValueChangedEventArgs>? ValueChanged;
 
     /// <summary>Always <c>false</c>. This implementation does not support transactions.</summary>
     public bool SupportsTransactions => false;
 
-    /// <summary
+    /// <summary>
     /// This implementation does not support transactions>
     /// </summary>
     /// <exception cref="NotSupportedException">Always.</exception>
@@ -42,7 +42,10 @@ public sealed class InMemoryStorage : IStorage
                 var updatedMeasure = existingMeasure with { Value = value };
 
                 if (oldValue != value)
-                    ValueChanged?.Invoke(this, new ValueChangedEventArgs<MeasureValue>(name, oldValue, value));
+                {
+                    // Raise the event on a thread pool thread to avoid blocking the update operation.
+                    _ = Task.Run(() => ValueChanged?.Invoke(this, new ValueChangedEventArgs(name, oldValue, value)));
+                }
 
                 return updatedMeasure;
             }));
