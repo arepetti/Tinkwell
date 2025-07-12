@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Tinkwell.Bootstrapper;
+using Tinkwell.Bootstrapper.Hosting;
 
 namespace Tinkwell.Bridge.MqttServer;
 

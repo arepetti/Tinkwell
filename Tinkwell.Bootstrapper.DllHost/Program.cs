@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper.DllHost;
-using Tinkwell.Bootstrapper.Ipc;
+using Tinkwell.Bootstrapper.Hosting;
 
 var builder = Host.CreateDefaultBuilder(args)
    .AddWorker()

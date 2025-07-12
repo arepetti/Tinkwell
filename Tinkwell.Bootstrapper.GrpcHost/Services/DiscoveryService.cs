@@ -1,5 +1,6 @@
 using Grpc.Core;
 using Tinkwell.Bootstrapper.GrpcHost;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Services;
 
 namespace Tinkwell.Bootstrapper.Rpc.ServerHost.Services;

@@ -54,7 +54,7 @@ public static class StrategyAssemblyLoader
     /// Tinkwell.Strategy.Agent.Subtask.Linux.dll
     /// Tinkwell.Strategy.Other.dll
     /// </code>
-    /// Calling <c>Find("Tinkwell.Strategy", "Agent", "./plugins", SearchOption.TopDirectoryOnly)</c> will load:
+    /// Calling <c>LoadAssemblies("Tinkwell.Strategy", "Agent", "./plugins", SearchOption.TopDirectoryOnly)</c> will load:
     /// <list type="bullet">
     ///   <item><description><c>Tinkwell.Strategy.Agent.dll</c> (platform-independent)</description></item>
     ///   <item><description><c>Tinkwell.Strategy.Agent.Windows.dll</c> (matches current platform)</description></item>
@@ -67,7 +67,7 @@ public static class StrategyAssemblyLoader
     ///   <item><description><c>Tinkwell.Strategy.Other.dll</c> (task name mismatch)</description></item>
     /// </list>
     /// </example>
-    public static IEnumerable<Assembly> Find(string rootNamespace, string taskName, string path, SearchOption options)
+    public static IEnumerable<Assembly> LoadAssemblies(string rootNamespace, string taskName, string path, SearchOption options)
     {
         var files = Directory.GetFiles(path, "*.dll", options);
         if (files.Length == 0)
@@ -137,7 +137,7 @@ public static class StrategyAssemblyLoader
     /// Tinkwell.Strategy.Agent.Subtask.Linux.dll
     /// Tinkwell.Strategy.Other.dll
     /// </code>
-    /// Calling <c>Find("Tinkwell.Strategy", "Agent")</c> will load:
+    /// Calling <c>LoadAssemblies("Tinkwell.Strategy", "Agent")</c> will load:
     /// <list type="bullet">
     ///   <item><description><c>Tinkwell.Strategy.Agent.dll</c> (platform-independent)</description></item>
     ///   <item><description><c>Tinkwell.Strategy.Agent.Windows.dll</c> (matches current platform)</description></item>
@@ -150,12 +150,53 @@ public static class StrategyAssemblyLoader
     ///   <item><description><c>Tinkwell.Strategy.Other.dll</c> (task name mismatch)</description></item>
     /// </list>
     /// </example>
-    public static IEnumerable<Assembly> Find(string rootNamespace, string taskName)
+    public static IEnumerable<Assembly> LoadAssemblies(string rootNamespace, string taskName)
+        => LoadAssemblies(rootNamespace, taskName, GetExecutingAssemblyDirectoryName(), SearchOption.TopDirectoryOnly);
+
+    /// <summary>
+    /// Obtains all types in the specified assembly that implement the specified interface or class type.
+    /// </summary>
+    /// <typeparam name="T">The interface implemented by the types or a base class.</typeparam>
+    /// <param name="assembly">The assembly where types should be searched.</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException">If <paramref name="assembly"/> is <c>null</c>.</exception>
+    public static Type[] FindTypesImplementing<T>(Assembly assembly)
     {
-        var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
-            ?? Environment.CurrentDirectory;
-        return Find(rootNamespace, taskName, path, SearchOption.TopDirectoryOnly);
+        ArgumentNullException.ThrowIfNull(assembly);
+
+        return assembly.GetTypes()
+            .Where(type => typeof(T).IsAssignableFrom(type) && !type.IsAbstract && type.IsClass)
+            .ToArray();
     }
+
+    /// <summary>
+    /// Gets the directory path of the application entry point assembly.
+    /// </summary>
+    /// <returns>
+    /// The directory where the entry assembly is or the current directory if it cannot be determined.
+    /// </returns>
+    public static string GetEntryAssemblyDirectoryName()
+    {
+        try
+        {
+            // If running in a context without an entry assembly, like some tests
+            var entryAssembly = Assembly.GetEntryAssembly();
+            if (entryAssembly is null)
+                return Environment.CurrentDirectory;
+
+           return Path.GetDirectoryName(entryAssembly.Location) ?? Environment.CurrentDirectory;
+        }
+        catch (NotSupportedException)
+        {
+            // In some environments (like Blazor WebAssembly), the entry assembly
+            // location may not be available. We do not really expect this code to be called
+            // in those environments, but if it does, we return the current directory.
+            return Environment.CurrentDirectory;
+        }
+    }
+
+    internal static string GetExecutingAssemblyDirectoryName()
+        => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
 
     private static bool IsCorrectPlatform(string systemPlatform, string filePlatform, bool isFsCaseSensitive)
     {

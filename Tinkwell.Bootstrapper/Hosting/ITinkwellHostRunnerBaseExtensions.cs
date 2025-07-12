@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace Tinkwell.Bootstrapper;
+namespace Tinkwell.Bootstrapper.Hosting;
 
 /// <summary>
 /// Provides extension methods for <see cref="ITinkwellHostRunnerBase"/> to retrieve strongly-typed properties.

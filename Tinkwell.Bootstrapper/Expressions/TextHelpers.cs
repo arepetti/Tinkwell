@@ -119,4 +119,19 @@ public static class TextHelpers
     /// </returns>
     public static string DosWildcardToRegex(string pattern)
         => "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+
+    /// <summary>
+    /// Helper function to convert git-like wildcard patterns to regular expressions.
+    /// </summary>
+    /// <param name="pattern">
+    /// Pattern to convert to a regular expression.
+    /// See <see cref="GitLikeWildcardToRegex(string, bool)"/> for all the details.
+    /// </param>
+    /// <returns>
+    /// A regular expression that matches the specified pattern. It's compiled,
+    /// <strong>case-insensitive</strong> and performs <strong>invariant culture matching</strong>.
+    /// Use <c>GitLikeWilcardToRegex()</c> if you need control over the regex options.
+    /// </returns>
+    public static Regex PatternToRegex(string pattern)
+        => new Regex(GitLikeWildcardToRegex(pattern), RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 }

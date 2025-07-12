@@ -1,5 +1,5 @@
 ﻿using Grpc.Core;
-using Tinkwell.Bootstrapper;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Services;
 
 namespace Tinkwell.HealthCheck.Services;

@@ -5,7 +5,7 @@ using Tinkwell.Services;
 namespace Tinkwell.Actions.Executor.Agents;
 
 [Agent("mqtt_publish")]
-public sealed class PublishMqttMessageAgent(ILogger<PublishMqttMessageAgent> logger, ServiceLocator locator) : IAgent
+sealed class PublishMqttMessageAgent(ILogger<PublishMqttMessageAgent> logger, ServiceLocator locator) : IAgent
 {
     public sealed class Settings
     {

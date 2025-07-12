@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Tinkwell.Bootstrapper;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bridge.MqttClient.Internal;
 using Tinkwell.Bridge.MqttClient.Services;
 

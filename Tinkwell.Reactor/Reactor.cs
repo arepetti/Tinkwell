@@ -5,6 +5,7 @@ using System.Globalization;
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Reflection;
+using Tinkwell.Measures;
 using Tinkwell.Measures.Configuration.Parser;
 using Tinkwell.Services;
 
@@ -84,17 +85,14 @@ sealed class Reactor : IAsyncDisposable
             return;
 
         _logger.LogDebug("Subscribing to changes for {Count} dependencies", uniqueDependencies.Count);
-        var request = new SubscribeToSetRequest();
+        var request = new SubscribeManyRequest();
         request.Names.AddRange(uniqueDependencies);
 
-        using var call = _store.Client.SubscribeToSet(request, cancellationToken: cancellationToken);
+        using var call = _store.Client.SubscribeMany(request, cancellationToken: cancellationToken);
         try
         {
             await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
-            {
-                foreach (var change in response.Changes)
-                    await HandleChangeAsync(change.Name, cancellationToken);
-            }
+                await HandleChangeAsync(response.Name, cancellationToken);
         }
         catch (RpcException e) when (e.StatusCode == StatusCode.Cancelled)
         {
@@ -179,27 +177,20 @@ sealed class Reactor : IAsyncDisposable
         string? owningMeasure = signal.Owner;
         bool hasOwningMeasure = !string.IsNullOrWhiteSpace(owningMeasure);
 
-        var getManyRequest = new GetManyRequest();
-        getManyRequest.Names.AddRange(signal.Dependencies);
+        var readManyRequest = new StoreReadManyRequest();
+        readManyRequest.Names.AddRange(signal.Dependencies);
 
-        var response = await _store.Client.GetManyAsync(getManyRequest, cancellationToken: cancellationToken);
+        var response = await _store.Client.ReadManyAsync(readManyRequest, cancellationToken: cancellationToken);
 
         var expression = new NCalc.Expression(signal.When);
-        foreach (var dependency in signal.Dependencies)
+        foreach (var item in response.Items)
+            expression.Parameters[item.Name] = item.Value.ToObject();
+
+        if (hasOwningMeasure)
         {
-            if (response.Values.TryGetValue(dependency, out var quantityProto))
-            {
-                expression.Parameters[dependency] = quantityProto.Number;
-            }
-            else if (string.Equals(dependency, "value", StringComparison.Ordinal) && hasOwningMeasure)
-            {
-                if (response.Values.TryGetValue(owningMeasure, out var owningQuantityProto))
-                    expression.Parameters["value"] = owningQuantityProto.Number;
-            }
-            else
-            {
-                _logger.LogWarning("Cannot find dependency {Dependency} for signal {Signal}", dependency, signal.Name);
-            }
+            var owningMeasureValue = response.Items.FirstOrDefault(x => x.Name == owningMeasure);
+            if (owningMeasureValue is not null)
+                expression.Parameters["value"] = owningMeasureValue.Value.ToObject();
         }
 
         return Convert.ToBoolean(expression.Evaluate(), CultureInfo.InvariantCulture);

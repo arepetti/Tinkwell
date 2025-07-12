@@ -58,7 +58,9 @@ sealed class All : BinaryFunction<System.Collections.IEnumerable?, string>
 {
     protected override object? Call(System.Collections.IEnumerable? arg, string predicate)
     {
-        if (arg is null) return true;
+        if (arg is null)
+            return true;
+
         var evaluator = new ExpressionEvaluator();
         return arg.Cast<object>().All(value => evaluator.EvaluateBool(predicate, new { value }));
     }

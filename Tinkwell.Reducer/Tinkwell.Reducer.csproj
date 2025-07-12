@@ -11,9 +11,6 @@
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
-	  <Compile Include="..\Shared\UnitHelpers.cs" Link="UnitHelpers.cs" />
-	</ItemGroup>
-	<ItemGroup>
 		<PackageReference Include="Google.Protobuf" Version="3.31.1" />
 		<PackageReference Include="Grpc.Net.Client" Version="2.64.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />

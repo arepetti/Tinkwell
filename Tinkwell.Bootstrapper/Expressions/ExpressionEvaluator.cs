@@ -73,9 +73,7 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
 
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     private readonly static IEnumerable<INCalcCustomFunction> _customFunctions =
-        Assembly.GetExecutingAssembly()
-            .GetTypes()
-            .Where(x => x.IsClass && !x.IsAbstract && typeof(INCalcCustomFunction).IsAssignableFrom(x))
+        StrategyAssemblyLoader.FindTypesImplementing<INCalcCustomFunction>(typeof(ExpressionEvaluator).Assembly)
             .Select(x => (INCalcCustomFunction)Activator.CreateInstance(x)!);
 
     private static void ImportParameters(object? parameters, Expression expr)
