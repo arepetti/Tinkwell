@@ -1,11 +1,9 @@
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Globalization;
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Reflection;
 using Tinkwell.Measures.Configuration.Parser;
-using UnitsNet;
 
 namespace Tinkwell.Reducer;
 
@@ -91,16 +89,38 @@ sealed class Reducer : IAsyncDisposable
         {
             var measure = _dependencyWalker.Items.First(m => m.Name == measureName);
             _logger.LogDebug("Registering derived measure {Name}", measure.Name);
-            await _store.Client.RegisterAsync(new Services.StoreRegisterRequest
+            var request = new Services.StoreRegisterRequest
             {
-                Name = measure.Name,
-                QuantityType = measure.QuantityType,
-                Unit = measure.Unit,
-                Minimum = measure.Minimum,
-                Maximum = measure.Maximum,
-                Category = measure.Category,
-                Precision = measure.Precision,
-            }, cancellationToken: cancellationToken);
+                Definition = new()
+                {
+                    Name = measure.Name,
+                    Type = Services.StoreDefinition.Types.Type.Number,
+                    Attributes = 2, // Derived
+                    QuantityType = measure.QuantityType,
+                    Unit = measure.Unit,
+                },
+                Metadata = new()
+                {
+                    Tags = { measure.Tags },
+                }
+            };
+
+            if (measure.Minimum.HasValue)
+                request.Definition.Minimum = measure.Minimum.Value;
+
+            if (measure.Maximum.HasValue)
+                request.Definition.Maximum = measure.Maximum.Value;
+
+            if (measure.Precision.HasValue)
+                request.Definition.Precision = measure.Precision.Value;
+
+            if (measure.Description is not null)
+                request.Metadata.Description = measure.Description;
+
+            if (measure.Category is not null)
+                request.Metadata.Category = measure.Category;
+
+            await _store.Client.RegisterAsync(request, cancellationToken: cancellationToken);
         }
     }
 
@@ -122,17 +142,14 @@ sealed class Reducer : IAsyncDisposable
             return;
 
         _logger.LogDebug("Subscribing to changes for {Count} dependencies", uniqueDependencies.Count);
-        var request = new Services.SubscribeToSetRequest();
+        var request = new Services.SubscribeManyRequest();
         request.Names.AddRange(uniqueDependencies);
 
-        using var call = _store.Client.SubscribeToSet(request, cancellationToken: cancellationToken);
+        using var call = _store.Client.SubscribeMany(request, cancellationToken: cancellationToken);
         try
         {
             await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
-            {
-                foreach (var change in response.Changes)
-                    await HandleChangeAsync(change.Name, cancellationToken);
-            }
+                await HandleChangeAsync(response.Name, cancellationToken);
         }
         catch (RpcException e) when (e.StatusCode == StatusCode.Cancelled)
         {
@@ -146,13 +163,9 @@ sealed class Reducer : IAsyncDisposable
 
     private async Task HandleChangeAsync(string changedMeasure, CancellationToken cancellationToken)
     {
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-
         // TODO: we should really really REALLY publish these changes in batch: collect all the recalculated
         // measures and then publish them all at once, instead of one by one. We'll need to
-        // add a Store.UpdateMany() method. We should also probably have a simpler method where the value
-        // is not a string but a number (assumed to be with the correct unit of measure).
+        // add a Store.UpdateMany() method.
         if (_dependencyWalker.ReverseDependencyMap.TryGetValue(changedMeasure, out var affectedMeasures))
         {
             // We only care about the affected measures that are also derived measures.
@@ -167,10 +180,6 @@ sealed class Reducer : IAsyncDisposable
                 }
             }
         }
-
-        stopwatch.Stop();
-        _logger.LogDebug("Change of '{ChangedMeasureName}' affected {AffectedCount} measure(s) and took {Time} ms to complete",
-            changedMeasure, affectedMeasures?.Count ?? 0, stopwatch.ElapsedMilliseconds);
     }
 
     private async Task RecalculateMeasureAsync(Measure measure, CancellationToken cancellationToken)
@@ -189,16 +198,14 @@ sealed class Reducer : IAsyncDisposable
                 return;
             }
 
-            if (measure.Precision.HasValue)
-                result = UnitHelpers.Round(result, measure.Precision.Value);
-
             _logger.LogTrace("Recalculated {Name} = {Value}", measure.Name, result);
 
-            await _store.Client.UpdateAsync(new Services.StoreUpdateRequest
+            var request = new Services.StoreUpdateRequest()
             {
                 Name = measure.Name,
-                Value = result!.ToString("G", CultureInfo.InvariantCulture)
-            }, cancellationToken: cancellationToken);
+                Value = { NumberValue = result.Value }
+            };
+            await _store.Client.UpdateAsync(request, cancellationToken: cancellationToken);
         }
         catch (Exception e)
         {
@@ -207,50 +214,41 @@ sealed class Reducer : IAsyncDisposable
         }
     }
 
-    private async Task<IQuantity?> EvaluateMeasureExpression(Measure measure, CancellationToken cancellationToken)
+    private async Task<double?> EvaluateMeasureExpression(Measure measure, CancellationToken cancellationToken)
     {
         Debug.Assert(_store is not null);
 
-        var getManyRequest = new Services.GetManyRequest();
-        getManyRequest.Names.AddRange(measure.Dependencies);
-        var response = await _store.Client.GetManyAsync(getManyRequest, cancellationToken: cancellationToken);
+        var response = _store.Client.FindAll(
+            new Services.StoreFindAllRequest() { Names = { measure.Dependencies } },
+            cancellationToken: cancellationToken);
 
-        var expression = new NCalc.Expression(measure.Expression);
-        foreach (var dependency in measure.Dependencies)
+        var dependenciesValues = await response.ResponseStream
+            .ReadAllAsync(cancellationToken)
+            .ConsumeAllAsync();
+
+        if (dependenciesValues is null)
         {
-            if (response.Values.TryGetValue(dependency, out var quantityProto))
-            {
-                expression.Parameters[dependency] = quantityProto.Number;
-            }
-            else
-            {
-                _logger.LogWarning("Could not find value for dependency {Dependency} when recalculating {Name}.", dependency, measure.Name);
-                return null;
-            }
+            _logger.LogWarning("No values found for dependencies of {Name}. Measure disabled.", measure.Name);
+            return null;
         }
 
-        var result = ConvertResultToQuantity(measure, expression.Evaluate());
+        var expression = new NCalc.Expression(measure.Expression);
+        foreach (var dependency in dependenciesValues)
+        {
+            expression.Parameters[dependency.Definition.Name] = 
+                dependency.Value.HasNumberValue 
+                ? dependency.Value.NumberValue
+                : dependency.Value.StringValue;
+        }
+
+        var result = expression.Evaluate();
         if (result is null)
         {
             _logger.LogError("Expression for {Name} did not evaluate to manageable quantity. Measure disabled. Result type: {ResultType}", measure.Name, result?.GetType().Name ?? "null");
             return null;
         }
 
-        return result;
-    }
-
-    private IQuantity? ConvertResultToQuantity(Measure measure, object? result)
-    {
-        if (result is null)
-            return null;
-
-        if (result is IQuantity)
-            return (IQuantity)result;
-
-        if (UnitHelpers.TryGetQuantityValue(result, out var value))
-            return Quantity.From(value, measure.QuantityType, measure.Unit);
-
-        return null;
+        return (double)result;
     }
 }
 

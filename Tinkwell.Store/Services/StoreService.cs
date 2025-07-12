@@ -299,7 +299,8 @@ public class StoreService : Tinkwell.Services.Store.StoreBase
         return new MeasureMetadata(DateTime.UtcNow)
         {
             Tags = storeMetadataInput.Tags.ToList(),
-            Category = storeMetadataInput.HasCategory ? storeMetadataInput.Category : null
+            Category = storeMetadataInput.HasCategory ? storeMetadataInput.Category : null,
+            Description = storeMetadataInput.HasDescription ? storeMetadataInput.Description : null,
         };
     }
 
@@ -374,6 +375,9 @@ public class StoreService : Tinkwell.Services.Store.StoreBase
         if (metadata.Category is not null)
             storeMetadata.Category = metadata.Category;
 
+        if (metadata.Description is not null)
+            storeMetadata.Description = metadata.Description;
+
         return storeMetadata;
     }
 
@@ -390,9 +394,7 @@ public class StoreService : Tinkwell.Services.Store.StoreBase
             storeValue.StringValue = (string)value;
 
         return storeValue;
-    }
-
-    
+    } 
 
     private StoreValueChange ToStoreValueChange(ValueChangedEventArgs args)
     {

@@ -116,15 +116,20 @@ message StoreMetadata {
     repeated string tags = 2;
     // The category of the measure.
     optional string category = 3;
+    // The description of the measure.
+    optional string description = 4;
 }
 
 // Represents the metadata for a measure provided by the client on creation.
 // This message omits fields that are managed by the service, like `created_at`.
 message StoreMetadataInput {
+    reserved 3;
     // A list of tags to associate with the measure.
     repeated string tags = 1;
     // The category to associate with the measure.
     optional string category = 2;
+    // The description of the measure.
+    optional string description = 4;
 }
 
 // Represents the value of a measure, corresponding to the C# MeasureValue struct.

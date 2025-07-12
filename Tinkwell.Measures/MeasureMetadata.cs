@@ -22,6 +22,12 @@ public sealed record MeasureMetadata(DateTime CreatedAt)
         }
     }
 
+
+    /// <summary>
+    /// Gets or sets the description of the measure.
+    /// </summary>
+    public string? Description { get; set; }
+
     /// <summary>
     /// Gets or sets the category of the measure.
     /// </summary>
