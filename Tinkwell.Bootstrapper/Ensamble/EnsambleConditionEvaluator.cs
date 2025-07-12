@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Superpower;
 using Tinkwell.Bootstrapper.Expressions;
+using Tinkwell.Bootstrapper.Hosting;
 
 namespace Tinkwell.Bootstrapper.Ensamble;
 

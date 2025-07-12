@@ -2,7 +2,7 @@
 
 namespace Tinkwell.Bootstrapper.Expressions.CustomFunctions;
 
-class JsonPath : BinaryFunction<string, string>
+sealed class JsonPath : BinaryFunction<string, string>
 {
     protected override object? Call(string json, string path)
     {
@@ -10,7 +10,7 @@ class JsonPath : BinaryFunction<string, string>
         return NavigateJsonPath(doc.RootElement, path);
     }
 
-    protected static JsonElement NavigateJsonPath(JsonElement current, string path)
+    internal static JsonElement NavigateJsonPath(JsonElement current, string path)
     {
         foreach (var segment in path.Split('.'))
         {
@@ -31,12 +31,12 @@ class JsonPath : BinaryFunction<string, string>
     }
 }
 
-sealed class JsonValue : JsonPath
+sealed class JsonValue : BinaryFunction<string, string>
 {
     protected override object? Call(string json, string path)
     {
         using var doc = JsonDocument.Parse(json);
-        var current = NavigateJsonPath(doc.RootElement, path);
+        var current = JsonPath.NavigateJsonPath(doc.RootElement, path);
 
         return current.ValueKind switch
         {

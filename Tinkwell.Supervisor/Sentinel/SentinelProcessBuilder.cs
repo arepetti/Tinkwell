@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Tinkwell.Bootstrapper.Ensamble;
-using Tinkwell.Bootstrapper.IO;
 using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Supervisor.Sentinel;
@@ -20,7 +19,7 @@ sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger) : IC
         {
             FileName = ResolveFileName(definition.Path),
             Arguments = definition.Arguments,
-            WorkingDirectory = IoHelpers.GetCurrentDirectoryButPreferSameAs(definition.Path),
+            WorkingDirectory = ResolveWorkingDirectory(definition.Path),
         };
       
         psi.EnvironmentVariables[WellKnownNames.RunnerNameEnvironmentVariable] = definition.Name;
@@ -30,6 +29,17 @@ sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger) : IC
             return new SupervisionedChildProcess(_logger, psi, definition);
 
         return new ChildProcess(_logger, psi, definition);
+
+        static string ResolveWorkingDirectory(string executablePath)
+        {
+            // We set the working directory to the directory of the executable if the
+            // path is absolute (like for a program installed in a specific location) but
+            // use the current directory for everything else.
+            if (Path.IsPathFullyQualified(executablePath))
+                return Path.GetDirectoryName(executablePath)!;
+
+            return Environment.CurrentDirectory;
+        }
     }
 
     private readonly ILogger<SentinelProcessBuilder> _logger = logger;

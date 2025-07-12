@@ -11,7 +11,7 @@ sealed class Registry : IRegistry
         remove => _store.ValueChanged -= value;
     }
 
-    public void Register(QuantityMetadata metadata)
+    public void Register(MeasureMetadata metadata)
     {
         ArgumentNullException.ThrowIfNull(metadata);
 
@@ -41,7 +41,7 @@ sealed class Registry : IRegistry
         _store.Update(name, value);
     }
 
-    public QuantityMetadata Find(string name)
+    public MeasureMetadata Find(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
 
@@ -51,7 +51,7 @@ sealed class Registry : IRegistry
         throw new KeyNotFoundException($"No measure registered with the name '{name}'.");
     }
 
-    public IEnumerable<QuantityMetadata> FindAll()
+    public IEnumerable<MeasureMetadata> FindAll()
         => _store.List().Select(x => x.Metadata);
 
     public IQuantity? GetCurrentValue(string name)
@@ -77,7 +77,7 @@ sealed class Registry : IRegistry
         throw new KeyNotFoundException($"No measure registered with the name '{name}'.");
     }
 
-    private readonly HistoryDictionary<QuantityMetadata, IQuantity> _store
+    private readonly HistoryDictionary<MeasureMetadata, IQuantity> _store
         = new(QuantityEqualityComparer.Instance);
 
     private const int DefaultHistoryLength = 5;

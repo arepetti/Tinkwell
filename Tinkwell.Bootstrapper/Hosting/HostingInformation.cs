@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Ipc.Extensions;
 
-namespace Tinkwell.Bootstrapper;
+namespace Tinkwell.Bootstrapper.Hosting;
 
 /// <summary>
 /// Provides information and utilities related to the hosting environment for Tinkwell runners and services.

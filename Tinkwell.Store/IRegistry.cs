@@ -6,10 +6,10 @@ public interface IRegistry
 {
     event EventHandler<ValueChangedEventArgs<IQuantity>>? ValueChanged;
 
-    void Register(QuantityMetadata metadata);
+    void Register(MeasureMetadata metadata);
     void Update(string name, IQuantity value);
-    QuantityMetadata Find(string name);
-    IEnumerable<QuantityMetadata> FindAll();
+    MeasureMetadata Find(string name);
+    IEnumerable<MeasureMetadata> FindAll();
     IQuantity? GetCurrentValue(string name);
     IEnumerable<IQuantity> GetHistory(string name);
 }

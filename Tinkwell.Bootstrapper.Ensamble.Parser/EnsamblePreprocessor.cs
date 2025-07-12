@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Text.RegularExpressions;
-using Tinkwell.Bootstrapper.IO;
+﻿using System.Text.RegularExpressions;
 using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Bootstrapper.Ensamble;
@@ -48,18 +46,5 @@ static class EnsamblePreprocessor
     }
 
     private static string GetTemplatesDirectory()
-    {
-        try
-        {
-            var location = IoHelpers.GetEntryAssemblyDirectoryName();
-            if (string.IsNullOrWhiteSpace(location))
-                return Directory.GetCurrentDirectory();
-
-            return location;
-        }
-        catch (NotSupportedException)
-        {
-            return Directory.GetCurrentDirectory();
-        }
-    }
+        => StrategyAssemblyLoader.GetEntryAssemblyDirectoryName();
 }

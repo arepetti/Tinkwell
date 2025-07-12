@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Tinkwell.Bootstrapper.Ensamble;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Ipc.Extensions;
 

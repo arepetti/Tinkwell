@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Tinkwell.Bootstrapper;
+namespace Tinkwell.Bootstrapper.Hosting;
 
 /// <summary>
 /// Defines the contract for a DLL host runner, providing access to runner properties and service configuration.

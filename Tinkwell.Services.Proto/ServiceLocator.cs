@@ -1,6 +1,6 @@
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
-using Tinkwell.Bootstrapper;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell;

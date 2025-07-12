@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Reflection;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Services;
 
 namespace Tinkwell.Bootstrapper.GrpcHost;

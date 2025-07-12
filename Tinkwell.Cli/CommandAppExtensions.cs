@@ -3,6 +3,7 @@ using System.Data;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Spectre.Console.Cli;
+using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.IO;
 
 namespace Tinkwell.Cli;
@@ -42,7 +43,7 @@ static class CommandAppExtensions
         var inThisAssembly = FindAllCommands(Assembly.GetExecutingAssembly());
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            string path = IoHelpers.GetEntryAssemblyDirectoryName();
+            string path = StrategyAssemblyLoader.GetEntryAssemblyDirectoryName();
             string windowsAssemblyPath = Path.Combine(path, $"{typeof(CommandAppExtensions).Namespace}.{OSPlatform.Windows}.dll");
             var assembly = Assembly.LoadFrom(windowsAssemblyPath);
             return Enumerable.Concat(inThisAssembly, FindAllCommands(assembly)).ToArray();

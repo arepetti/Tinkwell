@@ -1,7 +1,7 @@
 ﻿namespace Tinkwell.Actions.Executor.Agents;
 
 [Agent("pass")]
-public sealed class PassAgent : IAgent
+sealed class PassAgent : IAgent
 {
     public object? Settings { get; } = null;
 

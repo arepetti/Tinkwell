@@ -4,7 +4,7 @@ using Tinkwell.Bootstrapper.Expressions;
 namespace Tinkwell.Actions.Executor.Agents;
 
 [Agent("log")]
-public sealed class LogAgent(ILogger<LogAgent> logger) : IAgent
+sealed class LogAgent(ILogger<LogAgent> logger) : IAgent
 {
     public sealed class Settings
     {

@@ -4,7 +4,7 @@ using Tinkwell.Services;
 namespace Tinkwell.Actions.Executor.Agents;
 
 [Agent("set_measure")]
-public sealed class SetMeasureValue(ServiceLocator locator) : IAgent
+sealed class SetMeasureValue(ServiceLocator locator) : IAgent
 {
     public sealed class Settings
     {
