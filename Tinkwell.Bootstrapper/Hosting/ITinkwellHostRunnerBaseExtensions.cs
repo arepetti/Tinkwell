@@ -75,11 +75,11 @@ public static class ITinkwellHostRunnerBaseExtensions
         {
             return Convert.ToBoolean(value, CultureInfo.InvariantCulture);
         }
-        catch (FormatException e)
+        catch (FormatException)
         {
             return defaultValue;
         }
-        catch (InvalidCastException e)
+        catch (InvalidCastException)
         {
             return defaultValue;
         }

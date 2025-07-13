@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Tinkwell.Measures.Storage;
+using static Tinkwell.Measures.PossiblyCompensatedTransaction;
 
 namespace Tinkwell.Measures;
 
@@ -204,6 +205,8 @@ file sealed class PossiblyCompensatedTransaction(IStorage storage)
 {
     public delegate ValueTask Undoer();
 
+    public event EventHandler? FailedRollback;
+
     public async ValueTask ExecuteAsync<T>(
         IEnumerable<T> inputs,
         Func<IStorage, T, ValueTask<Undoer>> performChange,
@@ -239,7 +242,15 @@ file sealed class PossiblyCompensatedTransaction(IStorage storage)
         }
         catch
         {
-            await storage.RollbackAsync();
+            try
+            {
+                await storage.RollbackAsync();
+            }
+            catch
+            {
+                FailedRollback?.Invoke(this, EventArgs.Empty);
+            }
+
             throw;
         }
     }
@@ -260,7 +271,7 @@ file sealed class PossiblyCompensatedTransaction(IStorage storage)
                 undoers.Add(await performChange(_storage, input));
             }
         }
-        catch (Exception e)
+        catch
         {
             try
             {
@@ -269,7 +280,7 @@ file sealed class PossiblyCompensatedTransaction(IStorage storage)
             }
             catch
             {
-                throw new InvalidOperationException($"Failed to rollback updates after error: {e.Message}", e);
+                FailedRollback?.Invoke(this, EventArgs.Empty);
             }
 
             throw;
