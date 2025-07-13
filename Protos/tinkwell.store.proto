@@ -10,20 +10,48 @@ import "google/protobuf/empty.proto";
 
 // Service definition for the Tinkwell Measures Registry.
 // This service provides methods for registering, updating, querying, and subscribing to measures.
+// All methods might return the following errors (unless otherwise specified):
+// * InvalidArgument: one or more arguments are not valid.
+// * NotFound: the specified item does not exist.
+// * FailedPrecondition: the operation cannot be performed on the requested target.
+// * Internal: an internal error occurred.
 service Store {
     // Registers a new measure.
+    // Might return the following errors (and all the standard ones):
+    // * InvalidArgument: if the measure definition is not valid, for example if it has an invalid
+    // combination of quantity type and unit or if a measure with the same name already exists.
+    // * OutOfRange: if one parameter is out of range, for example a negative TTL.
     rpc Register(StoreRegisterRequest) returns (google.protobuf.Empty);
 
     // Registers multiple measures in a single call.
+    // Might return the following errors (and all the standard ones):
+    // * InvalidArgument: if the measure definition is not valid, for example if it has an invalid
+    // combination of quantity type and unit or if a measure with the same name already exists.
+    // * OutOfRange: if one parameter is out of range, for example a negative TTL.
     rpc RegisterMany(StoreRegisterManyRequest) returns (google.protobuf.Empty);
 
     // Updates the value of an existing measure.
+    // Might return the following errors (and all the standard ones):
+    // * InvalidArgument: the measure cannot be updated with the specified value.
+    // * NotFound: cannot find a measure with the specified name.
+    // * OutOfRange: the specified value is outside the allowed range for the measure.
+    // * FailedPrecondition: trying to update a constant measure.
     rpc Update(StoreUpdateRequest) returns (google.protobuf.Empty);
 
     // Updates the values of multiple existing measures in a single call.
+    // Might return the following errors (and all the standard ones):
+    // * InvalidArgument: the measure cannot be updated with the specified value.
+    // * NotFound: cannot find a measure with the specified name.
+    // * OutOfRange: the specified value is outside the allowed range for the measure.
+    // * FailedPrecondition: trying to update a constant measure.
     rpc UpdateMany(StoreUpdateManyRequest) returns (google.protobuf.Empty);
 
     // Sets the value of an existing measure from a string, handling type conversion automatically.
+    // Might return the following errors (and all the standard ones):
+    // * InvalidArgument: the measure cannot be updated with the specified value.
+    // * NotFound: cannot find a measure with the specified name.
+    // * OutOfRange: the specified value is outside the allowed range for the measure.
+    // * FailedPrecondition: trying to update a constant measure.
     rpc SetMeasureValue(StoreSetMeasureValueRequest) returns (google.protobuf.Empty);
 
     // Finds a single measure by its unique name.

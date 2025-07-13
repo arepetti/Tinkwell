@@ -2,22 +2,67 @@
 
 Service definition for the Tinkwell Measures Registry. This service provides methods for registering, updating, querying, and subscribing to measures.
 
+**Common Errors**
+
+All methods might return the following errors (unless otherwise specified):
+
+* `InvalidArgument`: one or more arguments are not valid.
+* `NotFound`: the specified item does not exist.
+* `FailedPrecondition`: the operation cannot be performed on the requested target.
+* `Internal`: an internal error occurred.
+
 ## Methods
 
 ### Register(StoreRegisterRequest) returns (google.protobuf.Empty)
 Registers a new measure.
 
+**Errors**
+
+Might return the following errors (and all the standard ones):
+* `InvalidArgument`: if the measure definition is not valid, for example if it has an invalid combination of quantity type and unit or if a measure with the same name already exists.
+* `OutOfRange`: if one parameter is out of range, for example a negative TTL.
+
 ### RegisterMany(StoreRegisterManyRequest) returns (google.protobuf.Empty)
 Registers multiple measures in a single call.
+
+**Errors**
+
+Might return the following errors (and all the standard ones):
+* `InvalidArgument`: if the measure definition is not valid, for example if it has an invalid combination of quantity type and unit or if a measure with the same name already exists.
+* `OutOfRange`: if one parameter is out of range, for example a negative TTL.
 
 ### Update(StoreUpdateRequest) returns (google.protobuf.Empty)
 Updates the value of an existing measure.
 
+**Errors**
+
+Might return the following errors (and all the standard ones):
+* `InvalidArgument`: the measure cannot be updated with the specified value.
+* `NotFound`: cannot find a measure with the specified name.
+* `OutOfRange`: the specified value is outside the allowed range for the measure.
+* `FailedPrecondition`: trying to update a constant measure.
+
 ### UpdateMany(StoreUpdateManyRequest) returns (google.protobuf.Empty)
 Updates the values of multiple existing measures in a single call.
 
-### SetMeasureValue(SetMeasureValueRequest) returns (google.protobuf.Empty)
+**Errors**
+
+Might return the following errors (and all the standard ones):
+* `InvalidArgument`: the measure cannot be updated with the specified value.
+* `NotFound`: cannot find a measure with the specified name.
+* `OutOfRange`: the specified value is outside the allowed range for the measure.
+* `FailedPrecondition`: trying to update a constant measure.
+
+### SetMeasureValue(StoreSetMeasureValueRequest) returns (google.protobuf.Empty)
 Sets the value of an existing measure from a string, handling type conversion automatically.
+
+**Errors**
+
+Might return the following errors (and all the standard ones):
+* `InvalidArgument`: the measure cannot be updated with the specified value.
+* `NotFound`: cannot find a measure with the specified name.
+* `OutOfRange`: the specified value is outside the allowed range for the measure.
+* `FailedPrecondition`: trying to update a constant measure.
 
 ### Find(StoreFindRequest) returns (StoreMeasure)
 Finds a single measure by its unique name.
@@ -158,12 +203,13 @@ Request to update the values of multiple measures.
 |---|---|---|
 | `items` | `repeated StoreUpdateRequest` | A list of measure updates. |
 
-### SetMeasureValueRequest
+### StoreSetMeasureValueRequest
 Request to set the value of a measure from a string.
 
 | Field | Type | Description |
 |---|---|---|
 | `name` | `string` | The name of the measure to update. |
+| `timestamp` | `google.protobuf.Timestamp` | The timestamp when the value was recorded. |
 | `value_string` | `string` | The string representation of the value. The service will parse this based on the measure's type. |
 
 ### StoreFindRequest
@@ -236,10 +282,10 @@ Request to subscribe to measures matching a pattern.
 ## Enums
 
 ### Type (nested in StoreDefinition)
+Defines the type of a measure's value.
 
 | Name | Value | Description |
 |---|---|---|
-| `UNSPECIFIED` | 0 | The type is not specified. |
-| `DYNAMIC` | 1 | The measure can hold any type of value. |
-| `NUMBER` | 2 | The measure holds a numeric value. |
-| `STRING` | 3 | The measure holds a string value. |
+| `DYNAMIC` | 0 | The measure can hold any type of value. |
+| `NUMBER` | 1 | The measure holds a numeric value. |
+| `STRING` | 2 | The measure holds a string value. |

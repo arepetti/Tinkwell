@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Tinkwell.Measures.Storage;
-using static Tinkwell.Measures.PossiblyCompensatedTransaction;
 
 namespace Tinkwell.Measures;
 

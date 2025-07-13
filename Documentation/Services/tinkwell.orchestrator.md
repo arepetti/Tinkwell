@@ -36,6 +36,7 @@ Response message for Orchestrator.list().
 | `runners` | `repeated Runner` | List of runners that satisfies the query condition in OrchestratorListRequest.query |
 
 ### Runner (nested in OrchestratorListReply)
+Represents a single runner in the system.
 
 | Field | Type | Description |
 |---|---|---|

@@ -6,7 +6,7 @@ package Tinkwell;
 
 // Service to send MQTT messages.
 service MqttClient {
-    // List all the measures currently stored.
+    // Publishes a message.
     rpc Publish (PublishMqttMessageRequest) returns (PublishMqttMessageResponse);
 }
 

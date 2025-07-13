@@ -1,6 +1,6 @@
 # EventsGateway Service
 
-The EventsGateway service allows publishing events to a message broker.
+The The EventsGateway service allows publishing events to a message broker.
 
 ## Methods
 
@@ -14,7 +14,7 @@ Subscribe to the event specified in the request.
 Subscribe to all the events matching the criteria specified in the request.
 
 ### SubscribeToMatchingMany(SubscribeToMatchingManyEventsRequest) returns (stream SubscribeEventsResponse)
-Subscribe to all the events matching a set of criterias specified in the request. Callers can assign an ID to each match to determine which match caused the notification.
+Subscribe to all the events matching a set of criterias specified in the request. Callers can assign an ID to each match to determine which match caused the notification
 
 ## Enums
 

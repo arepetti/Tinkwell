@@ -5,7 +5,7 @@ Service to send MQTT messages.
 ## Methods
 
 ### Publish (PublishMqttMessageRequest) returns (PublishMqttMessageResponse)
-List all the measures currently stored.
+Publishes a message.
 
 ## Messages
 
