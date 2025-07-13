@@ -95,7 +95,7 @@ public interface IRegistry
     /// Finds a measure by name.
     /// </summary>
     /// <param name="name">The name of the measure to find.</param>
-    /// <returns>The measure with the specified name.</returns>
+    /// <returns>The measure with the specified name or <c>null</c> if not found.</returns>
     /// <exception cref="System.ArgumentNullException">
     /// Thrown when <paramref name="name"/> is null.
     /// </exception>
@@ -132,6 +132,19 @@ public interface IRegistry
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A collection of measures with the specified names.</returns>
     ValueTask<IEnumerable<Measure>> FindAllAsync(IEnumerable<string> names, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Finds a measure definition by name.
+    /// </summary>
+    /// <param name="name">The name of the measure to find.</param>
+    /// <returns>The measure with the specified name or <c>null</c> if not found.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    /// Thrown when <paramref name="name"/> is null.
+    /// </exception>
+    /// <exception cref="KeyNotFoundException">
+    /// Thrown when no measure is registered with the specified name.
+    /// </exception>
+    MeasureDefinition? FindDefinition(string name);
 
     /// <summary>
     /// Finds all measure definitions.

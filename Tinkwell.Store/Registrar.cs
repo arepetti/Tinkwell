@@ -2,6 +2,7 @@
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Measures;
+using Tinkwell.Measures.Storage;
 using Tinkwell.Store.Services;
 
 namespace Tinkwell.Store;
@@ -16,6 +17,7 @@ public sealed class Registrar : IHostedGrpcServerRegistrar
 
     public void ConfigureServices(IGrpcServerHost host)
     {
+        host.Services.AddSingleton<IStorage, InMemoryStorage>();
         host.Services.AddSingleton<IRegistry, Registry>();
     }
 }

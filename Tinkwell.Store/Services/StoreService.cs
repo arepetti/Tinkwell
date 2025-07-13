@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Measures;
 using Tinkwell.Services;
-using UnitsNet;
 
 namespace Tinkwell.Store.Services;
 
@@ -40,7 +39,11 @@ public class StoreService : Tinkwell.Services.Store.StoreBase
     {
         return await RunWithErrorHandling(async () =>
         {
-            var value = ToMeasureValue(request.Value);
+            var measure = _registry.FindDefinition(request.Name);
+            if (measure is null)
+                throw new RpcException(new Status(StatusCode.NotFound, $"Measure '{request.Name}' does not exist."));
+
+            var value = ToMeasureValue(measure, request.Value);
             await _registry.UpdateAsync(request.Name, value, context.CancellationToken);
         });
     }
@@ -49,9 +52,22 @@ public class StoreService : Tinkwell.Services.Store.StoreBase
     {
         return await RunWithErrorHandling(async () =>
         {
-            var measures = request.Items.Select(item =>
-                (item.Name, ToMeasureValue(item.Value)));
-            await _registry.UpdateManyAsync(measures, context.CancellationToken);
+            // First we fetch the interested measures and try to convert all values, in this
+            // way we minimize the chances of making an updated rolled back later because of a
+            // silly error in the arguments.
+            var updates = request.Items.Select(update =>
+            {
+                var measure = _registry.FindDefinition(update.Name);
+                if (measure is null)
+                    throw new RpcException(new Status(StatusCode.NotFound, $"Measure '{update.Name}' does not exist."));
+
+                var value = ToMeasureValue(measure, update.Value);
+                return (measure.Name, value);
+            });
+
+            // Now we can try to apply those changes, there are still possible errors with the
+            // arguments (checked by UpdateManyAsync()).
+            await _registry.UpdateManyAsync(updates, context.CancellationToken);
         });
     }
 
@@ -314,14 +330,14 @@ public class StoreService : Tinkwell.Services.Store.StoreBase
         };
     }
 
-    private MeasureValue ToMeasureValue(StoreValue storeValue)
+    private MeasureValue ToMeasureValue(MeasureDefinition measure, StoreValue storeValue)
     {
         if (storeValue.PayloadCase == StoreValue.PayloadOneofCase.NumberValue)
-            return new MeasureValue(Scalar.FromAmount(storeValue.NumberValue), storeValue.Timestamp.ToDateTime());
-        
+            return MeasureValue.FromValue(measure, storeValue.NumberValue, storeValue.Timestamp.ToDateTime());
+
         if (storeValue.PayloadCase == StoreValue.PayloadOneofCase.StringValue)
-            return new MeasureValue(storeValue.StringValue, storeValue.Timestamp.ToDateTime());
-        
+            return MeasureValue.FromValue(measure, storeValue.StringValue, storeValue.Timestamp.ToDateTime());
+
         return MeasureValue.Undefined;
     }
 

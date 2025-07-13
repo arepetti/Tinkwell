@@ -76,6 +76,15 @@ public sealed class InMemoryStorage : IStorage
     }
 
     /// <inheritdoc />
+    public MeasureDefinition? FindDefinition(string name)
+    {
+        if (_store.TryGetValue(name, out var measure))
+            return measure.Definition;
+
+        return null;
+    }
+
+    /// <inheritdoc />
     public ValueTask<IEnumerable<MeasureDefinition>> FindAllDefinitionsAsync(CancellationToken cancellationToken)
     {
         var items = FindThreadSafeMaybeConsistent(null, cancellationToken)

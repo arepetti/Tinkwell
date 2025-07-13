@@ -88,14 +88,12 @@ message StoreMeasureInfo {
 message StoreDefinition {
     // Defines the type of a measure's value.
     enum Type {
-        // The type is not specified.
-        UNSPECIFIED = 0;
         // The measure can hold any type of value.
-        DYNAMIC = 1;
+        DYNAMIC = 0;
         // The measure holds a numeric value.
-        NUMBER = 2;
+        NUMBER = 1;
         // The measure holds a string value.
-        STRING = 3;
+        STRING = 2;
     }
 
     // Attributes of the measure.

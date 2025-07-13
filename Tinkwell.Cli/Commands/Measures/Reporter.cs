@@ -44,6 +44,8 @@ static class Reporter
             table
                 .AddNote($"Mesure {index++}")
                 .AddNameEntry(definition.Name)
+                .AddEntry("Content", definition.Type)
+                .AddEntry("Attributes", Convert.ToString(definition.Attributes, 2).PadLeft(8, '0'))
                 .AddEntry("Type", definition.QuantityType)
                 .AddEntry("Unit", definition.Unit)
                 .AddEntry("Category", metadata.Category)

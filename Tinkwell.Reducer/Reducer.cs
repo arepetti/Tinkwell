@@ -1,6 +1,8 @@
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Globalization;
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Reflection;
 using Tinkwell.Measures;
@@ -89,14 +91,23 @@ sealed class Reducer : IAsyncDisposable
         foreach (var measureName in _dependencyWalker.CalculationOrder)
         {
             var measure = _dependencyWalker.Items.First(m => m.Name == measureName);
-            _logger.LogDebug("Registering derived measure {Name}", measure.Name);
+            _logger.LogInformation("Registering derived measure {Name}", measure.Name);
+
+            // A "declaration" is when we do not have an exxpression for the measure, technically
+            // runners should register their own measures but when integrating with external services
+            // (for example MQTT) is cleaner to have a place to "declare" those measures and let the
+            // others simply consume them.
+            bool isDeclaration = string.IsNullOrWhiteSpace(measure.Expression);
+            bool isConstant = !isDeclaration && measure.Dependencies.Count == 0 && _options.UseConstants;
+            bool isDerived = !isDeclaration && measure.Dependencies.Count > 0;
+
             var request = new Services.StoreRegisterRequest
             {
                 Definition = new()
                 {
                     Name = measure.Name,
                     Type = Services.StoreDefinition.Types.Type.Number,
-                    Attributes = 2, // Derived
+                    Attributes = (isDerived ? 2 : 0) | (isConstant ? 1 : 0),
                     QuantityType = measure.QuantityType,
                     Unit = measure.Unit,
                 },
@@ -138,7 +149,11 @@ sealed class Reducer : IAsyncDisposable
     {
         Debug.Assert(_store is not null);
 
-        var uniqueDependencies = _dependencyWalker.ForwardDependencyMap.Values.SelectMany(x => x).Distinct().ToList();
+        var uniqueDependencies = _dependencyWalker.ForwardDependencyMap.Values
+            .SelectMany(x => x)
+            .Distinct()
+            .ToList();
+
         if (uniqueDependencies.Count == 0)
             return;
 
@@ -170,7 +185,9 @@ sealed class Reducer : IAsyncDisposable
         if (_dependencyWalker.ReverseDependencyMap.TryGetValue(changedMeasure, out var affectedMeasures))
         {
             // We only care about the affected measures that are also derived measures.
-            var derivedAffectedMeasures = affectedMeasures.Where(name => _dependencyWalker.Items.Any(dm => dm.Name == name)).ToList();
+            var derivedAffectedMeasures = affectedMeasures
+                .Where(name => _dependencyWalker.Items.Any(dm => dm.Name == name))
+                .ToList();
 
             foreach (var measureName in _dependencyWalker.CalculationOrder)
             {
@@ -201,14 +218,11 @@ sealed class Reducer : IAsyncDisposable
 
             _logger.LogTrace("Recalculated {Name} = {Value}", measure.Name, result);
 
-            var request = new Services.StoreUpdateRequest()
-            {
-                Name = measure.Name,
-                Value = { 
-                    Timestamp = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow),
-                    NumberValue = result.Value
-                }
-            };
+            var request = new Services.StoreUpdateRequest() { Name = measure.Name, };
+            request.Value = new Services.StoreValue();
+            request.Value.Timestamp = Timestamp.FromDateTime(DateTime.UtcNow);
+            request.Value.NumberValue = result.Value;
+
             await _store.Client.UpdateAsync(request, cancellationToken: cancellationToken);
         }
         catch (Exception e)
@@ -237,7 +251,7 @@ sealed class Reducer : IAsyncDisposable
             return null;
         }
 
-        return (double)result;
+        return Convert.ToDouble(result, CultureInfo.InvariantCulture);
     }
 }
 

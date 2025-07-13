@@ -2,7 +2,10 @@ compose service orchestrator "Tinkwell.Orchestrator.dll"
 compose service store "Tinkwell.Store.dll"
 compose service events "Tinkwell.EventsGateway.dll"
 compose agent executor "Tinkwell.Actions.Executor.dll" { path: "./config/actions.twa" }
-compose agent reducer "Tinkwell.Reducer.dll" { path: "./config/measures.twm" }
+compose agent reducer "Tinkwell.Reducer.dll" { 
+	path: "./config/measures.twm"
+	use_constants: false
+}
 compose agent reactor "Tinkwell.Reactor.dll" { path: "./config/measures.twm" }
 compose agent watchdog "Tinkwell.Watchdog.dll"
 

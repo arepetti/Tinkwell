@@ -107,9 +107,22 @@ public interface IStorage
     /// Classes implementing this method should try as hard as possible to make sure
     /// this is a truly synchronous operation.
     /// If the storage provider supports transactions and you're invoking this from a transaction
-    /// scope then it should include the changes you made (but see later).
+    /// scope then it should include the changes you made.
     /// </remarks>
     Measure? Find(string name);
+
+    /// <summary>
+    /// Finds a measure definition by name.
+    /// </summary>
+    /// <param name="name">The name of the measure to find.</param>
+    /// <returns>The measure definition with the specified name.</returns>
+    /// <remarks>
+    /// Classes implementing this method should try as hard as possible to make sure
+    /// this is a truly synchronous operation.
+    /// If the storage provider supports transactions and you're invoking this from a transaction
+    /// scope then it should include the changes you made.
+    /// </remarks>
+    MeasureDefinition? FindDefinition(string name);
 
     /// <summary>
     /// Finds all measure definitions.

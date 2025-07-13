@@ -85,13 +85,23 @@ public static class Quant
     /// <param name="value">The value to parse.</param>
     /// <returns>The parsed quantity.</returns>
     /// <exception cref="ArgumentNullException">When <paramref name="quantityType"/> is null.</exception>
-    /// <exception cref="ArgumentException">When <paramref name="quantityType"/> is not valid.</exception>"
+    /// <exception cref="ArgumentException">
+    /// When <paramref name="quantityType"/> is not valid or the value cannot be parsed.
+    /// </exception>"
     public static IQuantity Parse(string quantityType, string value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(quantityType, nameof(quantityType));
 
         var quantityTypeType = FindQuantityInfoByName(quantityType, throwIfNotFound: true)!.ValueType;
-        return Quantity.Parse(CultureInfo.InvariantCulture, quantityTypeType, value);
+
+        try
+        {
+            return Quantity.Parse(CultureInfo.InvariantCulture, quantityTypeType, value);
+        }
+        catch (UnitNotFoundException e)
+        {
+            throw new ArgumentException(e.Message, e);
+        }
     }
 
     /// <summary>

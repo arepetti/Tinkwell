@@ -17,6 +17,83 @@ public readonly struct MeasureValue : IEquatable<MeasureValue>
     public static MeasureValue Undefined { get; } = new();
 
     /// <summary>
+    /// Creates a new instance of <c>MeasureValue</c> from the specified string.
+    /// </summary>
+    /// <param name="measure">Measure to which this <c>MeasureValue</c> is associated.</param>
+    /// <param name="value">Value for the new <c>MeasureValue</c>.</param>
+    /// <param name="timestamp">Timestamp of when the sample has been collected/calculated.</param>
+    /// <returns>A new <c>MeasureValue</c> instance holding the specified value.</returns>
+    /// <exception cref="ArgumentNullException">If <paramref name="measure"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">
+    /// If the specified value is not valid or if it is incompatible with the given measure.
+    /// </exception>
+    public static MeasureValue FromValue(MeasureDefinition measure, string value, DateTime timestamp)
+    {
+        // 1) string -> string = use as-is
+        if (measure.Type == MeasureType.String)
+            return new MeasureValue(value, timestamp);
+
+        // 2) string -> dynamic = if default unit then parse it otherwise use as-is with the assumption
+        // that if we specified a unit then we want numeric values. If we cannot parse it as quantity
+        // then we fallback to a plain string. It's a bit heuristic but it should cover normal use-cases
+        // because Dynamic measures are rare (should we stop supporting them?)
+        if (measure.Type == MeasureType.Dynamic)
+        {
+            if (string.IsNullOrWhiteSpace(measure.QuantityType))
+                return new MeasureValue(value, timestamp);
+
+            try
+            {
+                return new MeasureValue(Quant.ParseAndConvert(measure.QuantityType, measure.Unit, value), timestamp);
+            }
+
+            catch (ArgumentException)
+            {
+                return new MeasureValue(value, timestamp);
+            }
+        }
+
+        // 3) string -> numeric = parse
+        if (measure.Type == MeasureType.Number)
+            return new MeasureValue(Quant.ParseAndConvert(measure.QuantityType, measure.Unit, value), timestamp);
+
+        return Undefined;
+    }
+
+    /// <summary>
+    /// Creates a new instance of <c>MeasureValue</c> from the specified number.
+    /// </summary>
+    /// <param name="measure">Measure to which this <c>MeasureValue</c> is associated.</param>
+    /// <param name="value">Value for the new <c>MeasureValue</c>.</param>
+    /// <param name="timestamp">Timestamp of when the sample has been collected/calculated.</param>
+    /// <returns>A new <c>MeasureValue</c> instance holding the specified value.</returns>
+    /// <exception cref="ArgumentNullException">If <paramref name="measure"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">
+    /// If the specified value is not valid or if it is incompatible with the given measure.
+    /// </exception>
+    public static MeasureValue FromValue(MeasureDefinition measure, double value, DateTime timestamp)
+    {
+        // 1) numeric -> numeric = apply default unit
+        if (measure.Type == MeasureType.Number)
+            return new MeasureValue(Quant.From(measure.QuantityType, measure.Unit, value), timestamp);
+
+        // 2) numeric -> string = invalid, we do not want to hide it with a silent conversion
+        if (measure.Type == MeasureType.String)
+            throw new ArgumentException($"Measure '{measure.Name}' is a string but value is numeric.", nameof(value));
+
+        // 3) numeric -> dynamic = apply default unit (if present), otherwise as scalar
+        if (measure.Type == MeasureType.Dynamic)
+        {
+            if (string.IsNullOrWhiteSpace(measure.QuantityType))
+                return new MeasureValue(Scalar.FromAmount(value), timestamp);
+
+            return new MeasureValue(Quant.From(measure.QuantityType, measure.Unit, value), timestamp);
+        }
+
+        return Undefined;
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="MeasureValue"/> struct.
     /// </summary>
     /// <param name="value">The quantity value.</param>
@@ -55,26 +132,6 @@ public readonly struct MeasureValue : IEquatable<MeasureValue>
     /// </summary>
     /// <param name="value">The string value.</param>
     public MeasureValue(string value) : this(value, DateTime.UtcNow)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MeasureValue"/> struct.
-    /// </summary>
-    /// <param name="value">The double value.</param>
-    /// <param name="timestamp">The timestamp of the value.</param>
-    public MeasureValue(double value, DateTime timestamp)
-    {
-        _value = Scalar.FromAmount(value);
-        Type = MeasureValueType.String;
-        Timestamp = timestamp;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MeasureValue"/> struct.
-    /// </summary>
-    /// <param name="value">The double value.</param>
-    public MeasureValue(double value) : this(value, DateTime.UtcNow)
     {
     }
 
@@ -228,7 +285,7 @@ public readonly struct MeasureValue : IEquatable<MeasureValue>
     public static explicit operator string(MeasureValue value)
     {
         if (value.Type != MeasureValueType.String)
-            throw new InvalidCastException($"Cannot cast {value.Type} to double.");
+            throw new InvalidCastException($"Cannot cast {value.Type} to string.");
 
         return (string)value._value;
     }

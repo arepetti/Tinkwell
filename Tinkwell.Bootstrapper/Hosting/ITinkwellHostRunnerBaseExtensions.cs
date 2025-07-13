@@ -16,27 +16,30 @@ public static class ITinkwellHostRunnerBaseExtensions
     /// <returns>The property value as an <see cref="int"/>.</returns>
     public static int GetPropertyInt32(this ITinkwellHostRunnerBase host, string name, int defaultValue)
     {
-        if (host.Properties.TryGetValue(name, out var obj))
+        var value = GetPropertyValue(host, name);
+        if (value is null)
+            return defaultValue;
+
+        if (value is int)
+            return (int)value;
+
+
+        if (value is long)
+            checked { return (int)(long)value; }
+
+        try
         {
-            if (obj is int)
-                return (int)obj;
-
-            try
-            {
-                var str = Convert.ToString(obj, CultureInfo.InvariantCulture);
-                return int.TryParse(str, CultureInfo.InvariantCulture, out int value) ? value : defaultValue;
-            }
-            catch (FormatException)
-            {
-                return defaultValue;
-            }
-            catch (InvalidCastException)
-            {
-                return defaultValue;
-            }
+            var str = Convert.ToString(value, CultureInfo.InvariantCulture);
+            return int.TryParse(str, CultureInfo.InvariantCulture, out int num) ? num : defaultValue;
         }
-
-        return defaultValue;
+        catch (FormatException)
+        {
+            return defaultValue;
+        }
+        catch (InvalidCastException)
+        {
+            return defaultValue;
+        }
     }
 
     /// <summary>
@@ -48,10 +51,11 @@ public static class ITinkwellHostRunnerBaseExtensions
     /// <returns>The property value as a <see cref="string"/>.</returns>
     public static string? GetPropertyString(this ITinkwellHostRunnerBase host, string name, string? defaultValue)
     {
-        if (host.Properties.TryGetValue(name, out var obj))
-            return Convert.ToString(obj, CultureInfo.InvariantCulture);
+        var value = GetPropertyValue(host, name);
+        if (value is null)
+            return defaultValue;
 
-        return defaultValue;
+        return Convert.ToString(value, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -63,22 +67,29 @@ public static class ITinkwellHostRunnerBaseExtensions
     /// <returns>The property value as a <see cref="bool"/>.</returns>
     public static bool GetPropertyBoolean(this ITinkwellHostRunnerBase host, string name, bool defaultValue)
     {
-        if (host.Properties.TryGetValue(name, out var obj))
-        {
-            try
-            {
-                return Convert.ToBoolean(obj, CultureInfo.InvariantCulture);
-            }
-            catch (FormatException)
-            {
-                return defaultValue;
-            }
-            catch (InvalidCastException)
-            {
-                return defaultValue;
-            }
-        }
+        var value = GetPropertyValue(host, name);
+        if (value is null)
+            return defaultValue;
 
-        return defaultValue;
+        try
+        {
+            return Convert.ToBoolean(value, CultureInfo.InvariantCulture);
+        }
+        catch (FormatException e)
+        {
+            return defaultValue;
+        }
+        catch (InvalidCastException e)
+        {
+            return defaultValue;
+        }
+    }
+
+    private static object? GetPropertyValue(ITinkwellHostRunnerBase host, string name)
+    {
+        if (host.Properties.TryGetValue(name, out var value))
+            return value;
+     
+        return null;
     }
 }

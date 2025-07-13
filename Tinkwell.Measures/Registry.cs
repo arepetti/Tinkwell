@@ -154,6 +154,9 @@ public sealed class Registry(IStorage storage) : IRegistry
     public ValueTask<IEnumerable<Measure>> FindAllAsync(IEnumerable<string> names, CancellationToken cancellationToken)
         => _storage.FindAllAsync(names, cancellationToken);
 
+    public MeasureDefinition? FindDefinition(string name)
+        => _storage.FindDefinition(name);
+
     /// <inheritdoc />
     public ValueTask<IEnumerable<MeasureDefinition>> FindAllDefinitionsAsync(CancellationToken cancellationToken)
         => _storage.FindAllDefinitionsAsync(cancellationToken);
