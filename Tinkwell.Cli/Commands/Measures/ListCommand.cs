@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Grpc.Core;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -21,6 +22,10 @@ sealed class ListCommand : AsyncCommand<ListCommand.Settings>
         [CommandOption("--values")]
         [Description("Include current values.")]
         public bool Values { get; set; }
+
+        [CommandOption("-a|--all")]
+        [Description("Shows all measures (including those hidden by default).")]
+        public bool All { get; set; }
     }
 
     public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
@@ -32,16 +37,21 @@ sealed class ListCommand : AsyncCommand<ListCommand.Settings>
             .Spinner(Spinner.Known.Default)
             .StartAsync("Querying...", async ctx =>
             {
-                var request = new Services.StoreListRequest();
+                var request = new Services.SearchRequest();
                 request.IncludeValues = settings.Values;
                 if (!string.IsNullOrWhiteSpace(settings.Search))
                     request.Query = settings.Search;
 
                 var store = await DiscoveryHelpers.FindStoreServiceAsync(settings);
-                return await store.Client.ListAsync(request);
+                return store.Client.Search(request);
             });
 
-        Reporter.PrintToConsole(response.Items, settings.Values, settings.Verbose);
+        await Reporter.PrintToConsoleAsync(
+            response.ResponseStream.ReadAllAsync(CancellationToken.None),
+            settings.Values,
+            settings.Verbose,
+            settings.All
+        );
 
         return ExitCode.Ok;
     }

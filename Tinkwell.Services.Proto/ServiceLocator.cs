@@ -1,6 +1,6 @@
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
-using Tinkwell.Bootstrapper;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell;
@@ -68,10 +68,10 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
     }
 
     /// <summary>
-    /// 
+    /// Finds the <see cref="Services.Store.StoreClient"/> service.
     /// </summary>
     /// <param name="cancellationToken">A token that can be used to request cancellation of the operation.</param>
-    /// <returns></returns>
+    /// <returns>A container for the required service and its channel. It must be disposed when the service is not used anymore.</returns>
     public async Task<GrpcService<Services.Store.StoreClient>> FindStoreAsync(CancellationToken cancellationToken = default)
     {
         // Note that we are intentionally using Descriptor.Name instead of Descriptor.FullName. This is because it's possible,

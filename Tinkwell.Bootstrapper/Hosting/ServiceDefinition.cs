@@ -1,7 +1,7 @@
-namespace Tinkwell.Bootstrapper;
+namespace Tinkwell.Bootstrapper.Hosting;
 
 /// <summary>
-/// Represents metadata for a service registered in Tinkwell.
+/// Represents metadata for a (gRPC) service registered in Tinkwell.
 /// </summary>
 public sealed class ServiceDefinition
 {

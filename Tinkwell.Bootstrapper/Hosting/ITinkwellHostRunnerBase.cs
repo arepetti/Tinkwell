@@ -1,7 +1,7 @@
-﻿namespace Tinkwell.Bootstrapper;
+﻿namespace Tinkwell.Bootstrapper.Hosting;
 
 /// <summary>
-/// Defines the contract for a Tinkwell host runner base.
+/// Defines the contract for all Tinkwell hosts.
 /// </summary>
 public interface ITinkwellHostRunnerBase
 {
@@ -9,6 +9,7 @@ public interface ITinkwellHostRunnerBase
     /// Gets the name of the runner.
     /// </summary>
     string RunnerName { get; }
+
     /// <summary>
     /// Gets the properties associated with the runner.
     /// </summary>

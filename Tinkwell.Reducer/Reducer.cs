@@ -1,11 +1,13 @@
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Reflection;
+using Tinkwell.Measures;
 using Tinkwell.Measures.Configuration.Parser;
-using UnitsNet;
+using Tinkwell.Services;
 
 namespace Tinkwell.Reducer;
 
@@ -85,23 +87,55 @@ sealed class Reducer : IAsyncDisposable
     {
         Debug.Assert(_store is not null);
 
-        // TODO: add support for Store.RegisterMany() so that we can batch
-        // this process instead of calling Store.Register() too many times.
+        var request = new StoreRegisterManyRequest();
         foreach (var measureName in _dependencyWalker.CalculationOrder)
         {
+            // A "declaration" is when we do not have an exxpression for the measure, technically
+            // runners should register their own measures but when integrating with external services
+            // (for example MQTT) is cleaner to have a place to "declare" those measures and let the
+            // others simply consume them.
             var measure = _dependencyWalker.Items.First(m => m.Name == measureName);
-            _logger.LogDebug("Registering derived measure {Name}", measure.Name);
-            await _store.Client.RegisterAsync(new Services.StoreRegisterRequest
+            bool isDeclaration = string.IsNullOrWhiteSpace(measure.Expression);
+            bool isConstant = !isDeclaration && measure.Dependencies.Count == 0 && _options.UseConstants;
+            bool isDerived = !isDeclaration && measure.Dependencies.Count > 0;
+
+            _logger.LogDebug("Registering derived measure {Name}, type: {Type}",
+                measure.Name, isDeclaration ? "declaration" : (isConstant ? "constant" : "derived"));
+
+            var registerRequest = new StoreRegisterRequest
             {
-                Name = measure.Name,
-                QuantityType = measure.QuantityType,
-                Unit = measure.Unit,
-                Minimum = measure.Minimum,
-                Maximum = measure.Maximum,
-                Category = measure.Category,
-                Precision = measure.Precision,
-            }, cancellationToken: cancellationToken);
+                Definition = new()
+                {
+                    Name = measure.Name,
+                    Type = StoreDefinition.Types.Type.Number,
+                    Attributes = (isDerived ? 2 : 0) | (isConstant ? 1 : 0),
+                    QuantityType = measure.QuantityType,
+                    Unit = measure.Unit,
+                },
+                Metadata = new()
+                {
+                    Tags = { measure.Tags },
+                }
+            };
+
+            if (measure.Minimum.HasValue)
+                registerRequest.Definition.Minimum = measure.Minimum.Value;
+
+            if (measure.Maximum.HasValue)
+                registerRequest.Definition.Maximum = measure.Maximum.Value;
+
+            if (measure.Precision.HasValue)
+                registerRequest.Definition.Precision = measure.Precision.Value;
+
+            if (measure.Description is not null)
+                registerRequest.Metadata.Description = measure.Description;
+
+            if (measure.Category is not null)
+                registerRequest.Metadata.Category = measure.Category;
+
+            request.Items.Add(registerRequest);
         }
+        await _store.Client.RegisterManyAsync(request, cancellationToken: cancellationToken);
     }
 
     private async Task CalculateInitialValuesAsync(CancellationToken cancellationToken)
@@ -117,22 +151,23 @@ sealed class Reducer : IAsyncDisposable
     {
         Debug.Assert(_store is not null);
 
-        var uniqueDependencies = _dependencyWalker.ForwardDependencyMap.Values.SelectMany(x => x).Distinct().ToList();
+        var uniqueDependencies = _dependencyWalker.ForwardDependencyMap.Values
+            .SelectMany(x => x)
+            .Distinct()
+            .ToList();
+
         if (uniqueDependencies.Count == 0)
             return;
 
         _logger.LogDebug("Subscribing to changes for {Count} dependencies", uniqueDependencies.Count);
-        var request = new Services.SubscribeToSetRequest();
+        var request = new Services.SubscribeManyRequest();
         request.Names.AddRange(uniqueDependencies);
 
-        using var call = _store.Client.SubscribeToSet(request, cancellationToken: cancellationToken);
+        using var call = _store.Client.SubscribeMany(request, cancellationToken: cancellationToken);
         try
         {
             await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
-            {
-                foreach (var change in response.Changes)
-                    await HandleChangeAsync(change.Name, cancellationToken);
-            }
+                await HandleChangeAsync(response.Name, cancellationToken);
         }
         catch (RpcException e) when (e.StatusCode == StatusCode.Cancelled)
         {
@@ -146,18 +181,19 @@ sealed class Reducer : IAsyncDisposable
 
     private async Task HandleChangeAsync(string changedMeasure, CancellationToken cancellationToken)
     {
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-
         // TODO: we should really really REALLY publish these changes in batch: collect all the recalculated
-        // measures and then publish them all at once, instead of one by one. We'll need to
-        // add a Store.UpdateMany() method. We should also probably have a simpler method where the value
-        // is not a string but a number (assumed to be with the correct unit of measure).
+        // measures and then publish them all at once, instead of one by one.
         if (_dependencyWalker.ReverseDependencyMap.TryGetValue(changedMeasure, out var affectedMeasures))
         {
             // We only care about the affected measures that are also derived measures.
-            var derivedAffectedMeasures = affectedMeasures.Where(name => _dependencyWalker.Items.Any(dm => dm.Name == name)).ToList();
+            var derivedAffectedMeasures = affectedMeasures
+                .Where(name => _dependencyWalker.Items.Any(dm => dm.Name == name))
+                .ToList();
 
+            // We walk through the measures in the order we have to calculate them
+            // (it's like sorting derivedAffectedMeasures by the index in CalculationOrder
+            // but slightly faster), when a measure has been affected by this change then
+            // we need to recalculate it.
             foreach (var measureName in _dependencyWalker.CalculationOrder)
             {
                 if (derivedAffectedMeasures.Contains(measureName))
@@ -167,21 +203,19 @@ sealed class Reducer : IAsyncDisposable
                 }
             }
         }
-
-        stopwatch.Stop();
-        _logger.LogDebug("Change of '{ChangedMeasureName}' affected {AffectedCount} measure(s) and took {Time} ms to complete",
-            changedMeasure, affectedMeasures?.Count ?? 0, stopwatch.ElapsedMilliseconds);
     }
 
     private async Task RecalculateMeasureAsync(Measure measure, CancellationToken cancellationToken)
     {
         Debug.Assert(_store is not null);
 
+        // No op if this measure has been disabled before because an update failed
         if (measure.Disabled)
             return;
 
         try
         {
+            // First calculate the new value
             var result = await EvaluateMeasureExpression(measure, cancellationToken);
             if (result is null)
             {
@@ -189,16 +223,9 @@ sealed class Reducer : IAsyncDisposable
                 return;
             }
 
-            if (measure.Precision.HasValue)
-                result = UnitHelpers.Round(result, measure.Precision.Value);
-
+            // Then write it to the store
             _logger.LogTrace("Recalculated {Name} = {Value}", measure.Name, result);
-
-            await _store.Client.UpdateAsync(new Services.StoreUpdateRequest
-            {
-                Name = measure.Name,
-                Value = result!.ToString("G", CultureInfo.InvariantCulture)
-            }, cancellationToken: cancellationToken);
+            await _store.Client.AsFacade().WriteQuantityAsync(measure.Name, result.Value, cancellationToken);
         }
         catch (Exception e)
         {
@@ -207,50 +234,30 @@ sealed class Reducer : IAsyncDisposable
         }
     }
 
-    private async Task<IQuantity?> EvaluateMeasureExpression(Measure measure, CancellationToken cancellationToken)
+    private async Task<double?> EvaluateMeasureExpression(Measure measure, CancellationToken cancellationToken)
     {
         Debug.Assert(_store is not null);
 
-        var getManyRequest = new Services.GetManyRequest();
-        getManyRequest.Names.AddRange(measure.Dependencies);
-        var response = await _store.Client.GetManyAsync(getManyRequest, cancellationToken: cancellationToken);
+        // First we need the current value for all the dependencies, they'll become
+        // parameters for the NCalc expression.
+        var valuesForDependencies = await _store.Client.ReadManyAsync(
+            new Services.StoreReadManyRequest() { Names = { measure.Dependencies } },
+            cancellationToken: cancellationToken);
 
         var expression = new NCalc.Expression(measure.Expression);
-        foreach (var dependency in measure.Dependencies)
-        {
-            if (response.Values.TryGetValue(dependency, out var quantityProto))
-            {
-                expression.Parameters[dependency] = quantityProto.Number;
-            }
-            else
-            {
-                _logger.LogWarning("Could not find value for dependency {Dependency} when recalculating {Name}.", dependency, measure.Name);
-                return null;
-            }
-        }
+        foreach (var dependency in valuesForDependencies.Items)
+            expression.Parameters[dependency.Name] = dependency.Value.ToObject();
 
-        var result = ConvertResultToQuantity(measure, expression.Evaluate());
+        // The we can calculate the result, it's always a double: derived measures do not
+        // support a string output (but they accept strings as inputs!)
+        var result = expression.Evaluate();
         if (result is null)
         {
             _logger.LogError("Expression for {Name} did not evaluate to manageable quantity. Measure disabled. Result type: {ResultType}", measure.Name, result?.GetType().Name ?? "null");
             return null;
         }
 
-        return result;
-    }
-
-    private IQuantity? ConvertResultToQuantity(Measure measure, object? result)
-    {
-        if (result is null)
-            return null;
-
-        if (result is IQuantity)
-            return (IQuantity)result;
-
-        if (UnitHelpers.TryGetQuantityValue(result, out var value))
-            return Quantity.From(value, measure.QuantityType, measure.Unit);
-
-        return null;
+        return Convert.ToDouble(result, CultureInfo.InvariantCulture);
     }
 }
 

@@ -1,9 +1,29 @@
-compose service orchestrator "Tinkwell.Orchestrator.dll"
-compose service store "Tinkwell.Store.dll"
-compose service events "Tinkwell.EventsGateway.dll"
-compose agent executor "Tinkwell.Actions.Executor.dll" { path: "./config/actions.twa" }
-compose agent reducer "Tinkwell.Reducer.dll" { path: "./config/measures.twm" }
-compose agent reactor "Tinkwell.Reactor.dll" { path: "./config/measures.twm" }
+runner system "Tinkwell.Bootstrapper.GrpcHost" {
+	service runner orchestrator "Tinkwell.Orchestrator.dll" {}
+	service runner store "Tinkwell.Store.dll" {}
+	service runner events "Tinkwell.EventsGateway.dll" {}
+	service runner health "Tinkwell.HealthCheck.dll" {}
+}
+
+runner measures "Tinkwell.Bootstrapper.DllHost" {
+	service runner reducer "Tinkwell.Reducer.dll" {
+		properties {
+			path: "./config/measures.twm"
+			use_constants: false
+		}
+	}
+	service runner reactor "Tinkwell.Reactor.dll" {
+		properties {
+			path: "./config/measures.twm"
+		}
+	}
+	service runner executor "Tinkwell.Actions.Executor.dll" {
+		properties {
+			path: "./config/actions.twa"
+		}
+	}
+}
+
 compose agent watchdog "Tinkwell.Watchdog.dll"
 
 compose agent mqtt_server "Tinkwell.Bridge.MqttServer.dll" {}

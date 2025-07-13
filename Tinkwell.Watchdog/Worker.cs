@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Globalization;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
@@ -8,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Ipc.Extensions;
+using Tinkwell.Measures;
 using Tinkwell.Services;
 
 namespace Tinkwell.Watchdog;
@@ -129,9 +129,9 @@ sealed class Worker(
         Debug.Assert(_store is not null);
         
         var measureName = await GetOrRegisterMeasureNameAsync(runnerName, cancellationToken);
-        var value = Convert.ToString((int)status, CultureInfo.InvariantCulture) ?? "";
-        await _store.Client.UpdateAsync(new() { Name = measureName, Value = value }, cancellationToken: cancellationToken);
-    }
+        var value = status.ToString();
+        await _store.Client.AsFacade().WriteStringAsync(measureName, value, cancellationToken);
+     }
 
     private async Task<string> GetOrRegisterMeasureNameAsync(string runnerName, CancellationToken cancellationToken)
     {
@@ -144,9 +144,17 @@ sealed class Worker(
         var newMeasureName = _options.NamePattern.Replace("{{ name }}", runnerName);
         await _store.Client.RegisterAsync(new()
         {
-            Name = newMeasureName,
-            QuantityType = "Scalar",
-            Unit = "",
+            Definition = new()
+            {
+                Type = StoreDefinition.Types.Type.String,
+                Attributes = 4, // System generated
+                Name = newMeasureName,
+            },
+            Metadata = new()
+            {
+                Description = $"Service satus for {measureName}",
+                Tags = { "HealthCheck" }
+            }
         }, cancellationToken: cancellationToken);
 
         _nameMap.TryAdd(runnerName, newMeasureName);

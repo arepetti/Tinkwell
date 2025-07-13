@@ -1,3 +1,5 @@
+using Tinkwell.Bootstrapper.Hosting;
+
 namespace Tinkwell.Bootstrapper.GrpcHost;
 
 [Flags]

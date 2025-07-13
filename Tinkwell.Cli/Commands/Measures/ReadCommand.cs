@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using Tinkwell.Measures;
 
 namespace Tinkwell.Cli.Commands.Measures;
 
@@ -22,17 +23,14 @@ sealed class ReadCommand : AsyncCommand<ReadCommand.Settings>
             .Spinner(Spinner.Known.Default)
             .StartAsync("Reading...", async ctx =>
             {
-                var request = new Services.GetRequest();
+                var request = new Services.StoreFindRequest();
                 request.Name = settings.Name;
 
                 var store = await DiscoveryHelpers.FindStoreServiceAsync(settings);
-                return await store.Client.GetAsync(request);
+                return await store.Client.FindAsync(request);
             });
 
-        if (response.Value.ValueCase == Services.Quantity.ValueOneofCase.Text)
-            AnsiConsole.WriteLine(response.Value.Text);
-        else
-            AnsiConsole.WriteLine(response.Value.Number.ToString("G", CultureInfo.InvariantCulture));
+        AnsiConsole.WriteLine(response.Value.FormatAsString());
 
         return ExitCode.Ok;
     }

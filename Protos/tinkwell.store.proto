@@ -4,72 +4,265 @@ option csharp_namespace = "Tinkwell.Services";
 
 package Tinkwell;
 
+import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
-import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
 
-// Service to store values from various inputs (typically with their unit of measure).
+// Service definition for the Tinkwell Measures Registry.
+// This service provides methods for registering, updating, querying, and subscribing to measures.
+// All methods might return the following errors (unless otherwise specified):
+// * InvalidArgument: one or more arguments are not valid.
+// * NotFound: the specified item does not exist.
+// * FailedPrecondition: the operation cannot be performed on the requested target.
+// * Internal: an internal error occurred.
 service Store {
-    // List all the measures currently stored.
-    rpc List (StoreListRequest) returns (StoreListReply);
+    // Registers a new measure.
+    // Might return the following errors (and all the standard ones):
+    // * InvalidArgument: if the measure definition is not valid, for example if it has an invalid
+    // combination of quantity type and unit or if a measure with the same name already exists.
+    // * OutOfRange: if one parameter is out of range, for example a negative TTL.
+    rpc Register(StoreRegisterRequest) returns (google.protobuf.Empty);
 
-    // Register a new measure, it can be used to store values later.
-    rpc Register (StoreRegisterRequest) returns (StoreRegisterReply);
+    // Registers multiple measures in a single call.
+    // Might return the following errors (and all the standard ones):
+    // * InvalidArgument: if the measure definition is not valid, for example if it has an invalid
+    // combination of quantity type and unit or if a measure with the same name already exists.
+    // * OutOfRange: if one parameter is out of range, for example a negative TTL.
+    rpc RegisterMany(StoreRegisterManyRequest) returns (google.protobuf.Empty);
 
-    // Update a measure with a new value, you need to call Register() before
-    // you can set a value for a measure. This method reqires a unit of measure and
-    // perfirns the necessary conversions if the registereed unit is different from the one specified.
-    // Use Store.Set() if you have a floating point number already expresses with the correct unit.
-    rpc Update (StoreUpdateRequest) returns (StoreUpdateReply);
+    // Updates the value of an existing measure.
+    // Might return the following errors (and all the standard ones):
+    // * InvalidArgument: the measure cannot be updated with the specified value.
+    // * NotFound: cannot find a measure with the specified name.
+    // * OutOfRange: the specified value is outside the allowed range for the measure.
+    // * FailedPrecondition: trying to update a constant measure.
+    rpc Update(StoreUpdateRequest) returns (google.protobuf.Empty);
 
-    // Update a measure with a new value, you need to call Register() before
-    // you can set a value for a measure. Use Store.Update() if you have a unit of measure and it might
-    // be different from the one you registered.
-    rpc Set (StoreSetRequest) returns (StoreSetReply);
+    // Updates the values of multiple existing measures in a single call.
+    // Might return the following errors (and all the standard ones):
+    // * InvalidArgument: the measure cannot be updated with the specified value.
+    // * NotFound: cannot find a measure with the specified name.
+    // * OutOfRange: the specified value is outside the allowed range for the measure.
+    // * FailedPrecondition: trying to update a constant measure.
+    rpc UpdateMany(StoreUpdateManyRequest) returns (google.protobuf.Empty);
 
-    // Gets the current value of a single measure.
-    rpc Get(GetRequest) returns (GetResponse);
+    // Sets the value of an existing measure from a string, handling type conversion automatically.
+    // Might return the following errors (and all the standard ones):
+    // * InvalidArgument: the measure cannot be updated with the specified value.
+    // * NotFound: cannot find a measure with the specified name.
+    // * OutOfRange: the specified value is outside the allowed range for the measure.
+    // * FailedPrecondition: trying to update a constant measure.
+    rpc SetMeasureValue(StoreSetMeasureValueRequest) returns (google.protobuf.Empty);
 
-    // Gets the current values of multiple measures.
-    rpc GetMany(GetManyRequest) returns (GetManyResponse);
+    // Finds a single measure by its unique name.
+    rpc Find(StoreFindRequest) returns (StoreMeasure);
 
-    // Subscribe to changes for a specific measure. The measure does not need to be registered
-    // when you subscribe for changes (note that you will receive updates but no notification for when
-    // the measure is registered).
-    rpc SubscribeTo (SubscribeToRequest) returns (stream StoreChangeResponse);
+    // Finds all measures, optionally filtered by a list of names.
+    // If the names list is empty, all measures are returned.
+    rpc FindAll(StoreFindAllRequest) returns (stream StoreMeasure);
 
-    // Subscribe to changes for all the quantities that meet the specified criteria.
-    // Note that you're going to receive events also for measures not yet registered
-    // (but matching the criteria) when this function has been called.
-    rpc SubscribeToMatching (SubscribeToMatchingRequest) returns (stream StoreChangeResponse);
+    // Finds all measure definitions, optionally filtered by a list of names.
+    // If the names list is empty, all definitions are returned.
+    rpc FindAllDefinitions(StoreFindAllDefinitionsRequest) returns (stream StoreDefinition);
 
-    // Subscribe to changes for a specific set of measures. The measure does not need to be registered
-    // when you subscribe for changes.
-    rpc SubscribeToSet (SubscribeToSetRequest) returns (stream StoreChangeResponse);
+    // Searches for measures matching the specified criteria.
+    rpc Search(SearchRequest) returns (stream SearchResponse);
+
+    // Read the current value of a set of measures.
+    // It's lighter thand FindAll() but this function does NOT return a stream,
+    // use only when you need the current value of a very small number of measures.
+    rpc ReadMany(StoreReadManyRequest) returns (StoreValueList);
+
+    // Subscribes to value changes for a single measure.
+    rpc Subscribe(SubscribeRequest) returns (stream StoreValueChange);
+
+    // Subscribes to value changes for a specific list of measures.
+    rpc SubscribeMany(SubscribeManyRequest) returns (stream StoreValueChange);
+
+    // Subscribes to value changes for all measures matching a name pattern.
+    rpc SubscribeManyMatching(SubscribeManyMatchingRequest) returns (stream StoreValueChange);
 }
 
-// Represents a quantity (a value and its unit of measure).
-message Quantity {
-    // The unit of measure (such as DegreesCelsius, MetersPerSecond, etc).
-    string unit = 1;
-    // The type of the quantity (such as Temperature, Speed, etc).
-    string quantity_type = 2;
-    // The value of the quantity, it can be either a number or a text.
-    oneof value {
-        // The value associated with this quantity, if numeric.
-        double number = 3;
-        // The value associated with this quantity, if text.
-        string text = 4;
+// Represents the full state of a measure, including its definition, metadata, and current value.
+message StoreMeasure {
+    // The definition of the measure.
+    StoreDefinition definition = 1;
+    // The metadata associated with the measure.
+    StoreMetadata metadata = 2;
+    // The current value of the measure.
+    StoreValue value = 3;
+}
+
+// Represents a set of measures with their value.
+message StoreValueList {
+    message Item {
+        // The definition of the measure.
+        string name = 1;
+        // The current value of the measure.
+        StoreValue value = 2;
+    }
+    repeated Item items = 1;
+}
+
+// Represents a measure without its value, for when only definition and metadata are needed.
+message StoreMeasureInfo {
+    // The definition of the measure.
+    StoreDefinition definition = 1;
+    // The metadata associated with the measure.
+    StoreMetadata metadata = 2;
+}
+
+// Represents the definition of a measure, corresponding to the C# MeasureDefinition class.
+message StoreDefinition {
+    // Defines the type of a measure's value.
+    enum Type {
+        // The measure can hold any type of value.
+        DYNAMIC = 0;
+        // The measure holds a numeric value.
+        NUMBER = 1;
+        // The measure holds a string value.
+        STRING = 2;
+    }
+
+    // Attributes of the measure.
+    // This is a bitmask. For example, a value of 3 (binary 11) means Constant and Derived.
+    //   None = 0: normal measure
+    //   Constant = 1: constant value (cannot be changed after the first write)
+    //   Derived = 2: derived measure (informative)
+    //   SystemGenerated = 4: generated automatically by the system
+    int32 attributes = 1;
+    
+    // The type of the measure's value.
+    Type type = 2;
+    // The unique name of the measure.
+    string name = 3;
+    // The type of the quantity (e.g., "Length", "Mass").
+    optional string quantity_type = 4;
+    // The unit of the measure (e.g., "Meter", "Kilogram").
+    optional string unit = 5;
+    // The time-to-live for the measure's value. After this duration, the value is considered expired.
+    optional google.protobuf.Duration ttl = 6;
+    // The minimum allowed value for a numeric measure.
+    optional double minimum = 7;
+    // The maximum allowed value for a numeric measure.
+    optional double maximum = 8;
+    // The number of decimal places to round a numeric value to.
+    optional int32 precision = 9;
+}
+
+// Represents the metadata for a measure, returned by the service.
+message StoreMetadata {
+    // The timestamp when the measure was created.
+    google.protobuf.Timestamp created_at = 1;
+    // A list of tags associated with the measure for categorization and searching.
+    repeated string tags = 2;
+    // The category of the measure.
+    optional string category = 3;
+    // The description of the measure.
+    optional string description = 4;
+}
+
+// Represents the metadata for a measure provided by the client on creation.
+// This message omits fields that are managed by the service, like `created_at`.
+message StoreMetadataInput {
+    reserved 3;
+    // A list of tags to associate with the measure.
+    repeated string tags = 1;
+    // The category to associate with the measure.
+    optional string category = 2;
+    // The description of the measure.
+    optional string description = 4;
+}
+
+// Represents the value of a measure, corresponding to the C# MeasureValue struct.
+message StoreValue {
+    // The timestamp when the value was recorded.
+    google.protobuf.Timestamp timestamp = 1;
+    // The actual value, which can be either a number or a string.
+    oneof payload {
+        double number_value = 2;
+        string string_value = 3;
     }
 }
 
-// Request message for Store.List().
-message StoreListRequest {
-    // Indicates whether to include the values in the result. If true then the latest known valu of
-    // each measure ius included,
-    optional bool include_values = 1;
-    // A filter to apply to the stored measures, it can be empty. If specified then only
-    // those measures whose name contains the specified text are included in the result.
-    // Search is case-insensitive.  Wildcards such as * and ? are supported.
+// Represents a notification for a measure value change.
+message StoreValueChange {
+    // The name of the measure that changed.
+    string name = 1;
+    // The new value of the measure.
+    StoreValue new_value = 2;
+    // The old value of the measure, if available.
+    optional StoreValue old_value = 3;
+}
+
+// --- Request and Response Messages ---
+
+// Request to register a new measure.
+message StoreRegisterRequest {
+    // The definition of the measure to register.
+    StoreDefinition definition = 1;
+    // The initial metadata for the measure.
+    StoreMetadataInput metadata = 2;
+}
+
+// Request to register multiple measures.
+message StoreRegisterManyRequest {
+    // A list of measures to register.
+    repeated StoreRegisterRequest items = 1;
+}
+
+// Request to update the value of a measure.
+message StoreUpdateRequest {
+    // The name of the measure to update.
+    string name = 1;
+    // The new value for the measure.
+    StoreValue value = 2;
+}
+
+// Request to update the values of multiple measures.
+message StoreUpdateManyRequest {
+    // A list of measure updates.
+    repeated StoreUpdateRequest items = 1;
+}
+
+// Request to set the value of a measure from a string.
+message StoreSetMeasureValueRequest {
+    // The name of the measure to update.
+    string name = 1;
+    // The timestamp when the value was recorded.
+    google.protobuf.Timestamp timestamp = 2;
+    // The string representation of the value. The service will parse this based on the measure's type.
+    string value_string = 3;
+}
+
+// Request to find a single measure.
+message StoreFindRequest {
+    // The name of the measure to find.
+    string name = 1;
+}
+
+// Request to find all measures, with an optional filter by name.
+message StoreFindAllRequest {
+    // If empty, find all measures. Otherwise, find only the measures with the specified names.
+    repeated string names = 1;
+}
+
+// Request to read the value of a set of measures.
+message StoreReadManyRequest {
+    // List of names of the measures to include in the response.
+    repeated string names = 1;
+}
+
+// Request to find all measure definitions, with an optional filter by name.
+message StoreFindAllDefinitionsRequest {
+    // If empty, find all definitions. Otherwise, find only the definitions with the specified names.
+    repeated string names = 1;
+}
+
+// Request to search for measures.
+message SearchRequest {
+    // A query string to match against the measure name. Search is case-insensitive.
+    // Wildcards such as * and ? are supported.
     // For example "JournalBearing.Temperature.*" matches all the measures that start with "JournalBearing.Temperature."
     // and "JournalBearing.*.*Oil*" matches all the measures that start with "JournalBearing." and contain "Oil" in the
     // third part of the name." ? works as a single character wildcard, for example "JournalBearing.Temperature.Oil?"
@@ -77,153 +270,47 @@ message StoreListRequest {
     // If you want to search for all the measure that includes a specific word then use "*word*".
     // It suports groups as in "[Bb]lue", it matches both "Blue" and "blue". You can negate groups as
     // as in "[^Bb]lue", it matches "Glue" but not "blue" or "Blue". You can also specify ranges "[a-zA-Z]".
-    optional string query = 2;
-    // Filter by tag. Only measures containing this tag will be returned. Case insensitive.
-    optional string tag = 3;
-    // Filter by category. Only measures belonging to this category will be returned. Case insensitive.
-    optional string category = 4;
+    optional string query = 1;
+    // A list of tags to match against the measure's tags.
+    repeated string tags = 2;
+    // A category to match against the measure's category.
+    optional string category = 3;
+    // If true, the response will include the full StoreMeasure with values.
+    // If false, the response will include only StoreMeasureInfo (definition and metadata).
+    bool include_values = 4;
 }
 
-// Response message for Store.List().
-message StoreListReply {
-    // Represents a measure.
-    message Item {
-        // Name of the measure.
-        string name = 1;
-        // If StoreListRequest.include_values is true then this field contains the latest value. This value
-        // includes the unit of measure specified in unit (for example 3 °C).
-        optional string value = 2;
-        // Type of the measure (for example Temperature, Speed, etc).
-        string quantity_type = 3;
-        // The unit of measure (must be a valid unit of measure for quantity_type, for example DegreesCelsius).
-        string unit = 4;
-        // Optional: The minimum expected value for this measure.
-        optional google.protobuf.DoubleValue minimum = 5;
-        // Optional: The maximum expected value for this measure.
-        optional google.protobuf.DoubleValue maximum = 6;
-        // Optional: A list of tags associated with this measure.
-        repeated string tags = 7;
-        // Optional: The category this measure belongs to.
-        optional google.protobuf.StringValue category = 8;
-        // Optional: The precision (number of decimal places) to round the value to.
-        optional google.protobuf.Int32Value precision = 9;
+// Response from a search request.
+message SearchResponse {
+    // The result of the search, which can be either a full measure or just its info.
+    oneof result {
+        StoreMeasure measure = 1;
+        StoreMeasureInfo info = 2;
     }
-    // List of measures, each measure is represented by an Item.
-    repeated Item items = 1;
 }
 
-// Request message for Store.Register().
-message StoreRegisterRequest {
-    // Name of the measure, it must be unique.
-    string name = 1;
-    // Time to live for the measure, after this time the measure is considered expired and it will be discarded.
-    // Note that a measure is discarded only if there is a newer available value, otherwise it is kept indefinitely.
-    // If omitted then the measure is kept in the history until the list is full (then oldest measures are discarded).
-    optional google.protobuf.Duration ttl = 2;
-    // Type of the measure, it must be a valid type (for example Temperature, Speed, etc).
-    optional string quantity_type = 3;
-    // Unit of measure, it must be a valid unit of measure for the specified quantity_type (for example DegreesCelsius).
-    optional string unit = 4;
-    // Optional: The minimum expected value for this measure.
-    optional google.protobuf.DoubleValue minimum = 5;
-    // Optional: The maximum expected value for this measure.
-    optional google.protobuf.DoubleValue maximum = 6;
-    // Optional: A list of tags associated with this measure.
-    repeated string tags = 7;
-    // Optional: The category this measure belongs to.
-    optional google.protobuf.StringValue category = 8;
-    // Optional: The precision (number of decimal places) to round the value to.
-    optional google.protobuf.Int32Value precision = 9;
-}
-
-// Response message for Store.Register().
-message StoreRegisterReply {}
-
-// Request message for Store.Update().
-message StoreUpdateRequest {
-    // Name of the measure to update, it must be registered before using Store.Register().
-    string name = 1;
-    // New value for this measure. It must include a valid unit of measure compatible with the type of
-    // quantity specified when registering the measure. If the unit of measure is different (but compatible)
-    // then it's converted automatically to the unit specified if StoreRegisterRequest. For example, if the unit
-    // is DegreesCelsius and you pass the value 14 °F then it is converted to -10 °C.
-    string value = 2;
-}
-
-// Request message for Store.Set().
-message StoreSetRequest {
-    // Name of the measure to update, it must be registered before using Store.Register().
-    string name = 1;
-    // New value for this measure.
-    double value = 2;
-}
-
-// Response message for Store.Update().
-message StoreUpdateReply {}
-
-// Response message for Store.Set().
-message StoreSetReply {}
-
-// Request for Store.Get().
-message GetRequest {
-    // The name of the quantity to retrieve.
+// Request to subscribe to a single measure.
+message SubscribeRequest {
+    // The name of the measure to subscribe to.
     string name = 1;
 }
 
-// Response for Store.Get().
-message GetResponse {
-    // The requested quantity.
-    Quantity value = 1;
-}
-
-// Request for Store.GetMany().
-message GetManyRequest {
-    // The names of the quantities to retrieve.
+// Request to subscribe to multiple measures.
+message SubscribeManyRequest {
+    // The names of the measures to subscribe to.
     repeated string names = 1;
 }
 
-// Response for Store.GetMany().
-message GetManyResponse {
-    // A map of quantity names to their values.
-    map<string, Quantity> values = 1;
-}
-
-// Request for Store.SubscribeTo().
-message SubscribeToRequest {
-    // The name of the quantity to subscribe to. It must be an exact match.
-    string name = 1;
-}
-
-// Request for Store.SubscribeToMatching().
-message SubscribeToMatchingRequest {
-    // The matching pattern. Important: contrarily to Store.List(), the search is case sensitive.
+// Request to subscribe to measures matching a pattern.
+message SubscribeManyMatchingRequest {
+    // A pattern to match against measure names. Search is case-insensitive.
     // Wildcards such as * and ? are supported.
     // For example "JournalBearing.Temperature.*" matches all the measures that start with "JournalBearing.Temperature."
     // and "JournalBearing.*.*Oil*" matches all the measures that start with "JournalBearing." and contain "Oil" in the
     // third part of the name." ? works as a single character wildcard, for example "JournalBearing.Temperature.Oil?"
     // matches all the measures that starts with the specified string and ends with any other single character.
+    // If you want to search for all the measure that includes a specific word then use "*word*".
     // It suports groups as in "[Bb]lue", it matches both "Blue" and "blue". You can negate groups as
     // as in "[^Bb]lue", it matches "Glue" but not "blue" or "Blue". You can also specify ranges "[a-zA-Z]".
     string pattern = 1;
-}
-
-// Request for Store.SubscribeToSet().
-message SubscribeToSetRequest {
-    // The names of the quantities to subscribe to.
-    repeated string names = 1;
-}
-
-// Response containing a list of changes occurred in the Store.
-message StoreChangeResponse {
-    // Represents a single change in the Store.
-    message StoreChange {
-        reserved 3;
-        // The name of the quantity that changed.
-        string name = 1;
-        // The new value of the quantity.
-        Quantity new_value = 2;
-    }
-    // The list of changes. It may contain one or more changes (if changes have been batched) and if the
-    // same measure changed multiple times then all the individual changes are listed (from oldest to newest).
-    repeated StoreChange changes = 1;
 }

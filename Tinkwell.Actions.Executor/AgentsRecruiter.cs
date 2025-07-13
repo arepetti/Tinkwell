@@ -1,16 +1,15 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using Tinkwell.Bootstrapper;
 
 namespace Tinkwell.Actions.Executor;
 
 public static class AgentsRecruiter
 {
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     internal static Type? FindAgent(string name)
     {
-        _types ??= Assembly
-            .GetExecutingAssembly()
-            .GetExportedTypes() // Public types to avoid problems when trimming for native AOT
-            .Where(type => type.IsClass && !type.IsAbstract && typeof(IAgent).IsAssignableFrom(type))
-            .ToArray();
+        _types ??= StrategyAssemblyLoader.FindTypesImplementing<IAgent>(typeof(AgentsRecruiter).Assembly);
 
         return _types.FirstOrDefault(type =>
             string.Equals(name, type.GetCustomAttribute<AgentAttribute>()?.Name, StringComparison.Ordinal));

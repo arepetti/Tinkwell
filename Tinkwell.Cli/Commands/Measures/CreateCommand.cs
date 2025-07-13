@@ -29,10 +29,15 @@ sealed class CreateCommand : AsyncCommand<CreateCommand.Settings>
             .Spinner(Spinner.Known.Default)
             .StartAsync("Creating...", async ctx =>
             {
-                var request = new Services.StoreRegisterRequest();
-                request.Name = settings.Name;
-                request.QuantityType = settings.Type;
-                request.Unit = settings.Unit;
+                var request = new Services.StoreRegisterRequest
+                {
+                    Definition =
+                    {
+                        Name = settings.Name,
+                        QuantityType = settings.Type,
+                        Unit = settings.Unit
+                    }
+                };
 
                 var store = await DiscoveryHelpers.FindStoreServiceAsync(settings);
                 await store.Client.RegisterAsync(request);

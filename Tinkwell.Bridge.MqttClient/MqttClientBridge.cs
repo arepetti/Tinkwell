@@ -5,6 +5,7 @@ using MQTTnet.Protocol;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Tinkwell.Bridge.MqttClient.Internal;
+using Tinkwell.Services;
 
 namespace Tinkwell.Bridge.MqttClient;
 
@@ -247,23 +248,15 @@ sealed class MqttClientBridge : IAsyncDisposable
 
         try
         {
+            var request = new StoreUpdateRequest();
+            request.Name = measure.Name;
+            request.Value.Timestamp = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow);
             if (measure.IsNumeric)
-            {
-                await _store.Client.SetAsync(new()
-                {
-                    Name = measure.Name,
-                    Value = measure.AsDouble()
-                });
-            }
+                request.Value.NumberValue = measure.AsDouble();
             else
-            {
-                await _store.Client.UpdateAsync(new()
-                {
-                    Name = measure.Name,
-                    Value = measure.AsString()
-                });
+                request.Value.StringValue = measure.AsString();
 
-            }
+            await _store.Client.UpdateAsync(request);
             _logger.LogTrace("Updated measure '{MeasureName}' with value {Value}.", measure.Name, measure.Value);
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)

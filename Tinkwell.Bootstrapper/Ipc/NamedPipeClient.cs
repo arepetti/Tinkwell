@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipes;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Tinkwell.Bootstrapper.Ipc;
 
@@ -193,7 +195,11 @@ public sealed class NamedPipeClient : INamedPipeClient
         if (resultAsText is null)
             throw new InvalidOperationException("Received null reply from the server.");
 
-        T? result = System.Text.Json.JsonSerializer.Deserialize<T>(resultAsText);
+        // JsonSerializer is a bit quirky, apparently it's OK to to consider JsonElement as a good
+        // fit for object! For example if T is Dictionary<string, object> then values are going to be JsonElement.
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(new ObjectJsonConverter());
+        T? result = JsonSerializer.Deserialize<T>(resultAsText, options);
         if (result is null)
             throw new InvalidOperationException($"Failed to deserialize reply to type {typeof(T).FullName}.");
 
@@ -229,5 +235,35 @@ public sealed class NamedPipeClient : INamedPipeClient
         {
             _disposed = true;
         }
+    }
+}
+
+file sealed class ObjectJsonConverter : JsonConverter<object>
+{
+    public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        return reader.TokenType switch
+        {
+            JsonTokenType.String => reader.GetString()!,
+            JsonTokenType.Number => ReadNumber(reader),
+            JsonTokenType.True => true,
+            JsonTokenType.False => false,
+            JsonTokenType.Null => null!,
+            _ => JsonDocument.ParseValue(ref reader).RootElement.Clone()
+        };
+    }
+
+    public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+        => JsonSerializer.Serialize(writer, value, value?.GetType() ?? typeof(object), options);
+
+    private static object ReadNumber(Utf8JsonReader reader)
+    {
+        if (reader.TryGetInt32(out int i))
+            return i;
+
+        if (reader.TryGetInt64(out long l))
+            return l;
+
+        return reader.GetDouble();
     }
 }
