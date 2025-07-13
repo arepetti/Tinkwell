@@ -22,6 +22,10 @@ sealed class ListCommand : AsyncCommand<ListCommand.Settings>
         [CommandOption("--values")]
         [Description("Include current values.")]
         public bool Values { get; set; }
+
+        [CommandOption("-a|--all")]
+        [Description("Shows all measures (including those hidden by default).")]
+        public bool All { get; set; }
     }
 
     public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
@@ -45,7 +49,8 @@ sealed class ListCommand : AsyncCommand<ListCommand.Settings>
         await Reporter.PrintToConsoleAsync(
             response.ResponseStream.ReadAllAsync(CancellationToken.None),
             settings.Values,
-            settings.Verbose
+            settings.Verbose,
+            settings.All
         );
 
         return ExitCode.Ok;

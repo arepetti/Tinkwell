@@ -279,7 +279,7 @@ Manage [measures](./Glossary.md#measure).
 ### SYNOPSIS
 
 ```console
-tw measures list [search] [...shared...] [--host=<host>] [--values] [--verbose|-v]
+tw measures list [search] [...shared...] [--host=<host>] [--values] [--all] [--verbose|-v]
 tw measures inspect <name> [...shared...] [--host=<host>] [--value]
 tw measures read <name> [...shared...] [--host=<host>]
 tw measures write <name> <value> [...shared...] [--host=<host>]
@@ -295,7 +295,7 @@ Use `tw measures` when you want to inspect the measures registered in the [syste
 ### COMMANDS
 
 ```console
-tw measures list [search] [...shared...] [--host=<host>] [--values] [--verbose|-v]
+tw measures list [search] [...shared...] [--host=<host>] [--values] [--all] [--verbose|-v]
 ```
 List all the registered measures, optionally displaying their current value if `--values` is specified. Use `--verbose` to obtain all the fields associated with every measure`.
 
@@ -377,6 +377,10 @@ You can either exclude a specific rule using its ID or a group, using their cate
 **`--strict`**
 
 Apply stricter rules and the exit code is not zero when all the issues are minor. Use `--verbose` to see exactly which rules are applied.
+
+**`--all`**, **`-a`**
+
+Show all measures, including system measures and all the others hidden by default.
 
 **`--verbose`** **`-v`**
 
