@@ -1,0 +1,18 @@
+{
+  "id": "full_app_setup",
+  "name": "Full Application Setup",
+  "description": "Scaffolds a console app with optional appsettings.json.",
+  "type": "meta",
+  "questions": [
+    {
+      "name": "IncludeAppSettings",
+      "prompt": "Include appsettings.json?",
+      "type": "confirm",
+      "default": "yes"
+    }
+  ],
+  "sequence": [
+    { "templateId": "console_app" },
+    { "templateId": "appsettings_config", "when": "full_app_setup.IncludeAppSettings == true" }
+  ]
+}

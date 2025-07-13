@@ -4,7 +4,7 @@ The CLI interface lets you  **monitor** and **debug** your Tinkwell application 
 
 All the sub-commands are accessible with the `tw` command.
 
-**Initial setup**: [`tw certs`](#tw-certs), [`tw ensamble`](#tw-ensamble), [`tw measures`](#tw-measures)
+**Initial setup**: [`tw certs`](#tw-certs), [`tw ensamble`](#tw-ensamble), [`tw measures`](#tw-measures), [`tw templates`](#tw-templates)
 
 **Measures and alarms**: [`tw measures`](#tw-measures), [`tw events`](#tw-events), [`tw actions`](#tw-actions)
 
@@ -378,10 +378,6 @@ You can either exclude a specific rule using its ID or a group, using their cate
 
 Apply stricter rules and the exit code is not zero when all the issues are minor. Use `--verbose` to see exactly which rules are applied.
 
-**`--all`**, **`-a`**
-
-Show all measures, including system measures and all the others hidden by default.
-
 **`--verbose`** **`-v`**
 
 Produce a detailed description of each measure.
@@ -609,6 +605,81 @@ Apply stricter rules and the exit code is not zero when all the issues are minor
 **`--verbose`** **`-v`**
 
 Produce a detailed description of the linting process.
+
+---
+
+##  `tw templates`
+
+Manage project templates.
+
+### SYNOPSIS
+
+```console
+tw templates list [--path=<path>]
+tw templates use [template_id] [--output=<path>] [--input=<file_path>] [--set=<key=value>] [--unattended] [--dry-run] [--trace=<file_path>] [--path=<path>]
+```
+
+### DESCRIPTION
+
+Use `tw templates` to generate new projects or files from predefined templates. Templates can be simple file sets or complex meta-templates that compose other templates conditionally.
+
+### COMMANDS
+
+```console
+tw templates list [--path=<path>]
+```
+Lists all available templates found in the specified `--path` (or default template path).
+
+```console
+tw templates use [template_id] [--output=<path>] [--input=<file_path>] [--set=<key=value>] [--unattended] [--dry-run] [--trace=<file_path>] [--path=<path>]
+```
+Applies a template to generate files. If `template_id` is omitted, you will be prompted to select one from a list. The command gathers answers for template variables through a combination of input file, command-line overrides, and interactive prompts.
+
+You can use this command to create _trace files_ containing a set of predefined answers to create repeatable configurations, for example:
+
+```bash
+# User will be prompted to answer all the questions from this meta-template
+# but we are not going to generate anything locally: we're interested in the answers
+tw templates meta_template_example --trace ./meta_trace.json --dry-run
+
+# Now you can distribute meta_trace.json and you can use it to always generate
+# the same configuration anywhere
+tw templates meta_template_example --input ./meta_trace.json
+```
+
+### ARGUMENTS
+
+**`[template_id]`**
+
+The C-style identifier of the template to use. If omitted, an interactive prompt will allow you to choose from available templates.
+
+**`--output=<path>`**
+
+The destination directory where the generated files will be placed. Defaults to the current working directory.
+
+**`--input=<file_path>`**
+
+Path to a JSON file containing predefined answers for template variables. These answers will be loaded first.
+
+**`--set=<key=value>`**
+
+A repeatable option to provide or override a single template variable. Use `template_id.variable_name=value` for meta-templates to target specific sub-template variables (e.g., `--set my_app.ProjectName=MyNewApp`). Values provided via `--set` take precedence over those from `--input`.
+
+**`--unattended`**
+
+If specified, disables all interactive prompts. If any required template variable is not provided via `--input` or `--set`, the command will exit with an error.
+
+**`--dry-run`**
+
+Performs all template processing, variable gathering, and rendering, but does not write any files to disk. Instead, it prints the planned file operations to the console. Useful for verifying template logic and variable substitution without making actual changes.
+
+**`--trace=<file_path>`**
+
+Saves the final, consolidated set of all template answers (including those from `--input`, `--set`, and interactive prompts) to the specified JSON file. This file can be used later as an `--input` for repeatable template generation.
+
+**`--path=<path>`**
+
+Specifies the local directory where templates are stored. Defaults to the `Templates` subdirectory in the executable's folder.
 
 ---
 

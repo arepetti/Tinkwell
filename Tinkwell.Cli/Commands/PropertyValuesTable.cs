@@ -4,7 +4,7 @@ using Spectre.Console.Rendering;
 
 namespace Tinkwell.Cli.Commands;
 
-sealed class PropertyValuesTable : IRenderable
+public sealed class PropertyValuesTable : IRenderable
 {
     public PropertyValuesTable()
     {

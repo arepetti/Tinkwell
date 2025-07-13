@@ -3,7 +3,7 @@ using Spectre.Console.Rendering;
 
 namespace Tinkwell.Cli.Commands;
 
-sealed class SimpleTable : IRenderable
+public sealed class SimpleTable : IRenderable
 {
     public SimpleTable(TableBorder border, params string?[] columns)
     {
