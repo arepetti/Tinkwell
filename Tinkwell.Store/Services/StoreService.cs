@@ -71,7 +71,7 @@ public class StoreService : Tinkwell.Services.Store.StoreBase
         });
     }
 
-    public override async Task<Empty> SetMeasureValue(SetMeasureValueRequest request, ServerCallContext context)
+    public override async Task<Empty> SetMeasureValue(StoreSetMeasureValueRequest request, ServerCallContext context)
     {
         return await RunWithErrorHandling(async () =>
         {

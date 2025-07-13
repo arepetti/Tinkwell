@@ -90,16 +90,17 @@ sealed class Reducer : IAsyncDisposable
         // this process instead of calling Store.Register() too many times.
         foreach (var measureName in _dependencyWalker.CalculationOrder)
         {
-            var measure = _dependencyWalker.Items.First(m => m.Name == measureName);
-            _logger.LogInformation("Registering derived measure {Name}", measure.Name);
-
             // A "declaration" is when we do not have an exxpression for the measure, technically
             // runners should register their own measures but when integrating with external services
             // (for example MQTT) is cleaner to have a place to "declare" those measures and let the
             // others simply consume them.
+            var measure = _dependencyWalker.Items.First(m => m.Name == measureName);
             bool isDeclaration = string.IsNullOrWhiteSpace(measure.Expression);
             bool isConstant = !isDeclaration && measure.Dependencies.Count == 0 && _options.UseConstants;
             bool isDerived = !isDeclaration && measure.Dependencies.Count > 0;
+
+            _logger.LogDebug("Registering derived measure {Name}, type: {Type}",
+                measure.Name, isDeclaration ? "declaration" : (isConstant ? "constant" : "derived"));
 
             var request = new Services.StoreRegisterRequest
             {
@@ -189,6 +190,10 @@ sealed class Reducer : IAsyncDisposable
                 .Where(name => _dependencyWalker.Items.Any(dm => dm.Name == name))
                 .ToList();
 
+            // We walk through the measures in the order we have to calculate them
+            // (it's like sorting derivedAffectedMeasures by the index in CalculationOrder
+            // but slightly faster), when a measure has been affected by this change then
+            // we need to recalculate it.
             foreach (var measureName in _dependencyWalker.CalculationOrder)
             {
                 if (derivedAffectedMeasures.Contains(measureName))
@@ -204,11 +209,13 @@ sealed class Reducer : IAsyncDisposable
     {
         Debug.Assert(_store is not null);
 
+        // No op if this measure has been disabled before because an update failed
         if (measure.Disabled)
             return;
 
         try
         {
+            // First calculate the new value
             var result = await EvaluateMeasureExpression(measure, cancellationToken);
             if (result is null)
             {
@@ -216,14 +223,9 @@ sealed class Reducer : IAsyncDisposable
                 return;
             }
 
+            // Then write it to the store
             _logger.LogTrace("Recalculated {Name} = {Value}", measure.Name, result);
-
-            var request = new Services.StoreUpdateRequest() { Name = measure.Name, };
-            request.Value = new Services.StoreValue();
-            request.Value.Timestamp = Timestamp.FromDateTime(DateTime.UtcNow);
-            request.Value.NumberValue = result.Value;
-
-            await _store.Client.UpdateAsync(request, cancellationToken: cancellationToken);
+            await _store.Client.AsFacade().WriteQuantityAsync(measure.Name, result.Value, cancellationToken);
         }
         catch (Exception e)
         {
@@ -236,14 +238,18 @@ sealed class Reducer : IAsyncDisposable
     {
         Debug.Assert(_store is not null);
 
-        var response = await _store.Client.ReadManyAsync(
+        // First we need the current value for all the dependencies, they'll become
+        // parameters for the NCalc expression.
+        var valuesForDependencies = await _store.Client.ReadManyAsync(
             new Services.StoreReadManyRequest() { Names = { measure.Dependencies } },
             cancellationToken: cancellationToken);
 
         var expression = new NCalc.Expression(measure.Expression);
-        foreach (var dependency in response.Items)
+        foreach (var dependency in valuesForDependencies.Items)
             expression.Parameters[dependency.Name] = dependency.Value.ToObject();
 
+        // The we can calculate the result, it's always a double: derived measures do not
+        // support a string output (but they accept strings as inputs!)
         var result = expression.Evaluate();
         if (result is null)
         {

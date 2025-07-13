@@ -24,7 +24,7 @@ service Store {
     rpc UpdateMany(StoreUpdateManyRequest) returns (google.protobuf.Empty);
 
     // Sets the value of an existing measure from a string, handling type conversion automatically.
-    rpc SetMeasureValue(SetMeasureValueRequest) returns (google.protobuf.Empty);
+    rpc SetMeasureValue(StoreSetMeasureValueRequest) returns (google.protobuf.Empty);
 
     // Finds a single measure by its unique name.
     rpc Find(StoreFindRequest) returns (StoreMeasure);
@@ -198,11 +198,13 @@ message StoreUpdateManyRequest {
 }
 
 // Request to set the value of a measure from a string.
-message SetMeasureValueRequest {
+message StoreSetMeasureValueRequest {
     // The name of the measure to update.
     string name = 1;
+    // The timestamp when the value was recorded.
+    google.protobuf.Timestamp timestamp = 2;
     // The string representation of the value. The service will parse this based on the measure's type.
-    string value_string = 2;
+    string value_string = 3;
 }
 
 // Request to find a single measure.
