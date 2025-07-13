@@ -7,6 +7,7 @@ using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Reflection;
 using Tinkwell.Measures;
 using Tinkwell.Measures.Configuration.Parser;
+using Tinkwell.Services;
 
 namespace Tinkwell.Reducer;
 
@@ -86,8 +87,7 @@ sealed class Reducer : IAsyncDisposable
     {
         Debug.Assert(_store is not null);
 
-        // TODO: add support for Store.RegisterMany() so that we can batch
-        // this process instead of calling Store.Register() too many times.
+        var request = new StoreRegisterManyRequest();
         foreach (var measureName in _dependencyWalker.CalculationOrder)
         {
             // A "declaration" is when we do not have an exxpression for the measure, technically
@@ -102,12 +102,12 @@ sealed class Reducer : IAsyncDisposable
             _logger.LogDebug("Registering derived measure {Name}, type: {Type}",
                 measure.Name, isDeclaration ? "declaration" : (isConstant ? "constant" : "derived"));
 
-            var request = new Services.StoreRegisterRequest
+            var registerRequest = new StoreRegisterRequest
             {
                 Definition = new()
                 {
                     Name = measure.Name,
-                    Type = Services.StoreDefinition.Types.Type.Number,
+                    Type = StoreDefinition.Types.Type.Number,
                     Attributes = (isDerived ? 2 : 0) | (isConstant ? 1 : 0),
                     QuantityType = measure.QuantityType,
                     Unit = measure.Unit,
@@ -119,22 +119,23 @@ sealed class Reducer : IAsyncDisposable
             };
 
             if (measure.Minimum.HasValue)
-                request.Definition.Minimum = measure.Minimum.Value;
+                registerRequest.Definition.Minimum = measure.Minimum.Value;
 
             if (measure.Maximum.HasValue)
-                request.Definition.Maximum = measure.Maximum.Value;
+                registerRequest.Definition.Maximum = measure.Maximum.Value;
 
             if (measure.Precision.HasValue)
-                request.Definition.Precision = measure.Precision.Value;
+                registerRequest.Definition.Precision = measure.Precision.Value;
 
             if (measure.Description is not null)
-                request.Metadata.Description = measure.Description;
+                registerRequest.Metadata.Description = measure.Description;
 
             if (measure.Category is not null)
-                request.Metadata.Category = measure.Category;
+                registerRequest.Metadata.Category = measure.Category;
 
-            await _store.Client.RegisterAsync(request, cancellationToken: cancellationToken);
+            request.Items.Add(registerRequest);
         }
+        await _store.Client.RegisterManyAsync(request, cancellationToken: cancellationToken);
     }
 
     private async Task CalculateInitialValuesAsync(CancellationToken cancellationToken)
@@ -181,8 +182,7 @@ sealed class Reducer : IAsyncDisposable
     private async Task HandleChangeAsync(string changedMeasure, CancellationToken cancellationToken)
     {
         // TODO: we should really really REALLY publish these changes in batch: collect all the recalculated
-        // measures and then publish them all at once, instead of one by one. We'll need to
-        // add a Store.UpdateMany() method.
+        // measures and then publish them all at once, instead of one by one.
         if (_dependencyWalker.ReverseDependencyMap.TryGetValue(changedMeasure, out var affectedMeasures))
         {
             // We only care about the affected measures that are also derived measures.

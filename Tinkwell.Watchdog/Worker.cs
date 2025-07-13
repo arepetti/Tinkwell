@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Globalization;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
