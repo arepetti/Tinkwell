@@ -615,7 +615,7 @@ Manage project templates.
 ### SYNOPSIS
 
 ```console
-tw templates list [--path=<path>]
+tw templates list [--path=<path>] [--all]
 tw templates use [template_id] [--output=<path>] [--input=<file_path>] [--set=<key=value>] [--unattended] [--dry-run] [--trace=<file_path>] [--path=<path>]
 ```
 
@@ -652,6 +652,10 @@ tw templates meta_template_example --input ./meta_trace.json
 **`[template_id]`**
 
 The C-style identifier of the template to use. If omitted, an interactive prompt will allow you to choose from available templates.
+
+**`--all`**, **`--all`**
+
+Shows all the templates, including the hidden ones.
 
 **`--output=<path>`**
 

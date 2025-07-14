@@ -4,7 +4,7 @@ namespace Tinkwell.Cli.Commands.Templates.Manifest;
 
 /// <summary>
 /// Represents a single file inside the template, it'll be copied/appended
-/// to create the desired output.
+/// to create the desired output. The manifest is <see cref="TemplateManifest"/>.
 /// </summary>
 sealed class TemplateFile
 {

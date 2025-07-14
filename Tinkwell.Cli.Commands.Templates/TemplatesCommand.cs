@@ -12,7 +12,7 @@ public sealed class TemplatesCommand : Command<TemplatesCommand.Settings>
     {
         [CommandOption("--path")]
         [Description("Path to the local directory containing the templates.")]
-        public string TemplateDirectoryPath { get; set; }
+        public string TemplatesDirectoryPath { get; set; }
             = Path.Combine(StrategyAssemblyLoader.GetEntryAssemblyDirectoryName(), "Templates");
     }
 
