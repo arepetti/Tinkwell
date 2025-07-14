@@ -43,6 +43,12 @@ public static class WellKnownNames
     public static readonly string SupervisorPidEnvironmentVariable = "TINKWELL_SUPERVISOR_PID";
 
     /// <summary>
+    /// An optional environment variable that contains the <em>environment</em> for this
+    /// installation. It could be <c>"Development"</c> or <c>"Release"</c>.
+    /// </summary>
+    public static readonly string EnvironmentEnvironmentVariable = "TINKWELL_ENVIRONMENT";
+
+    /// <summary>
     /// <strong>Internal</strong>. If possible try to use an existing host.
     /// <para>
     /// The environment variable for the web server certificate path.

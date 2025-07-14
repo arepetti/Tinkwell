@@ -39,16 +39,20 @@ static class CommandAppExtensions
     {
         // Some commands might have dependencies that cause errors at run-time, we load this platform-specific
         // assemblies only if we know that they're going to work.
+        // TODO: we should (and I mean really really SHOULD) rework this to use StrategyAssemblyLoader properly
         var inThisAssembly = FindAllCommands(Assembly.GetExecutingAssembly());
+        var extraAssemblies = StrategyAssemblyLoader.LoadAssemblies("Tinkwell.Cli", "Commands");
+        var extraCommands = extraAssemblies.SelectMany(FindAllCommands);
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             string path = StrategyAssemblyLoader.GetEntryAssemblyDirectoryName();
             string windowsAssemblyPath = Path.Combine(path, $"{typeof(CommandAppExtensions).Namespace}.{OSPlatform.Windows}.dll");
             var assembly = Assembly.LoadFrom(windowsAssemblyPath);
-            return Enumerable.Concat(inThisAssembly, FindAllCommands(assembly)).ToArray();
+            return Enumerable.Concat(inThisAssembly, FindAllCommands(assembly)).Concat(extraCommands).ToArray();
         }
 
-        return inThisAssembly;
+        return inThisAssembly.Concat(extraCommands).ToArray();
     }
 
     private static IEnumerable<(Type Type, Type? Parent, string Name, string Description)> FindAllCommands(Assembly assembly)

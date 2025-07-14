@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Tinkwell.Bootstrapper;
+namespace Tinkwell;
 
 /// <summary>
 /// Provides a mechanism to run a long-running task that can be cancelled and awaited.

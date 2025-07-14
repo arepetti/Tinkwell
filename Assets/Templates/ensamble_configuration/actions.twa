@@ -1,0 +1,18 @@
+// Configuration generated from a template at {{ "now" | date: "%Y-%m-%d %H:%M" }}
+
+when event signal {
+    // Uncomment this line to filter the events by object. As it is, it logs a message
+    // for every published signal.
+    // object: "high_load"
+    then {
+        log {
+            {% comment -%}
+            We need to enclose the next section with "raw" because message is a Liquid interpolated
+            string itself and we want to copy it as-is to the output file!
+            {%- endcomment %}
+            {% raw -%}
+            message: $"{{ subject }} {{ verb }} {{ object }} with severity {{ payload.severity }}"
+            {%- endraw %}
+        }
+    }
+}

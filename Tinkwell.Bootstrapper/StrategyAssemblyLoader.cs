@@ -195,6 +195,26 @@ public static class StrategyAssemblyLoader
         }
     }
 
+    /// <summary>
+    /// Determines the string comparer to use when working with file system entries
+    /// in the specified path.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns>A <c>StringComparison</c>.</returns>
+    /// <remarks>
+    /// This function always uses an <strong>ordinal</strong> string comparer, case-sensitive or not
+    /// depending on the file system itself.
+    /// Note that, in the case of directories, the directory itself could be
+    /// in a case-sensitive file system but it could be the mounting point of
+    /// a case-insensitive one (or vice-versa!). Also for files, network shares
+    /// could make things even more complicate so use this with caution.
+    /// </remarks>
+    public static StringComparison ResolveStringComparisonForPath(string path)
+    {
+        return IsFileSystemCaseSensitive(path)
+            ? StringComparison.Ordinal
+            : StringComparison.OrdinalIgnoreCase;
+    }
     internal static string GetExecutingAssemblyDirectoryName()
         => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
 
@@ -223,7 +243,10 @@ public static class StrategyAssemblyLoader
 
     private static bool IsFileSystemCaseSensitive(string path)
     {
-        if (!File.Exists(path))
+        bool isFile = File.Exists(path);
+        bool isDirectory = Directory.Exists(path);
+
+        if (!isFile && !isDirectory)
             return false;
 
         // To see if it's case-sensitive we try to read the given file
@@ -237,11 +260,21 @@ public static class StrategyAssemblyLoader
 
         var variant = Path.Combine(directoryPath!, altCaseFileName);
 
-        // If I can't find the "variant" then the file system is case-sensitive.
-        if (!File.Exists(variant))
+        if (isFile)
+        {
+            // If I can't find the "variant" then the file system is case-sensitive.
+            if (!File.Exists(variant))
+                return true;
+
+            // Both exist, let's check if they point to the same file/file
+            return new FileInfo(path).FullName != new FileInfo(variant).FullName;
+        }
+
+        // It's a directory, similar checks...
+        if (!Directory.Exists(variant))
             return true;
 
-        // Both exist, let's check if they point to the same file
-        return new FileInfo(path).FullName != new FileInfo(variant).FullName;
+        return new DirectoryInfo(path).FullName != new DirectoryInfo(variant).FullName;
     }
+
 }
