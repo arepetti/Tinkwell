@@ -55,7 +55,7 @@ sealed class RegisterDllsActivity : IActivity
     private readonly IEnsambleConditionEvaluator _evaluator;
     private IEnumerable<HostedDll>? _dlls;
 
-    private IEnumerable<IHostedDllRegistrar> LoadRegistrarsFrom(HostedDll configuration)
+    private IEnumerable<IHostedAssemblyRegistrar> LoadRegistrarsFrom(HostedDll configuration)
     {
         if (configuration.Assembly is null)
         {
@@ -69,17 +69,10 @@ sealed class RegisterDllsActivity : IActivity
             .Select(CreateInstance);
 
         static bool IsInstantiable(Type type)
-            => typeof(IHostedDllRegistrar).IsAssignableFrom(type) && !type.IsAbstract;
+            => typeof(IHostedAssemblyRegistrar).IsAssignableFrom(type) && !type.IsAbstract;
 
-        // Note that registrars CANNOT use DI! This activity has been created using a "shadow host"
-        // to circumvent the fact that IHostBuilder does not have a simple way to create synchronously
-        // (= not inside ConfigureServices() because it's deferred) an IServiceProvider. To workaround
-        // this we create a throw-away host in Extensions.DelegateConfigureServices() to DI this activity
-        // but we can't use it safely outside of here because it's disposed (including the services you obtained)
-        // right after this task completes. We could ignore registrars without a default constructors
-        // but then they'd be ignored without any error and would be confusing.
-        IHostedDllRegistrar CreateInstance(Type type)
-            => (IHostedDllRegistrar)Activator.CreateInstance(type)!;
+        IHostedAssemblyRegistrar CreateInstance(Type type)
+            => (IHostedAssemblyRegistrar)Activator.CreateInstance(type)!;
     }
 
     private async Task<IEnumerable<HostedDll>> FetchListAsync(CancellationToken cancellationToken)
@@ -98,14 +91,14 @@ sealed class RegisterDllsActivity : IActivity
             .ToArray();
     }
 
-    private sealed class HostProxy(IHostBuilder builder) : IDllHost
+    private sealed class HostProxy(IHostBuilder builder) : IConfigurableHost
     {
         public required string RunnerName { get; internal init; }
 
         public required IDictionary<string, object> Properties { get; internal init; }
 
-        public IHostBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
-            => _builder.ConfigureContainer(configureDelegate);
+        public void ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
+            => _builder.ConfigureServices(configureDelegate);
 
         private readonly IHostBuilder _builder = builder;
     }

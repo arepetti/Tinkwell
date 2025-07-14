@@ -5,7 +5,7 @@ namespace Tinkwell.Watchdog;
 
 public sealed class Registrar : IHostedDllRegistrar
 {
-    public void ConfigureServices(IDllHost host)
+    public void ConfigureServices(IConfigurableHost host)
     {
         host.ConfigureServices((context, services) =>
         {

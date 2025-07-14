@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Measures;
 using Tinkwell.Measures.Storage;
@@ -15,9 +14,12 @@ public sealed class Registrar : IHostedGrpcServerRegistrar
         host.MapGrpcService<StoreService>(new ServiceDefinition { FamilyName = name, Aliases = [name] });
     }
 
-    public void ConfigureServices(IGrpcServerHost host)
+    public void ConfigureServices(IConfigurableHost host)
     {
-        host.Services.AddSingleton<IStorage, InMemoryStorage>();
-        host.Services.AddSingleton<IRegistry, Registry>();
+        host.ConfigureServices((_, services) =>
+        {
+            services.AddSingleton<IStorage, InMemoryStorage>();
+            services.AddSingleton<IRegistry, Registry>();
+        });
     }
 }

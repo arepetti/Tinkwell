@@ -1,6 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
@@ -33,7 +38,7 @@ sealed class RegisterServicesActivity : IActivity
         _logger.LogDebug("Configuring dependencies for GRPC services ");
         await ForEachRegistrarAsync(
             () => new HostProxy(builder, _serviceProvider),
-            (host, service) => service.ConfigureServices(host),
+            (host, registrar) => registrar.ConfigureServices(host),
             cancellationToken);
 
         _logger.LogInformation("{Name} loaded {Count} runner(s): {Runners}",
@@ -50,7 +55,11 @@ sealed class RegisterServicesActivity : IActivity
         _logger.LogDebug("Configuring endpoints for GRPC services");
         await ForEachRegistrarAsync(
             () => new HostProxy(app),
-            (host, service) => service.ConfigureRoutes(host),
+            (host, registrar) =>
+            {
+                if (registrar is IHostedGrpcServerRegistrar grpcRegistrar)
+                    grpcRegistrar.ConfigureRoutes(host);
+            },
             cancellationToken);
     }
 
@@ -61,7 +70,7 @@ sealed class RegisterServicesActivity : IActivity
     private readonly IEnsambleConditionEvaluator _evaluator;
     private IEnumerable<HostedGrpcServer>? _services;
 
-    private async Task ForEachRegistrarAsync(Func<HostProxy> hostFactory, Action<HostProxy, IHostedGrpcServerRegistrar> action, CancellationToken cancellationToken)
+    private async Task ForEachRegistrarAsync(Func<HostProxy> hostFactory, Action<HostProxy, IHostedAssemblyRegistrar> action, CancellationToken cancellationToken)
     {
         _services ??= await FetchServiceListAsync(cancellationToken);
 
@@ -79,7 +88,7 @@ sealed class RegisterServicesActivity : IActivity
         }
     }
 
-    private IEnumerable<IHostedGrpcServerRegistrar> LoadRegistrarsFrom(HostProxy host, HostedGrpcServer configuration)
+    private IEnumerable<IHostedAssemblyRegistrar> LoadRegistrarsFrom(HostProxy host, HostedGrpcServer configuration)
     {
         if (configuration.Assembly is null)
         {
@@ -93,19 +102,14 @@ sealed class RegisterServicesActivity : IActivity
             .Select(CreateInstance);
 
         static bool IsInstantiable(Type type)
-            => typeof(IHostedGrpcServerRegistrar).IsAssignableFrom(type) && !type.IsAbstract;
+            => typeof(IHostedAssemblyRegistrar).IsAssignableFrom(type) && !type.IsAbstract;
 
-        IHostedGrpcServerRegistrar CreateInstance(Type type)
-            => (IHostedGrpcServerRegistrar)ActivatorUtilities.CreateInstance(host.ServiceProvider, type);
+        IHostedAssemblyRegistrar CreateInstance(Type type)
+            => (IHostedAssemblyRegistrar)ActivatorUtilities.CreateInstance(host.ServiceProvider, type);
     }
 
     private async Task<IEnumerable<HostedGrpcServer>> FetchServiceListAsync(CancellationToken cancellationToken)
     {
-        // TODO: _services should be cached/shared between instances, it's not (even if registered as singleton)
-        // because we manually create an instance from a temporary service provider (which is lost) in FromBuilder().
-        // The result? We scan the list of runners twice: when calling ConfigureBuilder() and then for ConfigureRoutes().
-        // Overall this entire class/mechanism needs some re-thinking!
-
         if (_services is not null)
             return _services;
 
@@ -139,18 +143,15 @@ sealed class RegisterServicesActivity : IActivity
         public IServiceProvider ServiceProvider
             => _app?.Services ?? _serviceProvider!;
 
-        IServiceCollection IGrpcServerHost.Services
-        {
-            get
-            {
-                ThrowNotSupportedIfNull(_builder);
-                return _builder.Services;
-            }
-        }
-
         public string RunnerName { get; internal set; } = null!;
 
         public IDictionary<string, object> Properties { get; internal set; } = null!;
+
+        public void ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
+        {
+            ThrowNotSupportedIfNull(_builder);
+            configureDelegate(new HostBuilderContext(_builder.Properties), _builder.Services);
+        }
 
         public void MapGrpcService<TService>(ServiceDefinition? definition = default) where TService : class
         {

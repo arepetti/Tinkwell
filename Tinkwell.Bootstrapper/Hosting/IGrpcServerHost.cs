@@ -1,10 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Tinkwell.Bootstrapper.Hosting;
 
-namespace Tinkwell.Bootstrapper;
+namespace Tinkwell.Bootstrapper.Hosting;
 
-public interface IGrpcServerHost : ITinkwellHostRunnerBase
+public interface IGrpcServerHost : IConfigurableHost
 {
-    IServiceCollection Services { get; }
     void MapGrpcService<TService>(ServiceDefinition? definition = default) where TService : class;
 }

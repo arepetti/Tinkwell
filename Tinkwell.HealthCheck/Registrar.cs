@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.HealthCheck.Services;
 using Tinkwell.Services;
@@ -18,21 +17,24 @@ public sealed class Registrar : IHostedGrpcServerRegistrar
         });
     }
 
-    public void ConfigureServices(IGrpcServerHost host)
+    public void ConfigureServices(IConfigurableHost host)
     {
-        host.Services.AddSingleton((_) =>
+        host.ConfigureServices((_, services) =>
         {
-            return new MonitoringOptions
+            services.AddSingleton((_) =>
             {
-                Interval = TimeSpan.FromSeconds(Math.Clamp(host.GetPropertyInt32("interval", DefaultInterval), 5, int.MaxValue)),
-                Samples = Math.Clamp(host.GetPropertyInt32("maximum_cpu_usage", DefaultSample), 1, 10),
-                EmaAlpha = Math.Clamp(host.GetPropertyInt32("ema_alpha", 70), DefaultEmaAlpha, 100) / 100.0,
-                MaximumCpuUsage = Math.Clamp(host.GetPropertyInt32("samples", DefaultMaximumCpuUsage), 1, 100),
-            };
+                return new MonitoringOptions
+                {
+                    Interval = TimeSpan.FromSeconds(Math.Clamp(host.GetPropertyInt32("interval", DefaultInterval), 5, int.MaxValue)),
+                    Samples = Math.Clamp(host.GetPropertyInt32("maximum_cpu_usage", DefaultSample), 1, 10),
+                    EmaAlpha = Math.Clamp(host.GetPropertyInt32("ema_alpha", DefaultEmaAlpha), 1, 100) / 100.0,
+                    MaximumCpuUsage = Math.Clamp(host.GetPropertyInt32("samples", DefaultMaximumCpuUsage), 1, 100),
+                };
+            });
+            services.AddHostedService<Worker>();
+            services.AddSingleton<IRegistry, Registry>();
+            services.AddTransient<IProcessInspector, CurrentProcessInspector>();
         });
-        host.Services.AddHostedService<Worker>();
-        host.Services.AddSingleton<IRegistry, Registry>();
-        host.Services.AddTransient<IProcessInspector, CurrentProcessInspector>();
     }
 
     private const int DefaultInterval = 30;
