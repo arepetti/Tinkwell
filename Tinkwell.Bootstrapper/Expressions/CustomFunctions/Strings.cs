@@ -22,6 +22,20 @@ sealed class IsNullOrWhiteSpace : UnaryFunction<string>
         => string.IsNullOrWhiteSpace(arg);
 }
 
+sealed class HasValue : UnaryFunction<object>
+{
+    protected override object? Call(object arg)
+    {
+        if (arg is null)
+            return false;
+
+        if (arg is string str)
+            return !string.IsNullOrWhiteSpace(str);
+
+        return true;
+    }
+}
+
 sealed class Length : UnaryFunction<string?>
 {
     protected override object? Call(string? arg)

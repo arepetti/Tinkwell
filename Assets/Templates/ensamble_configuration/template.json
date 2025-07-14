@@ -79,6 +79,12 @@
       "original": "actions.twa",
       "target": "{{actions_file_name}}",
       "mode": "copy"
+    },
+    {
+      "when": "has_value([ensamble_configuration.mqtt_mapping_file_name])",
+      "original": "mqtt-mapping.twmap",
+      "target": "{{mqtt_mapping_file_name}}",
+      "mode": "copy"
     }
   ]
 }

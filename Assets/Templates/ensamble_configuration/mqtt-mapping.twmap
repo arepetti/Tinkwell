@@ -1,0 +1,6 @@
+// Configuration generated from a template at {{ "now" | date: "%Y-%m-%d %H:%M" }}
+
+// Message { "current": 4000 } published to sensor/current with the
+// current reading expressed in mA.
+// We map that reading (in mA) to our "current" measure (in A).
+map sensor/current to json_value(payload, 'current') / 1000 as current
