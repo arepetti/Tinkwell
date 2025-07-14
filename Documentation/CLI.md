@@ -615,8 +615,10 @@ Manage project templates.
 ### SYNOPSIS
 
 ```console
-tw templates list [--path=<path>] [--all]
-tw templates use [template_id] [--output=<path>] [--input=<file_path>] [--set=<key=value>] [--unattended] [--dry-run] [--trace=<file_path>] [--path=<path>]
+tw templates create [--no-examples]
+tw templates list [--path=<path>] [--all] [--explain]
+tw templates inspect [template id]
+tw templates use [template id] [--output=<path>] [--input=<file path>] [--set=<key=value>] [--unattended] [--dry-run] [--trace=<file path>] [--path=<path>]
 ```
 
 ### DESCRIPTION
@@ -626,14 +628,27 @@ Use `tw templates` to generate new projects or files from predefined templates. 
 ### COMMANDS
 
 ```console
-tw templates list [--path=<path>]
+tw templates create [--no-examples]
+```
+
+Creates a new template interactively. Use `--path` to specify a custom output folder (default is the user's profile directory).
+Add `--no-examples` (`-n`) to avoid adding some example sections in the generated `template.json`.
+
+```console
+tw templates list [--path=<path>] [--explain]
 ```
 Lists all available templates found in the specified `--path` (or default template path).
 
 ```console
-tw templates use [template_id] [--output=<path>] [--input=<file_path>] [--set=<key=value>] [--unattended] [--dry-run] [--trace=<file_path>] [--path=<path>]
+tw templates inspect [template id]
 ```
-Applies a template to generate files. If `template_id` is omitted, you will be prompted to select one from a list. The command gathers answers for template variables through a combination of input file, command-line overrides, and interactive prompts.
+
+Shows all the properties of the specified template. If the ID is omitted then the user is prompted to select one from a list.
+
+```console
+tw templates use [template id] [--output=<path>] [--input=<file path>] [--set=<key=value>] [--unattended] [--dry-run] [--trace=<file path>] [--path=<path>]
+```
+Applies a template to generate files. If `<template id>` is omitted, you will be prompted to select one from a list. The command gathers answers for template variables through a combination of input file, command-line overrides, and interactive prompts.
 
 You can use this command to create _trace files_ containing a set of predefined answers to create repeatable configurations, for example:
 
@@ -649,13 +664,17 @@ tw templates meta_template_example --input ./meta_trace.json
 
 ### ARGUMENTS
 
-**`[template_id]`**
+**`[template id]`**
 
 The C-style identifier of the template to use. If omitted, an interactive prompt will allow you to choose from available templates.
 
-**`--all`**, **`--all`**
+**`--all`**, **`--a`**
 
 Shows all the templates, including the hidden ones.
+
+**`--explain`**
+
+Shows where the templates come from.
 
 **`--output=<path>`**
 
@@ -683,7 +702,7 @@ Saves the final, consolidated set of all template answers (including those from 
 
 **`--path=<path>`**
 
-Specifies the local directory where templates are stored. Defaults to the `Templates` subdirectory in the executable's folder.
+Specifies the local directory where templates are stored. Use this to add an extra directory to look for templates, by default it the command looks in a set of predefined directories (use `tw templates list --explain` to show the list).
 
 ---
 

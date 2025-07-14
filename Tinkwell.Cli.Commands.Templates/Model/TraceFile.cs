@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 
 namespace Tinkwell.Cli.Commands.Templates.Manifest;
@@ -8,7 +9,7 @@ sealed class TraceFile
 
     public async Task ImportAsync(string path)
     {
-        var json = await File.ReadAllTextAsync(path);
+        var json = await File.ReadAllTextAsync(path, Encoding.UTF8);
         var options = new JsonSerializerOptions();
         options.Converters.Add(new ObjectJsonConverter());
         var data = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
@@ -22,7 +23,8 @@ sealed class TraceFile
     public async Task SaveAsync(string path)
     {
         await File.WriteAllTextAsync(path,
-            JsonSerializer.Serialize(Answers, new JsonSerializerOptions { WriteIndented = true }));
+            JsonSerializer.Serialize(Answers, new JsonSerializerOptions { WriteIndented = true }),
+            Encoding.UTF8);
     }
 
     public void Add(IEnumerable<string> values)

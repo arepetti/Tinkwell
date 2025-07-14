@@ -1,8 +1,11 @@
-﻿using System.Runtime.InteropServices;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Superpower;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.Hosting;
+using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Bootstrapper.Ensamble;
 
@@ -51,6 +54,7 @@ public sealed class EnsambleConditionEvaluator : IEnsambleConditionEvaluator
         parameters.TryAdd("processor_architecture", RuntimeInformation.ProcessArchitecture.ToString());
         parameters.TryAdd("platform", HostingInformation.ResolvePlatform());
         parameters.TryAdd("session_id", Environment.ProcessId.ToString());
+        parameters.TryAdd("environment", IsDevelopmentEnvironment() ? "development" : "release");
 
         return parameters;
 
@@ -67,4 +71,35 @@ public sealed class EnsambleConditionEvaluator : IEnsambleConditionEvaluator
 
     private readonly IConfiguration? _configuration;
     private readonly IExpressionEvaluator _expressionEvaluator;
+
+    private bool IsDevelopmentEnvironment()
+    {
+        // Forced by configuration option or environment variable.
+        // If this is present the we honor whatever value there is.
+        var environment = _configuration?.GetValue<string>("Ensamble:Environment")
+            ?? Environment.GetEnvironmentVariable(WellKnownNames.EnvironmentEnvironmentVariable);
+
+        if (!string.IsNullOrWhiteSpace(environment))
+            return string.Equals("Development", environment, StringComparison.OrdinalIgnoreCase);
+
+        // Inferred from [Debuggable] attached to the assembly, we use two methods
+        // because neither is 100% accurate.
+        var entryAssembly = Assembly.GetEntryAssembly();
+        if (entryAssembly is not null)
+        {
+            var debuggable = entryAssembly.GetCustomAttribute<DebuggableAttribute>();
+            if (debuggable?.IsJITTrackingEnabled ?? false)
+                return true;
+
+            if (debuggable?.IsJITOptimizerDisabled ?? false)
+                return true;
+        }
+
+        // If this assembly has been compiled in debug then let's assume we're in development mode
+#if DEBUG
+        return true;
+#else
+        return false;
+#endif
+    }
 }

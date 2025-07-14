@@ -8,6 +8,9 @@ namespace Tinkwell.Cli.Commands.Templates.Manifest;
 /// </summary>
 sealed class TemplateFile
 {
+    [JsonPropertyName("when")]
+    public string When { get; set; } = "";
+
     [JsonPropertyName("original")]
     public string Original { get; set; } = "";
 

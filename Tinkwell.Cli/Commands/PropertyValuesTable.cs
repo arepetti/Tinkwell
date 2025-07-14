@@ -16,16 +16,19 @@ public sealed class PropertyValuesTable : IRenderable
 
     public Table ToSpectreTable() => _table;
 
-    public PropertyValuesTable AddNameEntry(object? value, bool isSubsection = false)
+    public PropertyValuesTable AddNameEntry(string label, object? value, bool isSubsection = false)
     {
         string text = (Convert.ToString(value) ?? "").EscapeMarkup();
         if (isSubsection)
-            _table.AddRow($"[yellow]Name[/]", $"[darkcyan]{text}[/]");
+            _table.AddRow($"[yellow]{label.EscapeMarkup()}[/]", $"[darkcyan]{text}[/]");
         else
-            _table.AddRow($"[yellow]Name[/]", $"[cyan]{text}[/]");
+            _table.AddRow($"[yellow]{label.EscapeMarkup()}[/]", $"[cyan]{text}[/]");
 
         return this;
     }
+
+    public PropertyValuesTable AddNameEntry(object? value, bool isSubsection = false)
+        => AddNameEntry("Name", value, isSubsection);
 
     public PropertyValuesTable AddEntry(string key, IRenderable value, int indentation = 0)
     {
@@ -37,9 +40,20 @@ public sealed class PropertyValuesTable : IRenderable
 
     public PropertyValuesTable AddEntry(string key, object? value, int indentation = 0)
     {
-        string str = value is not null ? Convert.ToString(value, CultureInfo.InvariantCulture) ?? "" : "";
+        string str = ValueToString();
         AddEntry(key, IsEmptyEntry(value) ? new Markup($"[italic grey]None[/]") : new Text(str.EscapeMarkup()), indentation);
         return this;
+
+        string ValueToString()
+        {
+            if (value is null)
+                return "";
+
+            if (value is bool flag)
+                return flag ? "Yes" : "No";
+
+            return Convert.ToString(value, CultureInfo.InvariantCulture) ?? "";
+        }
     }
 
     public PropertyValuesTable AddGroupTitle(string title)

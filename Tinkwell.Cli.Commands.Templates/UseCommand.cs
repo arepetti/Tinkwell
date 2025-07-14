@@ -1,10 +1,11 @@
-using System.ComponentModel;
 using Spectre.Console.Cli;
+using System.ComponentModel;
+using Tinkwell.Bootstrapper;
 
 namespace Tinkwell.Cli.Commands.Templates;
 
 [CommandFor("use", parent: typeof(TemplatesCommand))]
-[Description("Use a template to generate a new configuration/project.")]
+[Description("Uses a template to generate a new configuration/project.")]
 public sealed class UseCommand : AsyncCommand<UseCommand.Settings>
 {
     public sealed class Settings : TemplatesCommand.Settings

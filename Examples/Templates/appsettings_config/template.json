@@ -1,9 +1,0 @@
-{
-  "id": "appsettings_config",
-  "name": "Appsettings Configuration",
-  "description": "Adds a basic appsettings.json file.",
-  "type": "standard",
-  "files": [
-    { "original": "appsettings.json", "target": "appsettings.json", "mode": "copy" }
-  ]
-}

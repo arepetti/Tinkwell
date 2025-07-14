@@ -11,8 +11,7 @@ app
         config.SetApplicationName(Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly()!.Location));
         config.SetExceptionHandler((exception, _) =>
         {
-            Consoles.Error.WriteException(exception);
-            //Consoles.Error.MarkupLineInterpolated($"[red]Error:[/] {exception.Message}");
+            Consoles.Error.MarkupLineInterpolated($"[red]Error:[/] {exception.Message}");
         });
     });
 

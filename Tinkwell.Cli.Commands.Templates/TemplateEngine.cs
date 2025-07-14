@@ -1,4 +1,5 @@
 using Spectre.Console;
+using System.Text;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Cli.Commands.Templates.Manifest;
 
@@ -21,7 +22,7 @@ sealed class TemplateEngine
         // Select the template if not provided
         var templateId = _settings.TemplateId;
         if (string.IsNullOrEmpty(templateId))
-            templateId = PromptToSelectTemplate();
+            templateId = PromptToSelectTemplate(_settings.TemplatesDirectoryPath);
 
         // Use the template to generate the output
         await ExecuteTemplateAsync(templateId);
@@ -33,6 +34,20 @@ sealed class TemplateEngine
             await _answers.SaveAsync(_settings.TraceFile);
 
         return 0;
+    }
+
+    public static string PromptToSelectTemplate(string additionalTemplatesDirectoryPath)
+    {
+        // We give the user a nice list reading the manifest for all the available templates
+        var templates = TemplateManifest.FindAll(additionalTemplatesDirectoryPath);
+        var prompt = new SelectionPrompt<string>()
+            .Title("Select a template")
+            .PageSize(10)
+            .MoreChoicesText("[grey](Move up and down to reveal more templates)[/]")
+            .AddChoices(templates.Select(t => t.Name));
+
+        var selectedTemplateName = AnsiConsole.Prompt(prompt);
+        return templates.First(x => x.Name == selectedTemplateName).Id;
     }
 
     private readonly UseCommand.Settings _settings;
@@ -55,23 +70,8 @@ sealed class TemplateEngine
             await _answers.ImportAsync(_settings.InputFile);
 
         // On the top of the baseline we set all the answers we received from the command line
-        // in the form --set template_id.answer_id=value (where template_id can be omitted for
-        // simple templates, it's used only in meta)
+        // in the form --set template_id.answer_id=value
         _answers.Add(_settings.Set);
-    }
-
-    private string PromptToSelectTemplate()
-    {
-        // We give the user a nice list reading the manifest for all the available templates
-        var templates = TemplateManifest.FindAll(_settings.TemplatesDirectoryPath);
-        var prompt = new SelectionPrompt<string>()
-            .Title("Select a template")
-            .PageSize(10)
-            .MoreChoicesText("[grey](Move up and down to reveal more templates)[/]")
-            .AddChoices(templates.Select(t => t.Name));
-
-        var selectedTemplateName = AnsiConsole.Prompt(prompt);
-        return templates.First(x => x.Name == selectedTemplateName).Id;
     }
 
     // Core logic
@@ -91,6 +91,14 @@ sealed class TemplateEngine
         // Now let's ask the user to answer all the questions without a global answer
         foreach (var question in manifest.Questions)
         {
+            if (!string.IsNullOrWhiteSpace(question.When))
+            {
+                var evaluator = new ExpressionEvaluator();
+                bool isEnabled = evaluator.EvaluateBool(question.When, _answers.Flatten());
+                if (!isEnabled)
+                    continue;
+            }
+
             if (!currentTemplateAnswers.ContainsKey(question.Name))
             {
                 if (_settings.Unattended)
@@ -133,7 +141,7 @@ sealed class TemplateEngine
     // Apply a standard template (or a child template!)
     private async Task ProcessStandardTemplateAsync(string templateId, TemplateManifest manifest, Dictionary<string, object> answers)
     {
-        var templateSourcePath = Path.Combine(_settings.TemplatesDirectoryPath, templateId);
+        var templateSourcePath = Path.GetDirectoryName(manifest.FullPath)!;
         var outputPath = _settings.OutputPath;
         bool isMetaTemplate = string.Equals(_rootTemplateType, "meta", StringComparison.OrdinalIgnoreCase);
 
@@ -197,7 +205,7 @@ sealed class TemplateEngine
         }
 
         // Render with Liquid to obtain the final content
-        var content = await File.ReadAllTextAsync(originalFilePath);
+        var content = await File.ReadAllTextAsync(originalFilePath, Encoding.UTF8);
         var renderedContent = _templateRenderer.Render(content, answers);
 
         // Write the final content into the output folder
@@ -212,9 +220,9 @@ sealed class TemplateEngine
         {
             Directory.CreateDirectory(Path.GetDirectoryName(destinationFilePath)!);
             if (string.Equals(file.Mode, "append", StringComparison.OrdinalIgnoreCase) && File.Exists(destinationFilePath))
-                await File.AppendAllTextAsync(destinationFilePath, renderedContent);
+                await File.AppendAllTextAsync(destinationFilePath, renderedContent, Encoding.UTF8);
             else // copy or append to non-existent file
-                await File.WriteAllTextAsync(destinationFilePath, renderedContent);
+                await File.WriteAllTextAsync(destinationFilePath, renderedContent, Encoding.UTF8);
 
             AnsiConsole.MarkupLineInterpolated($"{file.Mode.ToUpperInvariant()}: [blueviolet]{destinationFilePath}[/]");
         }

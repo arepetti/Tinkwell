@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Spectre.Console.Cli;
-using Tinkwell.Bootstrapper;
 
 namespace Tinkwell.Cli.Commands.Templates;
 
@@ -11,9 +10,8 @@ public sealed class TemplatesCommand : Command<TemplatesCommand.Settings>
     public class Settings : CommandSettings
     {
         [CommandOption("--path")]
-        [Description("Path to the local directory containing the templates.")]
-        public string TemplatesDirectoryPath { get; set; }
-            = Path.Combine(StrategyAssemblyLoader.GetEntryAssemblyDirectoryName(), "Templates");
+        [Description("Path to a local directory containing additional templates.")]
+        public string TemplatesDirectoryPath { get; set; } = "";
     }
 
     public override int Execute(CommandContext context, Settings settings)
