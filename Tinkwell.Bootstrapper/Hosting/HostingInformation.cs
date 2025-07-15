@@ -11,6 +11,43 @@ namespace Tinkwell.Bootstrapper.Hosting;
 public static class HostingInformation
 {
     /// <summary>
+    /// Gets the default directory (at application level) where firmlets can store data.
+    /// </summary>
+    public static string ApplicationDataDirectory
+    {
+        get
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Tinkwell");
+
+            if (_linuxApplicationDataDirectory is null)
+            {
+                if (IsPathWriteable(PrefferredLinuxAppDataDirectory))
+                    _linuxApplicationDataDirectory = PrefferredLinuxAppDataDirectory;
+                else
+                    _linuxApplicationDataDirectory = PrefferredLinuxUserDataDirectory;
+            }
+
+            return _linuxApplicationDataDirectory;
+
+        }
+    }
+
+    /// <summary>
+    /// Gets the default directory (at user level) where firmlets can store data.
+    /// </summary>
+    public static string UserDataDirectory
+    {
+        get
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Tinkwell");
+
+            return PrefferredLinuxUserDataDirectory;
+        }
+    }
+
+    /// <summary>
     /// Gets the name of the current runner from environment variables.
     /// </summary>
     public static string RunnerName
@@ -67,8 +104,39 @@ public static class HostingInformation
 
     const int NumberOfAttemptsOnError = 3;
     private const int DelayBeforeRetryingOnError = 1000;
+    private const string PrefferredLinuxAppDataDirectory = "/var/lib/Tinkwell";
+    private const string PrefferredLinuxUserDataDirectory = "~/.local/share/Tinkwell";
 
     private static string? _discoveryServiceAddress;
+    private static string? _linuxApplicationDataDirectory;
+
+    private static bool IsPathWriteable(string path)
+    {
+        string tmpFilePath = Path.Combine(path, Guid.NewGuid().ToString());
+        try
+        {
+            // We want to be sure that we can both create and delete files
+            File.WriteAllText(tmpFilePath, "test");
+            return TryDelete();
+        }
+        catch
+        {
+            return false;
+        }
+
+        bool TryDelete()
+        {
+            try
+            {
+                File.Delete(tmpFilePath);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
 
     private static async Task<string?> QueryDiscoveryAddressAsync(IConfiguration configuration, INamedPipeClient client)
     {

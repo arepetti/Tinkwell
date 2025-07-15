@@ -16,7 +16,7 @@ sealed class MeasureDto
         return (MeasureValueType)Type switch
         {
             MeasureValueType.String => new MeasureValue(StringValue ?? "", timestamp),
-            MeasureValueType.Number => new MeasureValue(Quant.Parse(definition.QuantityType, definition.Unit ?? ""), timestamp),
+            MeasureValueType.Number => new MeasureValue(Quant.From(definition.QuantityType, definition.Unit ?? "", DoubleValue!.Value), timestamp),
             _ => MeasureValue.Undefined,
         };
     }

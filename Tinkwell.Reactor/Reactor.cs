@@ -94,9 +94,12 @@ sealed class Reactor : IAsyncDisposable
             await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
                 await HandleChangeAsync(response.Name, cancellationToken);
         }
-        catch (RpcException e) when (e.StatusCode == StatusCode.Cancelled)
+        catch (RpcException e)
         {
-            _logger.LogDebug("Subscription cancelled by the host.");
+            if (e.StatusCode == StatusCode.Cancelled)
+                _logger.LogDebug("Subscription cancelled by the host.");
+            else if (e.StatusCode != StatusCode.Unavailable) // Unavailable might happen when closing
+                throw;
         }
         catch (Exception e)
         {

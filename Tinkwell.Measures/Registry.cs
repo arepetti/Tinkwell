@@ -148,6 +148,9 @@ public sealed class Registry(IStorage storage) : IRegistry
         ArgumentNullException.ThrowIfNull(definition, nameof(definition));
         ArgumentNullException.ThrowIfNull(metadata, nameof(metadata));
 
+        if (string.IsNullOrWhiteSpace(definition.Name))
+            throw new ArgumentException("Measures must have a name: it cannot be empty or null.");
+
         bool hasUnit = !string.IsNullOrWhiteSpace(definition.QuantityType)
             || !string.IsNullOrWhiteSpace(definition.Unit);
 
@@ -166,7 +169,7 @@ public sealed class Registry(IStorage storage) : IRegistry
         var definition = measure.Definition;
 
         if (definition.Attributes.HasFlag(MeasureAttributes.Constant) && measure.Value.Type != MeasureValueType.Undefined)
-            throw new InvalidOperationException($"Cannot update a constant measure '{measure.Name}'.");
+            throw new ArgumentException($"Cannot update a constant measure '{measure.Name}'.");
 
         if (!definition.IsCompatibleWith(value))
             throw new ArgumentException($"Value '{value}' is not compatible with the registered measure '{measure.Name}'.");

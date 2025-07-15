@@ -9,11 +9,12 @@ namespace Tinkwell.Store.Storage.Sqlite;
 
 sealed class SqliteStorage : IStorage
 {
-    public SqliteStorage(string connectionString)
+    public SqliteStorage(SqliteConnection connection)
     {
-        _connectionString = connectionString;
-        _connection = new SqliteConnection(_connectionString);
-        _connection.Open();
+        _connection = connection;
+        if (connection.State == ConnectionState.Closed)
+            _connection.Open();
+
         InitializeDatabase();
     }
 
@@ -63,7 +64,7 @@ sealed class SqliteStorage : IStorage
         => await _connection.QueryAsync<MeasureDefinition>(SqlCommands.FindAllDefinitions);
 
     public async ValueTask<IEnumerable<MeasureDefinition>> FindAllDefinitionsAsync(IEnumerable<string> names, CancellationToken cancellationToken)
-        => await _connection.QueryAsync<MeasureDefinition>(SqlCommands.FindAllDefinitionsByNames, new { names });
+        => await _connection.QueryAsync<MeasureDefinition>(SqlCommands.FindAllDefinitionsByNames, new { Names = names });
 
     public void Dispose()
     {
@@ -73,8 +74,14 @@ sealed class SqliteStorage : IStorage
 
     internal async Task<bool> RegisterImplAsync(MeasureDefinition definition, MeasureMetadata metadata, IDbTransaction? transaction)
     {
-        if (FindDefinition(definition.Name) is not null)
+        // If this measure has been already added during this session then it's definitely an error
+        if (_sessionRegisteredMeasures.TryGetValue(definition.Name, out var _))
             return false;
+
+        // Measures are expected to exist, it's OK. TODO: we should update the record with the new values
+        // (in case they changed) or keep track of them all for historical reasons.
+        if (FindDefinition(definition.Name) is not null)
+            return true;
 
         await _connection.ExecuteAsync(SqlCommands.InsertDefinition, definition, transaction);
         await _connection.ExecuteAsync(SqlCommands.InsertMetadata, new { definition.Name, CreatedAt = ((DateTimeOffset)metadata.CreatedAt).ToUnixTimeMilliseconds(), metadata.Description, metadata.Category, Tags = string.Join(",", metadata.Tags) }, transaction);
@@ -90,9 +97,9 @@ sealed class SqliteStorage : IStorage
     {
         if (_sessionRegisteredMeasures.Contains(name))
         {
-            await _connection.ExecuteAsync(SqlCommands.DeleteMeasure, new { name }, transaction);
-            await _connection.ExecuteAsync(SqlCommands.DeleteMetadata, new { name }, transaction);
-            await _connection.ExecuteAsync(SqlCommands.DeleteDefinition, new { name }, transaction);
+            await _connection.ExecuteAsync(SqlCommands.DeleteMeasure, new { Name = name }, transaction);
+            await _connection.ExecuteAsync(SqlCommands.DeleteMetadata, new { Name = name }, transaction);
+            await _connection.ExecuteAsync(SqlCommands.DeleteDefinition, new { Name = name }, transaction);
             _sessionRegisteredMeasures.Remove(name);
             _measureCache.TryRemove(name, out _);
         }
@@ -156,9 +163,9 @@ sealed class SqliteStorage : IStorage
 
     internal async Task<IEnumerable<Measure>> FindAllImplAsync(IEnumerable<string> names, CancellationToken cancellationToken, IDbTransaction? transaction)
     {
-        var measures = await _connection.QueryAsync<MeasureDto>(SqlCommands.FindAllMeasuresByNames, new { names }, transaction);
-        var definitions = await _connection.QueryAsync<MeasureDefinition>(SqlCommands.FindAllDefinitionsByNames, new { names }, transaction);
-        var metadata = await _connection.QueryAsync<MeasureMetadataDto>(SqlCommands.FindAllMetadataByNames, new { names }, transaction);
+        var measures = await _connection.QueryAsync<MeasureDto>(SqlCommands.FindAllMeasuresByNames, new { Names = names }, transaction);
+        var definitions = await _connection.QueryAsync<MeasureDefinition>(SqlCommands.FindAllDefinitionsByNames, new { Names = names }, transaction);
+        var metadata = await _connection.QueryAsync<MeasureMetadataDto>(SqlCommands.FindAllMetadataByNames, new { Names = names }, transaction);
 
         if (cancellationToken.IsCancellationRequested)
             return [];
@@ -177,12 +184,12 @@ sealed class SqliteStorage : IStorage
         if (_measureCache.TryGetValue(name, out var cachedMeasure))
             return cachedMeasure;
 
-        var measureDto = await _connection.QueryFirstOrDefaultAsync<MeasureDto>(SqlCommands.FindMeasureByName, new { name }, transaction: transaction);
+        var measureDto = await _connection.QueryFirstOrDefaultAsync<MeasureDto>(SqlCommands.FindMeasureByName, new { Name = name }, transaction: transaction);
         if (measureDto is null)
             return null;
 
-        var definition = await _connection.QueryFirstAsync<MeasureDefinition>(SqlCommands.FindDefinitionByName, new { name }, transaction: transaction);
-        var metadata = await _connection.QueryFirstAsync<MeasureMetadataDto>(SqlCommands.FindMetadataByName, new { name }, transaction: transaction);
+        var definition = await _connection.QueryFirstAsync<MeasureDefinition>(SqlCommands.FindDefinitionByName, new { Name = name }, transaction: transaction);
+        var metadata = await _connection.QueryFirstAsync<MeasureMetadataDto>(SqlCommands.FindMetadataByName, new { Name = name }, transaction: transaction);
 
         var measure = new Measure(definition, metadata.ToMeasureMetadata(), measureDto.ToMeasureValue(definition));
         _measureCache.TryAdd(name, measure);
@@ -190,11 +197,10 @@ sealed class SqliteStorage : IStorage
     }
 
     internal Task<MeasureDefinition?> FindDefinitionImplAsync(string name, IDbTransaction? transaction)
-        => _connection.QueryFirstOrDefaultAsync<MeasureDefinition>(SqlCommands.FindDefinitionByName, new { name }, transaction);
+        => _connection.QueryFirstOrDefaultAsync<MeasureDefinition>(SqlCommands.FindDefinitionByName, new { Name = name }, transaction);
 
     private readonly ConcurrentDictionary<string, Measure> _measureCache = new();
     private readonly HashSet<string> _sessionRegisteredMeasures = new();
-    private readonly string _connectionString;
     private readonly SqliteConnection _connection;
     private bool _disposed;
 
@@ -214,7 +220,6 @@ sealed class SqliteStorage : IStorage
         {
             if (disposing)
             {
-                _connection.Dispose();
                 _measureCache.Clear();
                 _sessionRegisteredMeasures.Clear();
             }

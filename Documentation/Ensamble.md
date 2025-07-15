@@ -6,7 +6,7 @@ This document describes the Ensamble DSL, which defines how services and agents 
 
 The most common way to define the system composition is by using the `compose` directive. You can also include other files with `import`.
 
-```tinkwell
+```text
 // Import other definitions
 import "shared_services.tw"
 
@@ -37,14 +37,14 @@ The `compose` directive is a high-level abstraction for running standard Tinkwel
 
 For example, this high-level configuration:
 
-```tinkwell
+```text
 compose service store "Tinkwell.Store.dll"
 compose agent reducer "Tinkwell.Reducer.dll" { path: "./config/measures.twm" }
 ```
 
 ...is expanded by the preprocessor into this full `runner` configuration:
 
-```tinkwell
+```text
 runner store "Tinkwell.Bootstrapper.GrpcHost" {
     service runner "Tinkwell.Store.dll" {}
     service runner "Tinkwell.HealthCheck.dll" {}
@@ -81,22 +81,24 @@ Hosts are special runners designed to load and manage one or more firmlets, prov
 Firmlets are the core components that provide the application's logic. They are loaded by hosts.
 
 -   **`Tinkwell.Orchestrator`**: A service that exposes commands to manage runners and the supervisor itself.
--   **`Tinkwell.Store`**: A service that acts as the central database for all measures, handling storage, unit conversion, and broadcasting changes.
+-   **`Tinkwell.Store`**: A service that acts as the central database for all measures, handling storage, unit conversion, and broadcasting changes. The store supports two configuration properties to change the default implementation:
+    * `storage_strategy`: it's the name of an alternative storage where the measure data is kept. Default implementation keeps them in memory and it resets each time. You can use `"SqliteStorage"` to permanently store the measures in a local SQLite DB. You may also specify a `sqlite_connection_string` property (default to a file `measures.db` file in the application data folder).
+    * `registry_storage`: it's the name of an alternative management layer that validate input data and coordinate data transfer from and to the storage. There are no alternative implementations.   
 -   **`Tinkwell.EventsGateway`**: A service that provides a publish/subscribe message bus for system-wide events.
 -   **`Tinkwell.Executor`**: An agent that executes actions based on event triggers. It requires a `path` property pointing to an actions configuration file (`.twa`).
-    ```tinkwell
+    ```text
     compose agent executor "Tinkwell.Actions.Executor.dll" {
         path: "./config/actions.twa"
     }
     ```
 -   **`Tinkwell.Reducer`**: An agent that calculates derived measures based on a configuration file. It requires a `path` property pointing to a measures configuration file (`.twm`).
-    ```tinkwell
+    ```text
     compose agent reducer "Tinkwell.Reducer.dll" {
         path: "./config/measures.twm"
     }
     ```
 -   **`Tinkwell.Reactor`**: An agent that monitors the Store for changes and emits signals when conditions are met. It also requires a `path` to a measures configuration file (`.twm`) where signals are defined.
-    ```tinkwell
+    ```text
     compose agent reactor "Tinkwell.Reactor.dll" {
         path: "./config/measures.twm"
     }
@@ -136,7 +138,7 @@ The `runner` block is the underlying, low-level syntax for defining a process to
 
 A `runner` can act as a host for one or more `firmlets` (defined with `service runner`). Firmlets loaded within the same host share the same process, which can improve performance but reduces isolation.
 
-```tinkwell
+```text
 // A gRPC host runner containing multiple firmlets
 runner measures "Tinkwell.Bootstrapper.GrpcHost" {
     service runner "Tinkwell.Store.dll" {}
@@ -163,7 +165,7 @@ You can define your own reusable templates for the `compose` directive.
 
 For example, this is the built-in template for the `service` kind:
 
-```tinkwell
+```text
 runner "{{ name }}" "{{ host.grpc }}" {
   service runner "__{{ name }}___health_check__" "{{ firmlet.health_check }}" {}
   service runner "__{{ name }}___firmlet__" "{{ path }}" {
@@ -176,7 +178,7 @@ runner "{{ name }}" "{{ host.grpc }}" {
 
 ## Complete Example
 
-```tinkwell
+```text
 // File: /etc/tinkwell/ensemble.tw
 
 // Import shared definitions, which might contain the 'store' service
@@ -207,7 +209,7 @@ runner "data_importer" "/usr/bin/data-importer" {
 
 The following is the standard `ensamble.tw` configuration file that is included with a default Tinkwell installation. It composes all the core services and agents needed for a fully functional system.
 
-```tinkwell
+```text
 compose service orchestrator "Tinkwell.Orchestrator.dll"
 compose service store "Tinkwell.Store.dll"
 compose service events "Tinkwell.EventsGateway.dll"
@@ -216,3 +218,5 @@ compose agent reducer "Tinkwell.Reducer.dll" { path: "./config/measures.twm" }
 compose agent reactor "Tinkwell.Reactor.dll" { path: "./config/measures.twm" }
 compose agent watchdog "Tinkwell.Watchdog.dll"
 ```
+
+If you want to customize the configuration you should use the `tw templates create` command and select the appropriate starting point, the tool will ask you questions to create the perfect starting point for your specific needs.
