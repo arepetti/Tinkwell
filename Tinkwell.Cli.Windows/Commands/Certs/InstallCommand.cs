@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using Tinkwell.Bootstrapper.Ipc;
+using Tinkwell.Bootstrapper.Hosting;
 
 namespace Tinkwell.Cli.Commands.Certs;
 
@@ -15,7 +16,8 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
     {
         [CommandArgument(0, "[PATH]")]
         [Description("Path of the certificate file to install.")]
-        public string Path { get; set; } = $"./tw-{Environment.MachineName}.pfx";
+        public string Path { get; set; }
+            = System.IO.Path.Combine(HostingInformation.ApplicationDataDirectory, $"./tw-{Environment.MachineName}.pfx");
     }
 
     public override int Execute(CommandContext context, Settings settings)

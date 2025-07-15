@@ -160,8 +160,11 @@ sealed class Reducer : IAsyncDisposable
             return;
 
         _logger.LogDebug("Subscribing to changes for {Count} dependencies", uniqueDependencies.Count);
-        var request = new Services.SubscribeManyRequest();
+        var request = new SubscribeManyRequest();
         request.Names.AddRange(uniqueDependencies);
+
+        using var call2 = _store.Client.Subscribe(new() {  Name = "voltage" });
+
 
         using var call = _store.Client.SubscribeMany(request, cancellationToken: cancellationToken);
         try
@@ -169,9 +172,12 @@ sealed class Reducer : IAsyncDisposable
             await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
                 await HandleChangeAsync(response.Name, cancellationToken);
         }
-        catch (RpcException e) when (e.StatusCode == StatusCode.Cancelled)
+        catch (RpcException e)
         {
-            _logger.LogDebug("Subscription cancelled by the host.");
+            if (e.StatusCode == StatusCode.Cancelled)
+                _logger.LogDebug("Subscription cancelled by the host.");
+            else if (e.StatusCode != StatusCode.Unavailable) // Unavailable might happen when closing
+                throw;
         }
         catch (Exception e)
         {

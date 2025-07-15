@@ -294,6 +294,9 @@ public class StoreService : Tinkwell.Services.Store.StoreBase
         }
         catch (InvalidOperationException ex)
         {
+            // InvalidOperationException could be thrown also for unexpected reasons,
+            // it's better to have a log to see what cause it.
+            _logger.LogWarning(ex, ex.Message);
             throw new RpcException(new Status(StatusCode.FailedPrecondition, ex.Message));
         }
         catch (NotSupportedException ex)

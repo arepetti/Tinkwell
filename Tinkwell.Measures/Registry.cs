@@ -112,14 +112,14 @@ public sealed class Registry(IStorage storage) : IRegistry
     }
 
     /// <inheritdoc />
-    public async ValueTask<Measure> FindAsync(string name, CancellationToken cancellationToken)
+    public ValueTask<Measure> FindAsync(string name, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(name);
 
-        if (await _storage.TryFindAsync(name, cancellationToken, out var measure))
-            return measure;
-
-        throw ExceptionForMeasureNotFound(name);
+        // We use IStorage.Find() instead of the expected (but slower) IStorage.FindAll([name])
+        // because we can safely assume that the implementation will cache the values. In most
+        // cases this call should complete synchronously.
+        return ValueTask.FromResult(_storage.Find(name) ?? throw ExceptionForMeasureNotFound(name));
     }
     
     /// <inheritdoc />
@@ -148,6 +148,9 @@ public sealed class Registry(IStorage storage) : IRegistry
         ArgumentNullException.ThrowIfNull(definition, nameof(definition));
         ArgumentNullException.ThrowIfNull(metadata, nameof(metadata));
 
+        if (string.IsNullOrWhiteSpace(definition.Name))
+            throw new ArgumentException("Measures must have a name: it cannot be empty or null.");
+
         bool hasUnit = !string.IsNullOrWhiteSpace(definition.QuantityType)
             || !string.IsNullOrWhiteSpace(definition.Unit);
 
@@ -166,7 +169,7 @@ public sealed class Registry(IStorage storage) : IRegistry
         var definition = measure.Definition;
 
         if (definition.Attributes.HasFlag(MeasureAttributes.Constant) && measure.Value.Type != MeasureValueType.Undefined)
-            throw new InvalidOperationException($"Cannot update a constant measure '{measure.Name}'.");
+            throw new ArgumentException($"Cannot update a constant measure '{measure.Name}'.");
 
         if (!definition.IsCompatibleWith(value))
             throw new ArgumentException($"Value '{value}' is not compatible with the registered measure '{measure.Name}'.");

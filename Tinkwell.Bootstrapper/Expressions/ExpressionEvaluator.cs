@@ -11,7 +11,7 @@ namespace Tinkwell.Bootstrapper.Expressions;
 /// </summary>
 public sealed class ExpressionEvaluator : IExpressionEvaluator
 {
-    internal static readonly object Null = new object();
+    internal static readonly object Undefined = new object();
 
     /// <summary>
     /// Evaluates the specified expression with optional parameters.
@@ -72,9 +72,9 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
     }
 
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-    private readonly static IEnumerable<INCalcCustomFunction> _customFunctions =
-        StrategyAssemblyLoader.FindTypesImplementing<INCalcCustomFunction>(typeof(ExpressionEvaluator).Assembly)
-            .Select(x => (INCalcCustomFunction)Activator.CreateInstance(x)!);
+    private readonly static IEnumerable<ICustomFunction> _customFunctions =
+        StrategyAssemblyLoader.FindTypesImplementing<ICustomFunction>(typeof(ExpressionEvaluator).Assembly)
+            .Select(x => (ICustomFunction)Activator.CreateInstance(x)!);
 
     private static void ImportParameters(object? parameters, Expression expr)
     {
@@ -117,7 +117,7 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
             return;
 
         var result = function.Call(args);
-        if (ReferenceEquals(result, Null))
+        if (ReferenceEquals(result, Undefined))
             return;
 
         args.Result = result;

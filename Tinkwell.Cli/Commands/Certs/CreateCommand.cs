@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Cli.Commands.Certs;
@@ -25,8 +26,8 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
         public string ExportFileName { get; set; } = $"tw-{Environment.MachineName}";
 
         [CommandOption("--export-path")]
-        [Description("Path where the exported certificates should be saved, if omitted it's in the current directory.")]
-        public string ExportPath { get; set; } = Environment.CurrentDirectory;
+        [Description("Path where the exported certificates should be saved, if omitted it's app data directory.")]
+        public string ExportPath { get; set; } = HostingInformation.ApplicationDataDirectory;
 
         [CommandOption("--export-pem")]
         [Description("Export PEM certificate and key.")]

@@ -38,6 +38,11 @@ compose agent mqtt_server "Tinkwell.Bridge.MqttServer.dll" {% if mqtt_server != 
 {%- endif %}
 
 {% if add_mqtt_client -%}
-compose service mqtt_client "Tinkwell.Bridge.MqttClient.dll" {}
+compose service mqtt_client "Tinkwell.Bridge.MqttClient.dll" {
+    filter: "sensor/+"
+    {% if mqtt_mapping_file_name -%}
+    mapping: {{mqtt_mapping_file_name}}
+    {%- endif %}
+}
 {%- endif %}
 

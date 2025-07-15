@@ -3,9 +3,9 @@
 namespace Tinkwell.Bootstrapper.Hosting;
 
 /// <summary>
-/// Provides extension methods for <see cref="ITinkwellHostRunnerBase"/> to retrieve strongly-typed properties.
+/// Provides extension methods for <see cref="IConfigurableHost"/> to retrieve strongly-typed properties.
 /// </summary>
-public static class ITinkwellHostRunnerBaseExtensions
+public static class IConfigurableHostExtensions
 {
     /// <summary>
     /// Gets the value of a property as an <see cref="int"/>. Returns <paramref name="defaultValue"/> if the property is not found or cannot be converted.
@@ -14,7 +14,7 @@ public static class ITinkwellHostRunnerBaseExtensions
     /// <param name="name">The property name.</param>
     /// <param name="defaultValue">The default value to return if conversion fails.</param>
     /// <returns>The property value as an <see cref="int"/>.</returns>
-    public static int GetPropertyInt32(this ITinkwellHostRunnerBase host, string name, int defaultValue)
+    public static int GetPropertyInt32(this IConfigurableHost host, string name, int defaultValue)
     {
         var value = GetPropertyValue(host, name);
         if (value is null)
@@ -22,7 +22,6 @@ public static class ITinkwellHostRunnerBaseExtensions
 
         if (value is int)
             return (int)value;
-
 
         if (value is long)
             checked { return (int)(long)value; }
@@ -49,7 +48,7 @@ public static class ITinkwellHostRunnerBaseExtensions
     /// <param name="name">The property name.</param>
     /// <param name="defaultValue">The default value to return if the property is not found.</param>
     /// <returns>The property value as a <see cref="string"/>.</returns>
-    public static string? GetPropertyString(this ITinkwellHostRunnerBase host, string name, string? defaultValue)
+    public static string? GetPropertyString(this IConfigurableHost host, string name, string? defaultValue)
     {
         var value = GetPropertyValue(host, name);
         if (value is null)
@@ -65,7 +64,7 @@ public static class ITinkwellHostRunnerBaseExtensions
     /// <param name="name">The property name.</param>
     /// <param name="defaultValue">The default value to return if conversion fails.</param>
     /// <returns>The property value as a <see cref="bool"/>.</returns>
-    public static bool GetPropertyBoolean(this ITinkwellHostRunnerBase host, string name, bool defaultValue)
+    public static bool GetPropertyBoolean(this IConfigurableHost host, string name, bool defaultValue)
     {
         var value = GetPropertyValue(host, name);
         if (value is null)
@@ -85,7 +84,7 @@ public static class ITinkwellHostRunnerBaseExtensions
         }
     }
 
-    private static object? GetPropertyValue(ITinkwellHostRunnerBase host, string name)
+    private static object? GetPropertyValue(IConfigurableHost host, string name)
     {
         if (host.Properties.TryGetValue(name, out var value))
             return value;

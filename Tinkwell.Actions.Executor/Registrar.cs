@@ -7,7 +7,7 @@ namespace Tinkwell.Actions.Executor;
 
 public sealed class Registrar : IHostedDllRegistrar
 {
-    public void ConfigureServices(IDllHost host)
+    public void ConfigureServices(IConfigurableHost host)
     {
         host.ConfigureServices((_, services) =>
         {

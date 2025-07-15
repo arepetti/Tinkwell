@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Tinkwell.Bootstrapper;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Orchestrator.Services;
 
@@ -12,8 +12,11 @@ public sealed class Registrar : IHostedGrpcServerRegistrar
         host.MapGrpcService<OrchestratorService>();
     }
 
-    public void ConfigureServices(IGrpcServerHost host)
+    public void ConfigureServices(IConfigurableHost host)
     {
-        host.Services.AddSingleton<INamedPipeClient, NamedPipeClient>();
+        host.ConfigureServices((_, services) =>
+        {
+            services.AddSingleton<INamedPipeClient, NamedPipeClient>();
+        });
     }
 }

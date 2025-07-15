@@ -37,6 +37,7 @@ sealed class Executor : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await _listeningWorker.StopAsync(CancellationToken.None);
+        await _dispatchWorker.StopAsync(CancellationToken.None);
 
         if (_locator is not null)
             await _locator.DisposeAsync();

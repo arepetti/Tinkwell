@@ -3,7 +3,7 @@ using NCalc.Handlers;
 
 namespace Tinkwell.Bootstrapper.Expressions.CustomFunctions;
 
-abstract class NCalcCustomFunction : INCalcCustomFunction
+abstract class NCalcCustomFunction : ICustomFunction
 {
     public virtual string Name
         => PascalToSnake.Replace(GetType().Name, "_$1").ToLowerInvariant();
@@ -13,7 +13,20 @@ abstract class NCalcCustomFunction : INCalcCustomFunction
     protected static T ChangeType<T>(object? value)
         => (T)Convert.ChangeType(value, typeof(T))!;
 
-    private readonly static Regex PascalToSnake = new Regex("(?<=[a-z0-9]{2,})([A-Z])", RegexOptions.Compiled);
+    private readonly static Regex PascalToSnake = new Regex("(?<=[a-z0-9]{2,})([A-Z])", RegexOptions.CultureInvariant | RegexOptions.Compiled);
+}
+
+abstract class NullaryFunction : NCalcCustomFunction
+{
+    public override object? Call(FunctionArgs args)
+    {
+        if (args.Parameters.Length != 0)
+            throw new ArgumentException($"Function {Name}() requires no arguments, received {args.Parameters.Length}.");
+
+        return Call();
+    }
+
+    protected abstract object? Call();
 }
 
 abstract class UnaryFunction<T> : NCalcCustomFunction

@@ -63,10 +63,6 @@ public sealed class InMemoryStorage : IStorage
     }
 
     /// <inheritdoc />
-    public ValueTask<bool> TryFindAsync(string name, CancellationToken cancellationToken, out Measure measure)
-        => ValueTask.FromResult(_store.TryGetValue(name, out measure!)); // Hmpf, when false we do not have a null check
-
-    /// <inheritdoc />
     public Measure? Find(string name)
     {
         if (_store.TryGetValue(name, out var measure))
@@ -104,6 +100,11 @@ public sealed class InMemoryStorage : IStorage
 
             return ValueTask.FromResult<IEnumerable<MeasureDefinition>>(items);
         }
+    }
+
+    public void Dispose()
+    {
+        _store.Clear();
     }
 
     private static readonly StringComparer _comparer = StringComparer.Ordinal;
