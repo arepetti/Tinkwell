@@ -160,8 +160,11 @@ sealed class Reducer : IAsyncDisposable
             return;
 
         _logger.LogDebug("Subscribing to changes for {Count} dependencies", uniqueDependencies.Count);
-        var request = new Services.SubscribeManyRequest();
+        var request = new SubscribeManyRequest();
         request.Names.AddRange(uniqueDependencies);
+
+        using var call2 = _store.Client.Subscribe(new() {  Name = "voltage" });
+
 
         using var call = _store.Client.SubscribeMany(request, cancellationToken: cancellationToken);
         try

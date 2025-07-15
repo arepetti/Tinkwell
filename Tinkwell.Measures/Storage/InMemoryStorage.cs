@@ -104,6 +104,7 @@ public sealed class InMemoryStorage : IStorage
 
     public void Dispose()
     {
+        _store.Clear();
     }
 
     private static readonly StringComparer _comparer = StringComparer.Ordinal;

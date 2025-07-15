@@ -96,6 +96,7 @@ Once the Supervisor is running, you can use the command-line interface (CLI) to 
 
 You now have a running Tinkwell system. To learn more, explore the following resources:
 
--   [Glossary](./Glossary.md): Understand the core concepts and terminology.
--   [CLI Reference](./CLI.md): Discover all the available commands for monitoring and debugging.
--   [Derived Measures](./Derived-measures.md): Learn how to create custom measures.
+- [Glossary](./Glossary.md): Understand the core concepts and terminology.
+- [CLI Reference](./CLI.md): Discover all the available commands for monitoring and debugging.
+- [Derived Measures](./Derived-measures.md): Learn how to create custom measures.
+- [How-To](./How-to.md): Quick guide for doing the most common tasks.
