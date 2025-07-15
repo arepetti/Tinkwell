@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents a storage provider for measures.
 /// </summary>
-public interface IStorage
+public interface IStorage : IDisposable
 {
     /// <summary>
     /// Occurs when a measure value changes.
@@ -84,19 +84,6 @@ public interface IStorage
     /// All changes performed while querying, might be included or not, there is no guarantee.
     /// </remarks>
     ValueTask<IEnumerable<Measure>> FindAllAsync(IEnumerable<string> names, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Tries to find a measure by name.
-    /// </summary>
-    /// <param name="name">The name of the measure to find.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    /// <param name="measure">The measure with the specified name.</param>
-    /// <returns>true if the measure was found; otherwise, false.</returns>
-    /// <remarks>
-    /// If the storage provider supports transactions and you're invoking this from a transaction
-    /// scope then it should include the changes you made (but see later).
-    /// </remarks>
-    ValueTask<bool> TryFindAsync(string name, CancellationToken cancellationToken, out Measure measure);
 
     /// <summary>
     /// Finds a measure by name.

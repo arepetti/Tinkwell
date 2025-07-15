@@ -4,15 +4,10 @@ using System.Text.RegularExpressions;
 
 namespace Tinkwell.Bootstrapper.Expressions.CustomFunctions;
 
-sealed class Now : NCalcCustomFunction
+sealed class Now : NullaryFunction
 {
-    public override object? Call(NCalc.Handlers.FunctionArgs args)
-    {
-        if (args.Parameters.Length != 0)
-            throw new ArgumentException($"Function {Name}() requires no arguments.");
-
-        return DateTime.UtcNow;
-    }
+    protected override object? Call()
+        => DateTime.UtcNow;
 }
 
 sealed class ParseDate : UnaryFunction<string>

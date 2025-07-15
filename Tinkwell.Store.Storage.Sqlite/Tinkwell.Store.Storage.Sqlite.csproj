@@ -11,4 +11,9 @@
     <ProjectReference Include="..\Tinkwell.Store\Tinkwell.Store.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0-preview.3.24172.4" />
+  </ItemGroup>
+
 </Project>

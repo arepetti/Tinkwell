@@ -112,14 +112,14 @@ public sealed class Registry(IStorage storage) : IRegistry
     }
 
     /// <inheritdoc />
-    public async ValueTask<Measure> FindAsync(string name, CancellationToken cancellationToken)
+    public ValueTask<Measure> FindAsync(string name, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(name);
 
-        if (await _storage.TryFindAsync(name, cancellationToken, out var measure))
-            return measure;
-
-        throw ExceptionForMeasureNotFound(name);
+        // We use IStorage.Find() instead of the expected (but slower) IStorage.FindAll([name])
+        // because we can safely assume that the implementation will cache the values. In most
+        // cases this call should complete synchronously.
+        return ValueTask.FromResult(_storage.Find(name) ?? throw ExceptionForMeasureNotFound(name));
     }
     
     /// <inheritdoc />

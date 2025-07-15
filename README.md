@@ -77,3 +77,34 @@ Dive into the details and set up your first Tinkwell instance: [Getting-Started.
 *   [Derived Measures](./Documentation/Derived-measures.md): Learn advanced data processing.
 *   [Actions](./Documentation/Actions.md): Configure event-driven automation.
 *   [Ensamble](./Documentation/Ensamble.md): Deep dive into system composition.
+
+## Testing Strategy
+
+A robust testing strategy is crucial for ensuring the reliability and maintainability of Tinkwell. The following outlines the recommended approach for testing the `Tinkwell.Bootstrapper` and its components.
+
+### Golden File/Snapshot Testing for Parsers
+
+For components like the `EnsambleParser`, a **Golden File Testing** (or **Snapshot Testing**) approach is highly effective. This strategy provides a strong regression suite and serves as living documentation of the parser's capabilities.
+
+**Methodology:**
+
+1.  **Test Asset Directory:** Create a dedicated directory (e.g., `TestAssets/EnsambleParser/`) to store test files.
+2.  **Craft Test Files:** Develop a series of `.tw` files that cover various features, from simple cases to complex scenarios involving imports, conditionals, and nested runners.
+3.  **Generate Golden Files:** For each valid `.tw` file, run the parser once and serialize the resulting `RunnerDefinition` object graph to a JSON file (the "golden" or "snapshot" file). This file represents the expected output.
+4.  **Automated Comparison:** Use a testing framework like xUnit with a snapshot testing library (e.g., `Verify.Xunit`) to automatically compare the parser's output against the golden files. When the parser's logic is updated, the library can help review the changes and update the golden files with a single command.
+
+### Granular Unit Tests
+
+To complement the high-level snapshot tests, granular unit tests should be written for individual components:
+
+*   **`EnsambleTokenizer`:** Ensure that raw strings are correctly converted into a stream of tokens.
+*   **`EnsamblePreprocessor`:** Verify that template variables are correctly replaced.
+*   **`EnsambleParser` Logic:** Test the parser's logic with a pre-made list of tokens to ensure it correctly builds the object graph.
+
+### Unit and Integration Testing for Other Components
+
+*   **`ExpressionEvaluator` and Custom Functions:** Use `[Theory]` tests with `[InlineData]` to cover a wide range of expressions, including basic logic, parameter substitution, and error handling.
+*   **`EnsambleConditionEvaluator`:** Mock `IExpressionEvaluator` and `IConfiguration` to isolate and test the filtering logic.
+*   **`StrategyAssemblyLoader`:** Use integration tests with a temporary directory and dummy files to verify that the loader correctly identifies and loads assemblies based on file naming conventions and the current OS.
+*   **Host Implementations (`DllHost`, `GrpcHost`):** Use unit tests with fake registrars to verify that the hosts correctly discover and invoke registrar methods.
+*   **Inter-Process Communication (IPC):** Use integration tests with an in-process server to verify that the `NamedPipeClient` and `NamedPipeServer` can communicate end-to-end.

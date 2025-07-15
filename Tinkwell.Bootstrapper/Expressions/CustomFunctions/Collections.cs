@@ -3,7 +3,7 @@
 sealed class Count : UnaryFunction<System.Collections.IEnumerable?>
 {
     protected override object? Call(System.Collections.IEnumerable? arg)
-        => arg is null ? "" : arg.Cast<object>().Count();
+        => arg is null ? 0 : arg.Cast<object>().Count();
 }
 
 sealed class At : BinaryFunction<System.Collections.IEnumerable?, int>

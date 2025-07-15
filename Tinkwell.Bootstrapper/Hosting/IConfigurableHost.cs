@@ -6,8 +6,18 @@ namespace Tinkwell.Bootstrapper.Hosting;
 /// <summary>
 /// Defines the contract for a configurable host, providing a unified way to configure services.
 /// </summary>
-public interface IConfigurableHost : ITinkwellHostRunnerBase
+public interface IConfigurableHost
 {
+    /// <summary>
+    /// Gets the name of the runner.
+    /// </summary>
+    string RunnerName { get; }
+
+    /// <summary>
+    /// Gets the properties associated with the runner.
+    /// </summary>
+    IDictionary<string, object> Properties { get; }
+
     /// <summary>
     /// Configures services for the host using the specified delegate.
     /// </summary>

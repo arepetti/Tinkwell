@@ -1,6 +1,4 @@
-﻿using Tinkwell.Bootstrapper.Hosting;
-
-namespace Tinkwell.Bootstrapper.Hosting;
+﻿namespace Tinkwell.Bootstrapper.Hosting;
 
 /// <summary>
 /// Defines a contract for registering services and routes in a hosted gRPC server environment.
