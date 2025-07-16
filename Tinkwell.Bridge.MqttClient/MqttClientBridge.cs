@@ -170,11 +170,11 @@ sealed class MqttClientBridge : IAsyncDisposable
             {
                 MqttClientDisconnectReason.ConnectionRateExceeded => true,
                 MqttClientDisconnectReason.ImplementationSpecificError => true,
+                MqttClientDisconnectReason.KeepAliveTimeout => true,
                 MqttClientDisconnectReason.MaximumConnectTime => true,
                 MqttClientDisconnectReason.MessageRateTooHigh => true,
                 MqttClientDisconnectReason.ReceiveMaximumExceeded => true,
                 MqttClientDisconnectReason.ServerBusy => true,
-                MqttClientDisconnectReason.ServerShuttingDown => true, // Hopefully it'll restart
                 MqttClientDisconnectReason.UnspecifiedError => true,
                 _ => false
             };

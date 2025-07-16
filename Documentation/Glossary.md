@@ -132,3 +132,9 @@ One or more machines running a Tinkwell installation.
 A [firmlet](#firmlet) that periodically queries all [services](#service) implementing `Tinkwell.HealthCheck` to report on their status.
 
 *See also:* [Health check (Service)](#health-check-service), [Firmlet](#firmlet)
+
+#### Wildcard
+
+A symbol that stands in for one or more characters in a search or pattern, allowing flexible matches. Common wildcards include * (any number of characters) and ? (a single character).
+
+*See also:* [Wildcard Patterns](./Wildcards.md)

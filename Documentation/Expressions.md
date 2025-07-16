@@ -171,6 +171,7 @@ ago(parse_timespan("1h")) // Returns DateTime 1 hour ago from now
 | `trim(text: string): string` | Removes leading and trailing white-space characters from a string. Returns an empty string (`""`) if the input is `null`. |
 | `regex_match(text: string, pattern: string): boolean` | Returns `true` if the `text` matches the given regular expression `pattern`. |
 | `regex_extract(text: string, pattern: string, group: number): string` | Extracts a specific capture `group` (1-based index) from a regular expression `match` in the `text`. Returns `null` if no match is found or the group does not exist. |
+| `match(text: string, pattern: string): boolean` | Returns `true` if the `text` matches the given wildcard expression `pattern`. |
 | `json_encode(text: string): string` | Encodes a string into a JSON string literal. |
 | `url_encode(text: string): string` | Encodes a string for use in a URL. |
 

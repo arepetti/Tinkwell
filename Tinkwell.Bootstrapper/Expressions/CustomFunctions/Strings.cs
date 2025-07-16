@@ -4,9 +4,9 @@ using System.Net;
 
 namespace Tinkwell.Bootstrapper.Expressions.CustomFunctions;
 
-sealed class IsNull: UnaryFunction<object>
+sealed class IsNull: UnaryFunction<object?>
 {
-    protected override object? Call(object arg)
+    protected override object? Call(object? arg)
         => arg is null;
 }
 
@@ -94,6 +94,12 @@ sealed class RegexMatch : BinaryFunction<string, string>
 {
     protected override object? Call(string text, string pattern)
         => Regex.IsMatch(text, pattern);
+}
+
+sealed class Match : BinaryFunction<string, string>
+{
+    protected override object? Call(string text, string pattern)
+        => TextHelpers.PatternToRegex(pattern).IsMatch(text);
 }
 
 sealed class RegexExtract : TernaryFunction<string, string, int>

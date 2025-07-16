@@ -2,7 +2,7 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
-using Tinkwell.Bootstrapper;
+using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Reflection;
 using Tinkwell.Measures;
@@ -185,18 +185,18 @@ sealed class Reactor : IAsyncDisposable
 
         var response = await _store.Client.ReadManyAsync(readManyRequest, cancellationToken: cancellationToken);
 
-        var expression = new NCalc.Expression(signal.When);
+        var parameters = new Dictionary<string, object>();
         foreach (var item in response.Items)
-            expression.Parameters[item.Name] = item.Value.ToObject();
+            parameters[item.Name] = item.Value.ToObject();
 
         if (hasOwningMeasure)
         {
             var owningMeasureValue = response.Items.FirstOrDefault(x => x.Name == owningMeasure);
             if (owningMeasureValue is not null)
-                expression.Parameters["value"] = owningMeasureValue.Value.ToObject();
+                parameters["value"] = owningMeasureValue.Value.ToObject();
         }
 
-        return Convert.ToBoolean(expression.Evaluate(), CultureInfo.InvariantCulture);
+        return new ExpressionEvaluator().EvaluateBool(signal.When, parameters);
     }
 
     private async Task PublishEventAsync(Signal signal, CancellationToken cancellationToken)

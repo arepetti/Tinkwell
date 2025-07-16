@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
 using NCalc.Handlers;
 
 namespace Tinkwell.Bootstrapper.Expressions.CustomFunctions;
@@ -10,10 +11,44 @@ abstract class NCalcCustomFunction : ICustomFunction
 
     public abstract object? Call(FunctionArgs args);
 
-    protected static T ChangeType<T>(object? value)
-        => (T)Convert.ChangeType(value, typeof(T))!;
+    protected T ChangeType<T>(object? value)
+    {
+        var type = typeof(T);
 
-    private readonly static Regex PascalToSnake = new Regex("(?<=[a-z0-9]{2,})([A-Z])", RegexOptions.CultureInvariant | RegexOptions.Compiled);
+        // We're a bit lenient about nullability
+        if (type == typeof(object))
+            return (T)value!;
+
+        // Nullable value types are not supported as parameters.
+        // Special case to give a meaningful error message.
+        if (value is null && type.IsValueType)
+            throw CreateException();
+
+        // Convert.ChangeType() does not do this so we have to be explicit
+        if (value is not null && typeof(T).IsAssignableFrom(value.GetType()))
+            return (T)value!;
+
+        try
+        {
+            return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture)!;
+        }
+        catch (FormatException e)
+        {
+            throw CreateException(e);
+        }
+        catch (InvalidCastException e)
+        {
+            throw CreateException(e);
+        }
+
+        ArgumentException CreateException(Exception? exception = null)
+        {
+            var message = $"{Name}() requires an argument of type {type.Name}, received {value ?? "null"} ({value?.GetType().Name ?? "n/a"}). {exception?.Message ?? ""})";
+            return new ArgumentException(message, exception);
+        }
+    }
+
+    private readonly static Regex PascalToSnake = new Regex("(?<=[a-z0-9]{1,})([A-Z])", RegexOptions.CultureInvariant | RegexOptions.Compiled);
 }
 
 abstract class NullaryFunction : NCalcCustomFunction

@@ -40,9 +40,24 @@ public static class TextHelpers
         bool inBracket = false;
         bool firstInBracket = false;
 
-        foreach (char c in pattern)
+        for (int i=0; i < pattern.Length; ++i)
         {
-            if (c == '[')
+            char c = pattern[i];
+
+            if (c == '\\')
+            {
+                if (i + 1 < pattern.Length)
+                {
+                    regex.Append(Regex.Escape(pattern[i + 1].ToString()));
+                    ++i;
+                }
+                else
+                {
+                    // Trailing backslash, treat as literal
+                    regex.Append(Regex.Escape(c.ToString()));
+                }
+            }
+            else if (c == '[')
             {
                 if (inBracket)
                     throw new ArgumentException("Nested '[' not allowed.");
@@ -102,23 +117,6 @@ public static class TextHelpers
 
         return regex.ToString();
     }
-
-    /// <summary>
-    /// Converts a DOS-style wildcard pattern into a regular expression string.
-    /// </summary>
-    /// <param name="pattern">
-    /// A pattern string using DOS-style wildcards:
-    /// <list type="bullet">
-    ///   <item><description><c>*</c>: matches any sequence of characters (including none).</description></item>
-    ///   <item><description><c>?</c>: matches any single character.</description></item>
-    /// </list>
-    /// All other characters are treated literally; regular expression metacharacters are escaped automatically.
-    /// </param>
-    /// <returns>
-    /// A regular expression string that matches the input pattern exactly, anchored with <c>^</c> and <c>$</c>.
-    /// </returns>
-    public static string DosWildcardToRegex(string pattern)
-        => "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
 
     /// <summary>
     /// Helper function to convert git-like wildcard patterns to regular expressions.
