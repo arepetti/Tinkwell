@@ -64,7 +64,30 @@ when event high_temperature {
 }
 ```
 
-This simple setup demonstrates how Tinkwell seamlessly integrates data ingestion, processing, and reactive automation, all driven by clear, declarative configurations.
+This simple setup demonstrates how Tinkwell seamlessly integrates data ingestion, processing, and reactive automation, all driven by clear, declarative configurations. How does it work?
+
+```mermaid
+graph LR
+    classDef green color:#008b00,fill:#f2fde4;
+    classDef orange color:#e54304,fill:#fff2df;
+    classDef amber color:#FF6F00,fill:#FFF8E1;
+    Device1(Device 1):::amber -- message --> MQTT(MQTT Broker):::orange
+    MQTT(MQTT Broker) -- message --> MQTT_client[MQTT client]
+    Store -- notification --> Reducer
+    Reducer -- update --> Store
+    Store -- update --> Storage(Storage):::orange
+    Store -- notification --> Reactor
+    Reactor -- event --> EventsGateway[Events Gateway]
+    EventsGateway -- notification --> Executor
+    MQTT_client -- update --> Store
+    Executor -- message --> MQTT
+    Runner(Your runner):::green -- update --> Store
+    Runner -- event --> EventsGateway
+    Store -- notification --> Runner
+    EventsGateway -- notifies --> Runner
+    Device2(Device 2):::amber --> Runner
+    Runner --> Device2
+```
 
 ## Getting Started
 
