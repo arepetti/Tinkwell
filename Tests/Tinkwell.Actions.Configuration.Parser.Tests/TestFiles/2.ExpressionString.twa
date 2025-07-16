@@ -1,0 +1,9 @@
+// This is a comment
+when event signal {
+    object: "high_load"
+    then {
+        log {
+            message: @"cstr(1 + 1)"
+        }
+    }
+}

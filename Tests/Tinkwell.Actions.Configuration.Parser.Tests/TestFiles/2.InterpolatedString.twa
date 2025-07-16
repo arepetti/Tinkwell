@@ -1,0 +1,9 @@
+// This is a comment
+when event signal {
+    object: "high_load"
+    then {
+        log {
+            message: $"{{ subject }} {{ verb }} {{ object}} with severity {{ payload.severity }}"
+        }
+    }
+}

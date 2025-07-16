@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Tinkwell.Measures.Configuration.Parser\Tinkwell.Measures.Configuration.Parser.csproj" />
+    <ProjectReference Include="..\..\Tinkwell.Actions.Configuration.Parser\Tinkwell.Actions.Configuration.Parser.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,25 +33,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TestFiles\1.Comment.twm">
+    <None Update="TestFiles\2.ExpressionString.twa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="TestFiles\1.Measure.twm">
+    <None Update="TestFiles\1.Event.twa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="TestFiles\2.Constant.twm">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TestFiles\2.Declaration.twm">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TestFiles\2.Derived.twm">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TestFiles\3.RelativeSignal.twm">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TestFiles\3.StandaloneSignals.twm">
+    <None Update="TestFiles\2.InterpolatedString.twa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

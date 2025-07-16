@@ -1,0 +1,18 @@
+﻿{
+  Listeners: [
+    {
+      Topic: signal,
+      Object: high_load,
+      Actions: [
+        {
+          Name: log,
+          Properties: {
+            message: {
+              Value: High load!
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

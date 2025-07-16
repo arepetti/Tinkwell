@@ -100,6 +100,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Bootstrapper.Ensam
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Measures.Configuration.Parser.Tests", "Tests\Tinkwell.Measures.Configuration.Parser.Tests\Tinkwell.Measures.Configuration.Parser.Tests.csproj", "{EF08279B-0B0E-2007-F68F-DE3657BCDD5D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Actions.Configuration.Parser.Tests", "Tests\Tinkwell.Actions.Configuration.Parser.Tests\Tinkwell.Actions.Configuration.Parser.Tests.csproj", "{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -446,6 +448,18 @@ Global
 		{EF08279B-0B0E-2007-F68F-DE3657BCDD5D}.Release|x64.Build.0 = Release|Any CPU
 		{EF08279B-0B0E-2007-F68F-DE3657BCDD5D}.Release|x86.ActiveCfg = Release|Any CPU
 		{EF08279B-0B0E-2007-F68F-DE3657BCDD5D}.Release|x86.Build.0 = Release|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Debug|x64.Build.0 = Debug|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Debug|x86.Build.0 = Debug|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Release|x64.ActiveCfg = Release|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Release|x64.Build.0 = Release|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Release|x86.ActiveCfg = Release|Any CPU
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -477,6 +491,7 @@ Global
 		{A9CDEF0F-5F23-4930-8DF6-1661DE7DB387} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{D34CE32B-B8CB-488D-8263-42BC48A728AE} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{EF08279B-0B0E-2007-F68F-DE3657BCDD5D} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C0934B28-6FF7-4875-BBB5-5041537BE9EB}

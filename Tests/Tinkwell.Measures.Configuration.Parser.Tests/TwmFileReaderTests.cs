@@ -1,6 +1,6 @@
 using Tinkwell.Measures.Configuration.Parser;
 
-namespace Tinkwell.Bootstrapper.Ensamble.Parser.Tests;
+namespace Tinkwell.Measures.Configuration.Parser.Tests;
 
 public class TwmFileReaderTests
 {
@@ -20,6 +20,8 @@ public class TwmFileReaderTests
     {
         var reader = new TwmFileReader();
         var result = await reader.ReadFromFileAsync(path, CancellationToken.None);
-        await Verify(result).UseTextForParameters(Path.GetFileNameWithoutExtension(path));
+        await Verify(result)
+            .UseDirectory("Snapshots")
+            .UseTextForParameters(Path.GetFileNameWithoutExtension(path));
     }
 }
