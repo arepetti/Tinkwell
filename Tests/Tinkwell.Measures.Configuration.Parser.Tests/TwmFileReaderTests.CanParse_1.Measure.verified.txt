@@ -1,0 +1,20 @@
+﻿{
+  Measures: [
+    {
+      Name: power,
+      QuantityType: Power,
+      Unit: Watt,
+      Expression: voltage * current,
+      Minimum: 1.0,
+      Maximum: 12.0,
+      Tags: [
+        electric,
+        power,
+        critical
+      ],
+      Category: Grid,
+      Precision: 1
+    }
+  ],
+  Signals: []
+}

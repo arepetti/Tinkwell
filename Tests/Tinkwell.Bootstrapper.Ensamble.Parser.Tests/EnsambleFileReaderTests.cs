@@ -30,6 +30,8 @@ public class EnsambleFileReaderTests
         var evaluator = new EnsambleConditionEvaluator(config, new ExpressionEvaluator());
         var reader = new EnsambleFileReader(evaluator);
         var result = await reader.ReadAsync(path, FileReaderOptions.Default, CancellationToken.None);
-        await Verify(result).UseTextForParameters(Path.GetFileNameWithoutExtension(path));
+        await Verify(result)
+            .UseDirectory("Snapshots")
+            .UseTextForParameters(Path.GetFileNameWithoutExtension(path));
     }
 }

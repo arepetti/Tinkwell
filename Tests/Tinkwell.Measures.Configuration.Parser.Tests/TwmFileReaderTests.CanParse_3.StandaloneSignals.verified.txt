@@ -1,0 +1,13 @@
+﻿{
+  Measures: [],
+  Signals: [
+    {
+      Name: overheating,
+      When: temperature > 90 and [oil_pressure] < 30
+    },
+    {
+      Name: excessive_load,
+      When: voltage < 200 and frequency < 49.5
+    }
+  ]
+}

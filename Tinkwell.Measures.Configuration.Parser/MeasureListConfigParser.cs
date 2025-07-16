@@ -1,11 +1,10 @@
 using Superpower;
-using Superpower.Model;
 using Superpower.Parsers;
 using System.Globalization;
 
 namespace Tinkwell.Measures.Configuration.Parser;
 
-public static class MeasureListConfigParser
+static class MeasureListConfigParser
 {
     public static IEnumerable<object> Parse(string text)
     {

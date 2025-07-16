@@ -1,0 +1,11 @@
+﻿{
+  Measures: [
+    {
+      Name: name,
+      QuantityType: Scalar,
+      Unit: ,
+      Expression: a * b
+    }
+  ],
+  Signals: []
+}

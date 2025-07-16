@@ -1,0 +1,9 @@
+// A comment at the top of the file
+
+// This is a comment
+measure name { // This is also a comment
+    // A comment inside brackets
+    expression: "a * b" // An inline comment
+} // Another inline comment
+
+// A comment at the end of the file

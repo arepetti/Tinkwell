@@ -1,0 +1,11 @@
+﻿{
+  Measures: [
+    {
+      Name: power,
+      QuantityType: Power,
+      Unit: Watt,
+      Expression: voltage * current
+    }
+  ],
+  Signals: []
+}
