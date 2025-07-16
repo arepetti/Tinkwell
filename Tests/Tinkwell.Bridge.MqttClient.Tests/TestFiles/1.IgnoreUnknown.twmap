@@ -1,0 +1,2 @@
+map "sensor/temperature" as temperature
+map "sensor/humidity" as humidity

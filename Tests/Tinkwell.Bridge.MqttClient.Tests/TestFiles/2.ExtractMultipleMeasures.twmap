@@ -1,0 +1,2 @@
+map "sensor/data" to "json_value(payload, 'value1')" as value1
+map "sensor/data" to "json_value(payload, 'value2')" as value2
