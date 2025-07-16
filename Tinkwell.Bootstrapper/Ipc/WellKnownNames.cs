@@ -49,6 +49,12 @@ public static class WellKnownNames
     public static readonly string EnvironmentEnvironmentVariable = "TINKWELL_ENVIRONMENT";
 
     /// <summary>
+    /// An optional environment variable that contains the directory used to resolve
+    /// relative file paths. If not specified then the working directory is used.
+    /// </summary>
+    public static readonly string WorkingDirectoryEnvironmentVariable = "TINKWELL_APP_DATA_PATH";
+
+    /// <summary>
     /// <strong>Internal</strong>. If possible try to use an existing host.
     /// <para>
     /// The environment variable for the web server certificate path.

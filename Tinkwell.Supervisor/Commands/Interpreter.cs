@@ -26,6 +26,8 @@ sealed class Interpreter
     public event EventHandler<InterpreterResolveValueEventArgs>? QueryUrl;
     public event EventHandler? Signaled;
 
+    public bool IsReady { get; set; }
+
     public async Task<ParsingResult> ReadAndProcessNextCommandAsync(StreamReader reader, StreamWriter writer, CancellationToken cancellationToken)
     {
         string? input = (await reader.ReadLineAsync(cancellationToken))?.Trim();
@@ -86,7 +88,13 @@ sealed class Interpreter
 
         app.Command("ping", exitCmd =>
         {
+            exitCmd.OnExecute(() => writer.WriteLine(IsReady ? "OK" : "Loading"));
+        });
+
+        app.Command("shutdown", exitCmd =>
+        {
             exitCmd.OnExecute(() => writer.WriteLine("OK"));
+            Environment.Exit(0);
         });
 
         app.Command("pid", exitCmd =>

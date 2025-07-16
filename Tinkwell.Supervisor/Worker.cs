@@ -34,6 +34,7 @@ sealed class Worker : IHostedService
         await _commandServer.StartAsync(cancellationToken);
         await _registry.StartAsync(_commandServer, _ensambleFilePath, cancellationToken);
 
+        _commandServer.IsReady = true;
         _logger.LogInformation("Supervisor started successfully");
     }
 
@@ -56,7 +57,10 @@ sealed class Worker : IHostedService
         if (Path.IsPathFullyQualified(path))
             return path;
 
-        return Path.Combine(Environment.CurrentDirectory, path);
+        var defaultDirectory = Environment.GetEnvironmentVariable(WellKnownNames.WorkingDirectoryEnvironmentVariable)
+            ?? Environment.CurrentDirectory;
+
+        return Path.Combine(defaultDirectory, path);
     }
 
     private Task PanicAsync(string message)
