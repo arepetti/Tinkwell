@@ -62,14 +62,20 @@ mv ./tinkwell-cert.pem ./tinkwell-cert.crt
 sudo trust anchor --store ./tinkwell-cert.crt
 ```
 
-## 2. Understand the Ensemble Configuration
+## 2. Understand the Ensamble Configuration
 
 The `ensamble.tw` file is the heart of your application's configuration, defining all the processes (runners) that the Supervisor will manage.
 
--   Review the [Ensemble Syntax documentation](./Ensamble.md) to understand how runners and firmlets are defined.
+-   Review the [Ensamble Syntax documentation](./Ensamble.md) to understand how runners and firmlets are defined.
 -   Open the default `ensamble.tw` file (in the `Assets` project if in VS or the output folder if in "production") to see a practical example.
 
-You can create a starting point with all the basic features already configured using `tw templates create`. After you modified the configuration you should run the linters to catch common mistakes:
+You can create a starting point with all the basic features already configured using:
+
+```bash
+tw templates use ensamble_configuration
+```
+
+After you modified the configuration you should run the linters to catch common mistakes:
 
 ```bash
 ./tw ensamble lint ./ensamble.tw
@@ -99,4 +105,4 @@ You now have a running Tinkwell system. To learn more, explore the following res
 - [Glossary](./Glossary.md): Understand the core concepts and terminology.
 - [CLI Reference](./CLI.md): Discover all the available commands for monitoring and debugging.
 - [Derived Measures](./Derived-measures.md): Learn how to create custom measures.
-- [How-To](./How-to.md): Quick guide for doing the most common tasks.
+- [How-To](./How-To.md): Quick guide for doing the most common tasks.

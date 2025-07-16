@@ -1,6 +1,6 @@
 # Glossary
 
-[A](#agent) | [C](#configuration) | [D](#derived-measure) | [E](#ensemble) | [F](#firmlet) | [G](#grpc-host) | [H](#health-check-service) | [M](#machine) | [O](#orchestrator-service) | [R](#reactor) | [S](#service) | [W](#watchdog)
+[A](#agent) | [C](#configuration) | [D](#derived-measure) | [E](#ensamble) | [F](#firmlet) | [G](#grpc-host) | [H](#health-check-service) | [M](#machine) | [O](#orchestrator-service) | [R](#reactor) | [S](#service) | [W](#watchdog)
 
 ---
 
@@ -11,9 +11,9 @@ A synonym for [firmlet](#firmlet), when it does not expose a gRPC service (but c
 *See also:* [Firmlet](#firmlet), [gRPC host](#grpc-host), [DLL host](#dll-host)
 
 #### Configuration
-The set of files that define the system's behavior, including the [Ensemble](#ensemble) file and the configurations for [derived measures](#derived-measure).
+The set of files that define the system's behavior, including the [Ensamble](#ensamble) file and the configurations for [derived measures](#derived-measure).
 
-*See also:* [Ensemble](#ensemble), [Derived Measure](#derived-measure)
+*See also:* [Ensamble](#ensamble), [Derived Measure](#derived-measure)
 
 #### Derived Measure
 A [measure](#measure) whose value is calculated from other measures. The [Reducer](#reducer) is responsible for computing its value. Every measure is associated with its [unit of measure](./Units.md). Derived measures are defined in their own configuration file (see [Derived Measures Configuration](./Derived-measures.md)).
@@ -30,7 +30,7 @@ A [host](#host) that loads [agents](#agent) packaged as libraries. It does not e
 
 *See also:* [Host](#host), [Agent](#agent), [Firmlet](#firmlet)
 
-#### Ensemble
+#### Ensamble
 The description of a set of [runners](#runner) and their options.
 
 *See also:* [Runner](#runner), [Firmlet](#firmlet), [Supervisor](#supervisor)
@@ -119,9 +119,9 @@ A [service](#service) implementing `Tinkwell.Store` that keeps track of all the 
 *See also:* [Measure](#measure), [Derived Measure](#derived-measure), [Reducer](#reducer), [Reactor](#reactor)
 
 #### Supervisor
-The entry-point of a Tinkwell application. It's in charge of parsing the [ensemble](#ensemble) configuration file, starting the required processes, and monitoring their health at the process level. There can be only one per machine and only one master per [system](#system).
+The entry-point of a Tinkwell application. It's in charge of parsing the [ensamble](#ensamble) configuration file, starting the required processes, and monitoring their health at the process level. There can be only one per machine and only one master per [system](#system).
 
-*See also:* [Runner](#runner), [Ensemble](#ensemble), [Orchestrator (Service)](#orchestrator-service)
+*See also:* [Runner](#runner), [Ensamble](#ensamble), [Orchestrator (Service)](#orchestrator-service)
 
 #### System
 One or more machines running a Tinkwell installation.
