@@ -1,0 +1,12 @@
+﻿{
+  Runners: [
+    {
+      Name: name,
+      Path: /path/to/executable
+    },
+    {
+      Name: another_runner,
+      Path: /path/to/another_runner
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+// temperature in °C and oil_pressure in psi
+signal overheating {
+    when: "temperature > 90 and [oil_pressure] < 30"
+}
+
+// voltage in V and frequency in Hz
+signal excessive_load {
+    when: "voltage < 200 and frequency < 49.5"
+}

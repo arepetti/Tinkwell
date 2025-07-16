@@ -1,0 +1,12 @@
+﻿{
+  Runners: [
+    {
+      Name: name with spaces,
+      Path: /path/to/executable,
+      Arguments: --verbose,
+      Properties: {
+        runner_specific_property: value
+      }
+    }
+  ]
+}

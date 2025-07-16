@@ -1,0 +1,1 @@
+map "sensor/*" to "json_value(payload, 'value1')" as value1

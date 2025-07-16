@@ -132,7 +132,7 @@ The `runner` block is the underlying, low-level syntax for defining a process to
 | `path` | String | The path (full or relative) to the executable or library to load. |
 | `if "<condition>"` | String | **Conditional Loading:** An [expression](./Expressions.md) evaluated when the file is loaded. If `false`, the runner is ignored. Available parameters include `platform`, `os_architecture`, `cpu_architecture`, and any custom key/value pairs from `appsettings.json`. |
 | `arguments` | String | Command-line arguments to pass to the executable upon startup. |
-| `properties` | Dictionary | A block of key-value pairs specific to the runner. A common property is `keep_alive: true` (the default), which tells the Supervisor to restart the runner if it exits unexpectedly. |
+| `properties` | Dictionary | A block of key-value pairs specific to the runner. A common property is `keep_alive: "true"` (the default), which tells the Supervisor to restart the runner if it exits unexpectedly. Note that all values MUST be strings. |
 
 ### Nested Firmlets
 
@@ -200,7 +200,7 @@ compose agent reactor "Tinkwell.Reactor.dll" {
 runner "data_importer" "/usr/bin/data-importer" {
     arguments: "--source /var/data/source --interval 300"
     properties {
-        keep_alive: true
+        keep_alive: "true"
     }
 }
 ```

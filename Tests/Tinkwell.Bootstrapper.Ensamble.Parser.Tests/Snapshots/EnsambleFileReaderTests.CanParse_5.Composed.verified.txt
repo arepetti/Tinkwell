@@ -1,0 +1,58 @@
+﻿{
+  Runners: [
+    {
+      Name: service_name1,
+      Path: Tinkwell.Bootstrapper.GrpcHost,
+      Children: [
+        {
+          Name: __@service_name1__health,
+          Path: Tinkwell.HealthCheck.dll
+        },
+        {
+          Name: __@service_name1__firmlet,
+          Path: /path/to/service
+        }
+      ]
+    },
+    {
+      Name: service_name2,
+      Path: Tinkwell.Bootstrapper.GrpcHost,
+      Children: [
+        {
+          Name: __@service_name2__health,
+          Path: Tinkwell.HealthCheck.dll
+        },
+        {
+          Name: __@service_name2__firmlet,
+          Path: /path/to/service,
+          Properties: {
+            service_property: value
+          }
+        }
+      ]
+    },
+    {
+      Name: agent_name1,
+      Path: Tinkwell.Bootstrapper.DllHost,
+      Children: [
+        {
+          Name: __@agent_name1__firmlet,
+          Path: /path/to/agent
+        }
+      ]
+    },
+    {
+      Name: agent_name2,
+      Path: Tinkwell.Bootstrapper.DllHost,
+      Children: [
+        {
+          Name: __@agent_name2__firmlet,
+          Path: /path/to/agent,
+          Properties: {
+            agent_property: value
+          }
+        }
+      ]
+    }
+  ]
+}

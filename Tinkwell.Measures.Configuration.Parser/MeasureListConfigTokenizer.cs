@@ -5,7 +5,7 @@ using Superpower.Tokenizers;
 
 namespace Tinkwell.Measures.Configuration.Parser;
 
-public enum MeasureListConfigToken
+enum MeasureListConfigToken
 {
     None,
     Identifier,

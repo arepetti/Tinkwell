@@ -1,0 +1,2 @@
+runner yes "/path/to/app" if "true == true" {}
+runner no "/path/to/app" if "true == false" {}

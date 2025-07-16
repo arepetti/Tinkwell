@@ -1,0 +1,22 @@
+﻿{
+  Runners: [
+    {
+      Name: outer1,
+      Path: /path/to/executable1,
+      Children: [
+        {
+          Name: inner,
+          Path: path/to/executable1b
+        }
+      ]
+    },
+    {
+      Name: outer2,
+      Path: /path/to/executable2
+    },
+    {
+      Name: outer3,
+      Path: /path/to/executable3
+    }
+  ]
+}

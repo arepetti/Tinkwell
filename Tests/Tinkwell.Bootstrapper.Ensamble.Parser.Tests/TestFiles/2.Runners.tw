@@ -1,0 +1,6 @@
+runner outer1 "/path/to/executable1" {
+	service runner inner "path/to/executable1b" {}
+}
+
+runner outer2 "/path/to/executable2" {}
+runner outer3 "/path/to/executable3" {}

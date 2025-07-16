@@ -1,0 +1,12 @@
+﻿[
+  {
+    Name: value1,
+    Value: 123,
+    IsNumeric: true
+  },
+  {
+    Name: value2,
+    Value: 456,
+    IsNumeric: true
+  }
+]

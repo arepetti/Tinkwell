@@ -1,0 +1,10 @@
+measure power {
+    type: "Power"
+    unit: "Watt"
+    expression: "voltage * current"
+    minimum: 1
+    maximum: 12
+    precision: 1
+    tags: "electric,power,critical"
+    category: "Grid"
+}

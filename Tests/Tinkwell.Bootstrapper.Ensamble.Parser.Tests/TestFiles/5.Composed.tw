@@ -1,0 +1,9 @@
+compose service service_name1 "/path/to/service"
+compose service service_name2 "/path/to/service" {
+	service_property: "value"
+}
+
+compose agent agent_name1 "/path/to/agent" 
+compose agent agent_name2 "/path/to/agent" {
+	agent_property: "value"
+}

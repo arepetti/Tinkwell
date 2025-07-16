@@ -1,0 +1,24 @@
+﻿{
+  Measures: [
+    {
+      Name: power,
+      QuantityType: Power,
+      Unit: Watt,
+      Expression: voltage * current,
+      Signals: [
+        {
+          Name: high_load,
+          When: value > 3000,
+          Payload: {
+            severity: high
+          }
+        },
+        {
+          Name: low_load,
+          When: value < 500
+        }
+      ]
+    }
+  ],
+  Signals: []
+}

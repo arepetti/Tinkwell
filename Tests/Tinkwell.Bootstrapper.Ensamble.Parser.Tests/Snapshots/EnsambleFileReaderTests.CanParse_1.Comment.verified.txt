@@ -1,0 +1,9 @@
+﻿{
+  Runners: [
+    {
+      Name: name,
+      Path: /path/to/executable,
+      Arguments: --verbose
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+measure power {
+    type: "Power"
+    unit: "Watt"
+    expression: "voltage * current"
+
+    signal high_load {
+        when: "value > 3000"
+        with {
+            severity: "high"
+        }
+    }
+
+    signal low_load {
+        when: "value < 500"
+    }
+}

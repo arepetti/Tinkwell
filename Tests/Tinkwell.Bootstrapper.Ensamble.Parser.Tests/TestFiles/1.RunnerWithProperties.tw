@@ -1,0 +1,6 @@
+runner "name with spaces" "/path/to/executable" {
+	arguments: "--verbose"
+	properties {
+		runner_specific_property: "value"
+	}
+}

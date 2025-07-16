@@ -1,0 +1,19 @@
+﻿{
+  Listeners: [
+    {
+      Topic: signal,
+      Object: high_load,
+      Actions: [
+        {
+          Name: log,
+          Properties: {
+            message: {
+              Kind: Template,
+              Value: {{ subject }} {{ verb }} {{ object}} with severity {{ payload.severity }}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
