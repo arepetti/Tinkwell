@@ -1,9 +1,7 @@
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Globalization;
-using Tinkwell.Bootstrapper;
+using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.Reflection;
 using Tinkwell.Measures;
 using Tinkwell.Measures.Configuration.Parser;
@@ -163,9 +161,6 @@ sealed class Reducer : IAsyncDisposable
         var request = new SubscribeManyRequest();
         request.Names.AddRange(uniqueDependencies);
 
-        using var call2 = _store.Client.Subscribe(new() {  Name = "voltage" });
-
-
         using var call = _store.Client.SubscribeMany(request, cancellationToken: cancellationToken);
         try
         {
@@ -247,23 +242,21 @@ sealed class Reducer : IAsyncDisposable
         // First we need the current value for all the dependencies, they'll become
         // parameters for the NCalc expression.
         var valuesForDependencies = await _store.Client.ReadManyAsync(
-            new Services.StoreReadManyRequest() { Names = { measure.Dependencies } },
+            new StoreReadManyRequest() { Names = { measure.Dependencies } },
             cancellationToken: cancellationToken);
 
-        var expression = new NCalc.Expression(measure.Expression);
+        var parameters = new Dictionary<string, object>();
         foreach (var dependency in valuesForDependencies.Items)
-            expression.Parameters[dependency.Name] = dependency.Value.ToObject();
+            parameters[dependency.Name] = dependency.Value.ToObject();
 
         // The we can calculate the result, it's always a double: derived measures do not
         // support a string output (but they accept strings as inputs!)
-        var result = expression.Evaluate();
-        if (result is null)
-        {
-            _logger.LogError("Expression for {Name} did not evaluate to manageable quantity. Measure disabled. Result type: {ResultType}", measure.Name, result?.GetType().Name ?? "null");
-            return null;
-        }
+        var expression = new ExpressionEvaluator();
+        if (expression.TryEvaluateDouble(measure.Expression, parameters, out var result))
+            return result;
 
-        return Convert.ToDouble(result, CultureInfo.InvariantCulture);
+        _logger.LogError("Expression for {Name} did not evaluate to manageable quantity. Measure disabled.", measure.Name);
+        return null;
     }
 }
 

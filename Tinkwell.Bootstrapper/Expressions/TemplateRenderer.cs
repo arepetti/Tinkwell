@@ -3,8 +3,24 @@ using System.Globalization;
 
 namespace Tinkwell.Bootstrapper.Expressions;
 
+/// <summary>
+/// Helper class to render Liquid templates.
+/// </summary>
 public sealed class TemplateRenderer : ITemplateRenderer
 {
+    /// <summary>
+    /// Renders the specified Liquid template.
+    /// </summary>
+    /// <param name="content">The Liquid template to render.</param>
+    /// <param name="parameters">
+    /// Optional parameters for the template. If an object then all its properties
+    /// are included in the template's model, if a dictionary then all its entries
+    /// are included.
+    /// </param>
+    /// <returns>The result of the rendering.</returns>
+    /// <exception cref="BootstrapperException">
+    /// If <paramref name="content"/> is not a valid template.
+    /// </exception>
     public string Render(string content, object? parameters)
     {
         try
