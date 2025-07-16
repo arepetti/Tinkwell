@@ -2,6 +2,12 @@
 
 This document describes the Ensamble DSL, which defines how services and agents are composed and hosted within a Tinkwell system. Each file (typically with a `.tw` extension) describes a tree of runners, services, and their properties, used by the **Supervisor** to orchestrate process startup and configuration.
 
+You can create a starting poin to customize using:
+
+```bash
+tw templates use ensamble_configuration
+```
+
 ## Syntax Overview
 
 The most common way to define the system composition is by using the `compose` directive. You can also include other files with `import`.
@@ -179,7 +185,7 @@ runner "{{ name }}" "{{ host.grpc }}" {
 ## Complete Example
 
 ```text
-// File: /etc/tinkwell/ensemble.tw
+// File: /etc/tinkwell/ensamble.tw
 
 // Import shared definitions, which might contain the 'store' service
 import "shared_services.tw"

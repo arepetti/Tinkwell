@@ -104,6 +104,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Actions.Configurat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Bridge.MqttClient.Tests", "Tests\Tinkwell.Bridge.MqttClient.Tests\Tinkwell.Bridge.MqttClient.Tests.csproj", "{59546C08-25A8-42D7-A247-4303D386FD87}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tinkwell.Measures.Tests", "Tests\Tinkwell.Measures.Tests\Tinkwell.Measures.Tests.csproj", "{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -474,6 +476,18 @@ Global
 		{59546C08-25A8-42D7-A247-4303D386FD87}.Release|x64.Build.0 = Release|Any CPU
 		{59546C08-25A8-42D7-A247-4303D386FD87}.Release|x86.ActiveCfg = Release|Any CPU
 		{59546C08-25A8-42D7-A247-4303D386FD87}.Release|x86.Build.0 = Release|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Debug|x64.Build.0 = Debug|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Debug|x86.Build.0 = Debug|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Release|x64.ActiveCfg = Release|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Release|x64.Build.0 = Release|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Release|x86.ActiveCfg = Release|Any CPU
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -507,6 +521,7 @@ Global
 		{EF08279B-0B0E-2007-F68F-DE3657BCDD5D} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{7145AD1B-AB2D-F6B0-D1E6-916ABC17A6C8} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{59546C08-25A8-42D7-A247-4303D386FD87} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{E1B5BB2E-F6A2-76A6-F3F4-3B3568D3AF64} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C0934B28-6FF7-4875-BBB5-5041537BE9EB}
