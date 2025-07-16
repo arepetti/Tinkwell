@@ -70,12 +70,13 @@ This simple setup demonstrates how Tinkwell seamlessly integrates data ingestion
 graph LR
     classDef green color:#008b00,fill:#f2fde4;
     classDef orange color:#e54304,fill:#fff2df;
-    classDef amber color:#FF6F00,fill:#FFF8E1;
-    Device1(Device 1):::amber -- message --> MQTT(MQTT Broker):::orange
-    MQTT(MQTT Broker) -- message --> MQTT_client[MQTT client]
+    classDef amber color:#FF6F00,fill:#FFECB3;
+    Device1(Device 1):::amber --> MQTT(MQTT Broker):::orange
+    MQTT --> Device1
+    MQTT -- message --> MQTT_client[MQTT client]
     Store -- notification --> Reducer
-    Reducer -- update --> Store
     Store -- update --> Storage(Storage):::orange
+    Reducer -- update --> Store
     Store -- notification --> Reactor
     Reactor -- event --> EventsGateway[Events Gateway]
     EventsGateway -- notification --> Executor
