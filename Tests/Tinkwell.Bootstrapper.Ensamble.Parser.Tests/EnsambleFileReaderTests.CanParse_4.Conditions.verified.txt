@@ -1,0 +1,9 @@
+﻿{
+  Runners: [
+    {
+      Name: yes,
+      Path: /path/to/app,
+      Condition: true == true
+    }
+  ]
+}

@@ -59,7 +59,8 @@ public abstract class FileReaderWithImports<TDefinition, TResult>(IEnsambleCondi
             if (cancellationToken.IsCancellationRequested)
                 break;
 
-            result.AddRange(await ReadWithoutErrorHandlingAsync(basePath, import!, cancellationToken));
+            var importPath = Path.Combine(basePath, import);
+            result.AddRange(await ReadWithoutErrorHandlingAsync(basePath, importPath, cancellationToken));
         }
         result.AddRange(definitions);
         return result;

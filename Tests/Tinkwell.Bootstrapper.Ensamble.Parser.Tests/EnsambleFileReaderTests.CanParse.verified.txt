@@ -1,0 +1,8 @@
+﻿{
+  Runners: [
+    {
+      Name: name,
+      Path: /path/to/executable
+    }
+  ]
+}

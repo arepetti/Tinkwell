@@ -1,0 +1,24 @@
+﻿{
+  Runners: [
+    {
+      Name: runner1,
+      Path: /path/to/runner1
+    },
+    {
+      Name: runner2,
+      Path: /path/to/runner2
+    },
+    {
+      Name: runner3,
+      Path: /path/to/runner3
+    },
+    {
+      Name: runner4,
+      Path: /path/to/runner4
+    },
+    {
+      Name: runner5,
+      Path: /path/to/runner5
+    }
+  ]
+}
