@@ -2,10 +2,10 @@ using Tinkwell.Bootstrapper.Reflection;
 
 namespace Tinkwell.Bootstrapper.Tests.Reflection;
 
-public class ShallowCloner_Basic
+public class ShallowClonerTests
 {
-    private class SourceClass { public int A { get; set; } public string B { get; set; } }
-    private class TargetClass { public int A { get; set; } public string B { get; set; } }
+    private class SourceClass { public int A { get; set; } public required string B { get; set; } }
+    private class TargetClass { public int A { get; set; } public string B { get; set; } = ""; }
 
     [Fact]
     public void ShallowCloner_CopiesProperties()

@@ -3,7 +3,7 @@ using Tinkwell.Bootstrapper.Expressions;
 
 namespace Tinkwell.Bootstrapper.Tests.Expressions;
 
-public class TextHelpers_Matching
+public class TextHelpersTests
 {
     [Theory]
     [InlineData("blueish", "blue", false)]

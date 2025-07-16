@@ -5,13 +5,24 @@ namespace Tinkwell.Bootstrapper.Tests.Ipc;
 public class NamedPipes_ClientServer
 {
     [Fact]
+    public void NamedPipeFactory_CreatesNewServerInstance()
+    {
+        var factory = new NamedPipeServerFactory();
+        var instance1 = factory.Create();
+        var instance2 = factory.Create();
+
+        Assert.NotNull(instance1);
+        Assert.NotNull(instance2);
+        Assert.NotSame(instance1, instance2);
+    }
+
+    [Fact]
     public async Task NamedPipe_ClientServer_Communication()
     {
         var pipeName = Guid.NewGuid().ToString();
         var server = new NamedPipeServer();
         var client = new NamedPipeClient();
         var message = "Hello, pipe!";
-        var receivedMessage = new TaskCompletionSource<string>();
 
         server.Process += (sender, args) =>
         {

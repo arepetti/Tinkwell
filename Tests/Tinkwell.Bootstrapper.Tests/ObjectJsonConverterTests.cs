@@ -1,13 +1,9 @@
-
 using System.Text.Json;
 
 namespace Tinkwell.Bootstrapper.Tests;
 
-public class ObjectJsonConverter_Basic
+public class ObjectJsonConverterTests
 {
-    private class SourceClass { public int A { get; set; } public string B { get; set; } }
-    private class TargetClass { public int A { get; set; } public string B { get; set; } }
-
     [Fact]
     public void ObjectJsonConverter_DeserializesIntoDictionaryCorrectly()
     {
