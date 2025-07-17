@@ -21,6 +21,9 @@ sealed class Server : ICommandServer
 
     public event EventHandler? Signaled;
 
+    public bool IsReady { get; set; }
+
+
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogDebug("Starting command server on pipe '{PipeName}'", _pipeName);
@@ -34,6 +37,7 @@ sealed class Server : ICommandServer
     private void ReadAndProcessPipeData(object? sender, NamedPipeServerProcessEventArgs e)
     {
         var interpreter = new Interpreter(_logger, _registry);
+        interpreter.IsReady = IsReady;
         interpreter.Signaled += (_, _) => Signaled?.Invoke(this, EventArgs.Empty);
         interpreter.ClaimUrl += (_, e) => e.Value = _endpoints.Claim(e.MachineName, e.Runner);
         interpreter.QueryUrl += (_, e) =>

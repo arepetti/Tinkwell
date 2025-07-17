@@ -4,8 +4,8 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using Tinkwell.Actions.Configuration.Parser;
 using Tinkwell.Actions.Executor.Agents;
-using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ensamble;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Services;
 
 namespace Tinkwell.Actions.Executor;
@@ -25,8 +25,9 @@ sealed class Executor : IAsyncDisposable
     {
         _eventsGateway = await _locator.FindEventsGatewayAsync(cancellationToken);
 
-        _logger.LogDebug("Loading actions from {Path}", _options.Path);
-        var file = await _fileReader.ReadAsync(_options.Path, cancellationToken);
+        var path = HostingInformation.GetFullPath(_options.Path);
+        _logger.LogDebug("Loading actions from {Path}", path);
+        var file = await _fileReader.ReadAsync(path, cancellationToken);
         _listeners = file.Listeners.Select(CreateListener).ToList();
 
         await _dispatchWorker.StartAsync(DispatchIntentsAsync);

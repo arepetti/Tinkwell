@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Supervisor.Commands;
 using Tinkwell.Supervisor.Sentinel;
@@ -19,7 +20,7 @@ sealed class Worker : IHostedService
         _registry = registry;
         _commandServer = commandServer;
 
-        _ensambleFilePath = ResolveFullPath(
+        _ensambleFilePath = HostingInformation.GetFullPath(
             configuration.GetValue<string?>("Ensamble:Path") ?? "./ensamble.tw");
     }
 
@@ -34,6 +35,7 @@ sealed class Worker : IHostedService
         await _commandServer.StartAsync(cancellationToken);
         await _registry.StartAsync(_commandServer, _ensambleFilePath, cancellationToken);
 
+        _commandServer.IsReady = true;
         _logger.LogInformation("Supervisor started successfully");
     }
 
@@ -50,14 +52,6 @@ sealed class Worker : IHostedService
     private readonly IRegistry _registry;
     private readonly ICommandServer _commandServer;
     private readonly string _ensambleFilePath;
-
-    private static string ResolveFullPath(string path)
-    {
-        if (Path.IsPathFullyQualified(path))
-            return path;
-
-        return Path.Combine(Environment.CurrentDirectory, path);
-    }
 
     private Task PanicAsync(string message)
     {

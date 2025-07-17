@@ -1,0 +1,6 @@
+# This is a comment
+// This is also a comment
+  // A comment might have leading spaces and still being a comment
+  # In both forms
+
+map "sensor/data" as blob

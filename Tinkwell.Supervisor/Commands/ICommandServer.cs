@@ -3,6 +3,7 @@
 interface ICommandServer
 {
     event EventHandler? Signaled;
+    bool IsReady { get; set; }
     Task StartAsync(CancellationToken cancellationToken);
     Task StopAsync(CancellationToken cancellationToken);
 }

@@ -31,6 +31,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Update="TestFiles\1.Comments.twmap">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
         <None Update="TestFiles\1.IgnoreUnknown.twmap">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
