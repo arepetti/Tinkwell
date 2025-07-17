@@ -38,6 +38,23 @@ public static class StoreExtensions
     }
 
     /// <summary>
+    /// Converts a <see cref="StoreValueList"/> to a generic dictionary.
+    /// </summary>
+    /// <param name="list">List of values to convert.</param>
+    /// <returns>
+    /// A dictionary where each entry is created the measure name as key and its value (either
+    /// <c>double</c> or <c>string</c>) as value.
+    /// </returns>
+    public static Dictionary<string, object> ToDictionary(this StoreValueList list)
+    {
+        var result = new Dictionary<string, object>();
+        foreach (var item in list.Items)
+            result[item.Name] = ToObject(item.Value);
+
+        return result;
+    }
+
+    /// <summary>
     /// Converts a <see cref="StoreValue"/> to its underlying <see cref="object"/> representation
     /// (either a double or a string).
     /// </summary>

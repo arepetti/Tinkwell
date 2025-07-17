@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Tinkwell.Bootstrapper.Hosting;
+using Tinkwell.Measures;
 using Tinkwell.Measures.Configuration.Parser;
 
 namespace Tinkwell.Reducer;
@@ -18,8 +19,9 @@ public sealed class Registrar : IHostedDllRegistrar
 
             services.AddHostedService<Worker>();
             services.AddSingleton<Reducer>();
-            services.AddTransient<TwmFileReader>();
             services.AddTransient<ServiceLocator>();
+            services.AddTransient<TwmFileReader>();
+            services.AddTransient<IStore, StoreProxy>();
         });
     }
 }

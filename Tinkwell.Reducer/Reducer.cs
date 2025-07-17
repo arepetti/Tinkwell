@@ -12,10 +12,10 @@ namespace Tinkwell.Reducer;
 
 sealed class Reducer : IAsyncDisposable
 {
-    public Reducer(ILogger<Reducer> logger, ServiceLocator locator, TwmFileReader fileReader, ReducerOptions options)
+    public Reducer(ILogger<Reducer> logger, IStore store, TwmFileReader fileReader, ReducerOptions options)
     {
         _logger = logger;
-        _locator = locator;
+        _store = store;
         _fileReader = fileReader;
         _options = options;
         _dependencyWalker = new();
@@ -23,10 +23,9 @@ sealed class Reducer : IAsyncDisposable
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _store = await _locator.FindStoreAsync(cancellationToken);
-
         var path = HostingInformation.GetFullPath(_options.Path);
         _logger.LogDebug("Loading derived measures from {Path}", path);
+
         var file = await _fileReader.ReadFromFileAsync(path, cancellationToken);
         var measures = file.Measures
             .Where(x => !string.IsNullOrWhiteSpace(x.Expression))
@@ -69,73 +68,27 @@ sealed class Reducer : IAsyncDisposable
     {
         await _worker.StopAsync(CancellationToken.None);
 
-            await _locator.DisposeAsync();
-
         if (_store is not null)
             await _store.DisposeAsync();
     }
 
     private readonly ILogger<Reducer> _logger;
-    private readonly ServiceLocator _locator;
+    private readonly IStore _store;
     private readonly TwmFileReader _fileReader;
     private readonly ReducerOptions _options;
     private readonly DependencyWalker<Measure> _dependencyWalker;
     private readonly CancellableLongRunningTask _worker = new();
-    private GrpcService<Services.Store.StoreClient>? _store;
     
     private async Task RegisterDerivedMeasuresAsync(CancellationToken cancellationToken)
     {
-        Debug.Assert(_store is not null);
-
         var request = new StoreRegisterManyRequest();
         foreach (var measureName in _dependencyWalker.CalculationOrder)
         {
-            // A "declaration" is when we do not have an exxpression for the measure, technically
-            // runners should register their own measures but when integrating with external services
-            // (for example MQTT) is cleaner to have a place to "declare" those measures and let the
-            // others simply consume them.
+            _logger.LogDebug("Registering derived measure {Name}", measureName);
             var measure = _dependencyWalker.Items.First(m => m.Name == measureName);
-            bool isDeclaration = string.IsNullOrWhiteSpace(measure.Expression);
-            bool isConstant = !isDeclaration && measure.Dependencies.Count == 0 && _options.UseConstants;
-            bool isDerived = !isDeclaration && measure.Dependencies.Count > 0;
-
-            _logger.LogDebug("Registering derived measure {Name}, type: {Type}",
-                measure.Name, isDeclaration ? "declaration" : (isConstant ? "constant" : "derived"));
-
-            var registerRequest = new StoreRegisterRequest
-            {
-                Definition = new()
-                {
-                    Name = measure.Name,
-                    Type = StoreDefinition.Types.Type.Number,
-                    Attributes = (isDerived ? 2 : 0) | (isConstant ? 1 : 0),
-                    QuantityType = measure.QuantityType,
-                    Unit = measure.Unit,
-                },
-                Metadata = new()
-                {
-                    Tags = { measure.Tags },
-                }
-            };
-
-            if (measure.Minimum.HasValue)
-                registerRequest.Definition.Minimum = measure.Minimum.Value;
-
-            if (measure.Maximum.HasValue)
-                registerRequest.Definition.Maximum = measure.Maximum.Value;
-
-            if (measure.Precision.HasValue)
-                registerRequest.Definition.Precision = measure.Precision.Value;
-
-            if (measure.Description is not null)
-                registerRequest.Metadata.Description = measure.Description;
-
-            if (measure.Category is not null)
-                registerRequest.Metadata.Category = measure.Category;
-
-            request.Items.Add(registerRequest);
+            request.Items.Add(measure.ToStoreRegisterRequest(_options.UseConstants));
         }
-        await _store.Client.RegisterManyAsync(request, cancellationToken: cancellationToken);
+        await _store.RegisterManyAsync(request, cancellationToken);
     }
 
     private async Task CalculateInitialValuesAsync(CancellationToken cancellationToken)
@@ -154,19 +107,16 @@ sealed class Reducer : IAsyncDisposable
         var uniqueDependencies = _dependencyWalker.ForwardDependencyMap.Values
             .SelectMany(x => x)
             .Distinct()
-            .ToList();
+            .ToArray();
 
-        if (uniqueDependencies.Count == 0)
+        if (uniqueDependencies.Length == 0)
             return;
 
-        _logger.LogDebug("Subscribing to changes for {Count} dependencies", uniqueDependencies.Count);
-        var request = new SubscribeManyRequest();
-        request.Names.AddRange(uniqueDependencies);
-
-        using var call = _store.Client.SubscribeMany(request, cancellationToken: cancellationToken);
+        _logger.LogDebug("Subscribing to changes for {Count} dependencies", uniqueDependencies.Length);
+        using var call = await _store.SubscribeManyAsync(uniqueDependencies, cancellationToken);
         try
         {
-            await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
+            await foreach (var response in call.ReadAllAsync(cancellationToken))
                 await HandleChangeAsync(response.Name, cancellationToken);
         }
         catch (RpcException e)
@@ -228,7 +178,7 @@ sealed class Reducer : IAsyncDisposable
 
             // Then write it to the store
             _logger.LogTrace("Recalculated {Name} = {Value}", measure.Name, result);
-            await _store.Client.AsFacade().WriteQuantityAsync(measure.Name, result.Value, cancellationToken);
+            await _store.WriteQuantityAsync(measure.Name, result.Value, cancellationToken);
         }
         catch (Exception e)
         {
@@ -243,23 +193,15 @@ sealed class Reducer : IAsyncDisposable
 
         // First we need the current value for all the dependencies, they'll become
         // parameters for the NCalc expression.
-        var valuesForDependencies = await _store.Client.ReadManyAsync(
-            new StoreReadManyRequest() { Names = { measure.Dependencies } },
-            cancellationToken: cancellationToken);
-
-        var parameters = new Dictionary<string, object>();
-        foreach (var dependency in valuesForDependencies.Items)
-            parameters[dependency.Name] = dependency.Value.ToObject();
+        var values = await _store.ReadManyAsync(measure.Dependencies, cancellationToken);
 
         // The we can calculate the result, it's always a double: derived measures do not
         // support a string output (but they accept strings as inputs!)
         var expression = new ExpressionEvaluator();
-        if (expression.TryEvaluateDouble(measure.Expression, parameters, out var result))
+        if (expression.TryEvaluateDouble(measure.Expression, values.ToDictionary(), out var result))
             return result;
 
         _logger.LogError("Expression for {Name} did not evaluate to manageable quantity. Measure disabled.", measure.Name);
         return null;
     }
 }
-
-
