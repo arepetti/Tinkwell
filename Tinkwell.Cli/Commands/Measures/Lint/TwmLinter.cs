@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Cli.Commands.Lint;
 using Tinkwell.Measures.Configuration.Parser;
 
@@ -16,7 +17,7 @@ sealed class TwmLinter : Linter<ITwmFile>
     protected override Task<ITwmFile> LoadFileAsync(string path)
     {
         var reader = new TwmFileReader();
-        return reader.ReadFromFileAsync(path, CancellationToken.None);
+        return reader.ReadAsync(path, FileReaderOptions.Default, CancellationToken.None);
     }
 
     protected override Result Lint(ITwmFile data)

@@ -34,7 +34,7 @@ public class DependencyWalker<T> where T : IMeasureDependent
     }
 
     protected virtual IEnumerable<string> ResolveDependencies(T item)
-        => new Expression(item.Expression).GetParameterNames();
+        => new Expression(item.Expression).GetParameterNames().Where(p => !double.TryParse(p, out _));
 
     private readonly Dictionary<string, IList<string>> _forwardDependencyMap = new();
     private readonly Dictionary<string, IList<string>> _reverseDependencyMap = new();

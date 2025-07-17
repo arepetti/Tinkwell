@@ -1,6 +1,7 @@
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Reflection;
@@ -12,7 +13,7 @@ namespace Tinkwell.Reducer;
 
 sealed class Reducer : IAsyncDisposable
 {
-    public Reducer(ILogger<Reducer> logger, IStore store, TwmFileReader fileReader, ReducerOptions options)
+    public Reducer(ILogger<Reducer> logger, IStore store, IConfigFileReader<ITwmFile> fileReader, ReducerOptions options)
     {
         _logger = logger;
         _store = store;
@@ -26,9 +27,8 @@ sealed class Reducer : IAsyncDisposable
         var path = HostingInformation.GetFullPath(_options.Path);
         _logger.LogDebug("Loading derived measures from {Path}", path);
 
-        var file = await _fileReader.ReadFromFileAsync(path, cancellationToken);
+        var file = await _fileReader.ReadAsync(path, cancellationToken);
         var measures = file.Measures
-            .Where(x => !string.IsNullOrWhiteSpace(x.Expression))
             .Select(x => ShallowCloner.CopyAllPublicProperties(x, new Measure()))
             .ToArray();
 
@@ -74,7 +74,7 @@ sealed class Reducer : IAsyncDisposable
 
     private readonly ILogger<Reducer> _logger;
     private readonly IStore _store;
-    private readonly TwmFileReader _fileReader;
+    private readonly IConfigFileReader<ITwmFile> _fileReader;
     private readonly ReducerOptions _options;
     private readonly DependencyWalker<Measure> _dependencyWalker;
     private readonly CancellableLongRunningTask _worker = new();
@@ -162,8 +162,9 @@ sealed class Reducer : IAsyncDisposable
     {
         Debug.Assert(_store is not null);
 
-        // No op if this measure has been disabled before because an update failed
-        if (measure.Disabled)
+        // No op if this measure has been disabled before because an update failed or if
+        // it's just a "declaration" we do not update directly.
+        if (measure.Disabled || string.IsNullOrWhiteSpace(measure.Expression))
             return;
 
         try
