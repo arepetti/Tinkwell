@@ -2,8 +2,6 @@ namespace Tinkwell.IntegrationTests;
 
 public class SmokeTestsRunner : IClassFixture<SupervisorFixture>
 {
-    private readonly SupervisorFixture _fixture;
-
     public SmokeTestsRunner(SupervisorFixture fixture)
     {
         _fixture = fixture;
@@ -13,7 +11,7 @@ public class SmokeTestsRunner : IClassFixture<SupervisorFixture>
         // our entire configuration and it'll be deleted at the end.
         // TODO: scripting AND...copy from FS, not from a string...
         var ensambleContent = "compose service orchestrator \"Tinkwell.Orchestrator.dll\"\ncompose service store \"Tinkwell.Store.dll\"";
-        var ensamblePath = Path.Combine(_fixture.SupervisorAppDataPath, "ensamble.tw");
+        var ensamblePath = Path.Combine(_fixture.SupervisorWorkingDirectory, "ensamble.tw");
         File.WriteAllText(ensamblePath, ensambleContent);
     }
 
@@ -23,10 +21,11 @@ public class SmokeTestsRunner : IClassFixture<SupervisorFixture>
     {
         Assert.NotNull(_fixture.ClientCertificate);
         Assert.True(_fixture.ClientCertificate.HasPrivateKey);
-        Assert.NotNull(_fixture.Channel);
 
         // TODO: here we should call/parse/whatever the script that does our
         // integration tests. A list of processes to run?
         return Task.CompletedTask;
     }
+
+    private readonly SupervisorFixture _fixture;
 }

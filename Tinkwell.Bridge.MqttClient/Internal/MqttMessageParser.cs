@@ -3,9 +3,13 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Tinkwell.Bootstrapper.Expressions;
+using Tinkwell.Bootstrapper.Hosting;
 
 namespace Tinkwell.Bridge.MqttClient.Internal;
 
+/// <summary>
+/// <strong>Internal use</strong>. Represents a measure obtained from an MQTT message.
+/// </summary>
 public sealed record MqttMeasure(string Name, object Value)
 {
     public bool IsNumeric
@@ -30,6 +34,9 @@ public sealed record MqttMeasure(string Name, object Value)
         => Convert.ToString(Value, CultureInfo.InvariantCulture) ?? string.Empty;
 }
 
+/// <summary>
+/// <strong>Internal use</strong>. Parses the content of an MQTT message.
+/// </summary>
 public sealed class MqttMessageParser
 {
     public MqttMessageParser(MqttBridgeOptions options)
@@ -58,7 +65,7 @@ public sealed class MqttMessageParser
     private sealed record Mapping(Regex Topic, Func<string, string, string> MeasureName, Func<string, string, object?> Value);
 
     private readonly static Mapping DefaultMapping
-        = new Mapping(new Regex(TextHelpers.GitLikeWildcardToRegex("*")), ExtractDefaultMeasureName, ExtractDefaultValue);
+        = new Mapping(TextHelpers.PatternToRegex("*"), ExtractDefaultMeasureName, ExtractDefaultValue);
     private static readonly Regex _ruleParser = new Regex(
         @"^map\s+" +
         @"(?:(?<topic>""[^""]+"")|(?<topic>[^\s""=]+))\s+" +
@@ -76,9 +83,13 @@ public sealed class MqttMessageParser
 
         List<Mapping> mappings = new();
         ExpressionEvaluator evaluator = new();
-        foreach (var line in File.ReadAllLines(_mappingPath))
+        var lines = File.ReadAllLines(HostingInformation.GetFullPath(_mappingPath))
+            .Select(x => x.Trim())
+            .Where(string.IsNullOrEmpty);
+
+        foreach (var line in lines)
         {
-            if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//") || line.StartsWith('#'))
+            if (line.StartsWith("//") || line.StartsWith('#'))
                 continue;
 
             // Syntax:

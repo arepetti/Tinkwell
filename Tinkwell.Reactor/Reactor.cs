@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
 using Tinkwell.Bootstrapper.Expressions;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Reflection;
 using Tinkwell.Measures;
@@ -26,8 +27,9 @@ sealed class Reactor : IAsyncDisposable
         _store = await _locator.FindStoreAsync(cancellationToken);
         _eventsGateway = await _locator.FindEventsGatewayAsync(cancellationToken);
 
-        _logger.LogDebug("Loading signals from {Path}", _options.Path);
-        var file = await _fileReader.ReadFromFileAsync(_options.Path, cancellationToken);
+        var path = HostingInformation.GetFullPath(_options.Path);
+        _logger.LogDebug("Loading signals from {Path}", path);
+        var file = await _fileReader.ReadFromFileAsync(path, cancellationToken);
 
         var rootSignals = file.Signals.Select(signal => ShallowCloner.CopyAllPublicProperties(signal, new Signal()));
         var dependentSignals = file.Measures.SelectMany(measure =>

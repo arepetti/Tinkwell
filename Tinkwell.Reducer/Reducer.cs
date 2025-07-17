@@ -2,6 +2,7 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using Tinkwell.Bootstrapper.Expressions;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Reflection;
 using Tinkwell.Measures;
 using Tinkwell.Measures.Configuration.Parser;
@@ -24,8 +25,9 @@ sealed class Reducer : IAsyncDisposable
     {
         _store = await _locator.FindStoreAsync(cancellationToken);
 
-        _logger.LogDebug("Loading derived measures from {Path}", _options.Path);
-        var file = await _fileReader.ReadFromFileAsync(_options.Path, cancellationToken);
+        var path = HostingInformation.GetFullPath(_options.Path);
+        _logger.LogDebug("Loading derived measures from {Path}", path);
+        var file = await _fileReader.ReadFromFileAsync(path, cancellationToken);
         var measures = file.Measures
             .Where(x => !string.IsNullOrWhiteSpace(x.Expression))
             .Select(x => ShallowCloner.CopyAllPublicProperties(x, new Measure()))

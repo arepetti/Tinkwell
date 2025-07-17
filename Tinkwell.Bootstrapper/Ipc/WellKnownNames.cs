@@ -51,8 +51,35 @@ public static class WellKnownNames
     /// <summary>
     /// An optional environment variable that contains the directory used to resolve
     /// relative file paths. If not specified then the working directory is used.
+    /// It must be an absolute path.
     /// </summary>
-    public static readonly string WorkingDirectoryEnvironmentVariable = "TINKWELL_APP_DATA_PATH";
+    /// <remarks>
+    /// Do not use this variable directly, obtain the value from
+    /// <see cref="Hosting.HostingInformation.WorkingDirectory"/>.
+    /// </remarks>
+    public static readonly string WorkingDirectoryEnvironmentVariable = "TINKWELL_WORKING_DIR_PATH";
+
+    /// <summary>
+    /// An optional environment variable that contains the directory used as data directory
+    /// at application level. If not specified it resolves to a directory shared among all users
+    /// on the machine (or the user's profile if inaccessible). It must be an absolute path.
+    /// </summary>
+    /// <remarks>
+    /// Do not use this variable directly, obtain the value from
+    /// <see cref="Hosting.HostingInformation.ApplicationDataDirectory"/>.
+    /// </remarks>
+    public static readonly string AppDataEnvironmentVariable = "TINKWELL_APP_DATA_PATH";
+
+    /// <summary>
+    /// An optional environment variable that contains the directory used as data directory
+    /// at user level. If not specified it resolves to a directory in the user's profile.
+    /// It must be an absolute path.
+    /// </summary>
+    /// <remarks>
+    /// Do not use this variable directly, obtain the value from
+    /// <see cref="Hosting.HostingInformation.UserDataDirectory"/>.
+    /// </remarks>
+    public static readonly string UserDataEnvironmentVariable = "TINKWELL_USER_DATA_PATH";
 
     /// <summary>
     /// <strong>Internal</strong>. If possible try to use an existing host.
