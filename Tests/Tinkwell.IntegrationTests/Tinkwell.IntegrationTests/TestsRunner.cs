@@ -1,8 +1,8 @@
 namespace Tinkwell.IntegrationTests;
 
-public class SmokeTestsRunner : IClassFixture<SupervisorFixture>
+public class TestsRunner : IClassFixture<SupervisorFixture>
 {
-    public SmokeTestsRunner(SupervisorFixture fixture)
+    public TestsRunner(SupervisorFixture fixture)
     {
         _fixture = fixture;
 

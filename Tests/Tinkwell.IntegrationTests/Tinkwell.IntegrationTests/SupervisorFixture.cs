@@ -1,4 +1,3 @@
-using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
@@ -12,14 +11,14 @@ public class SupervisorFixture : IAsyncLifetime
     private const string SupervisorProjectPath = "../../../Tinkwell.Supervisor/Tinkwell.Supervisor.csproj";
     private const string CliProjectPath = "../../../Tinkwell.Cli/Tinkwell.Cli.csproj";
     private const string CertPassword = "ci-certificate-password";
+    private const string SupervisorPipeName = "tinkwell-isolated-command-pipe";
 
-    private Process? _supervisorProcess;
-    private string? _tempCertPath;
-    private readonly IConfiguration _config;
+    private const int MaximumNumberOfAttempts = 60;
+    private const int DelayBetweenAttemptsInSeconds = 1;
+    private const int MaximumWaitingToShutdownInSeconds = 30;
 
     public X509Certificate2? ClientCertificate { get; private set; }
     public string SupervisorWorkingDirectory { get; private set; } = "";
-    public GrpcChannel? Channel { get; private set; }
     
     public SupervisorFixture()
     {
@@ -27,166 +26,186 @@ public class SupervisorFixture : IAsyncLifetime
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "Supervisor:CommandServer:ServerName", "." },
-                { "Supervisor:CommandServer:PipeName", WellKnownNames.SupervisorCommandServerPipeName },
+                { "Supervisor:CommandServer:PipeName", SupervisorPipeName },
             })
             .Build();
     }
 
     public async Task InitializeAsync()
     {
-        // Create a unique temporary directory for Supervisor's app data
-        SupervisorWorkingDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(SupervisorWorkingDirectory);
+        await CreateIsolatedEnvironment();
+        string? discoveryAddress = await StartSupervisorAsync();
+        if (string.IsNullOrWhiteSpace(discoveryAddress))
+            throw new InvalidOperationException("Cannot obtain the Discovery Service address.");
 
-        // 1. Create temporary directory for certificates
-        _tempCertPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(_tempCertPath);
+        Console.WriteLine($"Discovery Service address: {discoveryAddress}");
+        // We should have this in Tinkwell.Services.Proto so that all the clients
+        // automatically use this certificate. The point is how to pass them this
+        // information without making tests a special case in the code.
+        //var handler = new HttpClientHandler();
+        //handler.ClientCertificates.Add(ClientCertificate);
+        //handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
 
-        // 2. Generate self-signed certificate
-        await CreateSelfSignedCertificate();
-
-        // Load client certificate for gRPC client trust
-        var pemCertPath = Path.Combine(_tempCertPath, "tinkwell-test-cert.pem");
-        ClientCertificate = new X509Certificate2(pemCertPath);
-
-        // 3. Set environment variables for Supervisor
-        Environment.SetEnvironmentVariable(WellKnownNames.WebServerCertificatePath, Path.Combine(_tempCertPath, "tinkwell-test-cert.pfx"));
-        Environment.SetEnvironmentVariable(WellKnownNames.WebServerCertificatePass, CertPassword);
-        Environment.SetEnvironmentVariable(WellKnownNames.WorkingDirectoryEnvironmentVariable, SupervisorWorkingDirectory); // Set app data path
-
-        // 4. Start Supervisor process
-        _supervisorProcess = RunCommand($"run --project \"{SupervisorProjectPath}");
-
-        // 5. Wait for Supervisor to be ready using ping command
-        var client = new NamedPipeClient();
-        var maxAttempts = 60; // Wait up to 60 seconds
-        var delay = TimeSpan.FromSeconds(1);
-
-        for (int i = 0; i < maxAttempts; i++)
-        {
-            try
-            {
-                var response = await client.SendCommandToSupervisorAndDisconnectAsync(_config, "ping");
-                if (response?.Trim()?.Equals("OK", StringComparison.OrdinalIgnoreCase) ?? false)
-                {
-                    Console.WriteLine("Supervisor is ready.");
-
-                    // Discover Discovery Service address
-                    var discoveryAddress = await client.SendCommandToSupervisorAndDisconnectAsync(_config, "roles query tinkwell-discovery-service");
-                    if (string.IsNullOrWhiteSpace(discoveryAddress))
-                        throw new InvalidOperationException("Could not discover Tinkwell.Discovery service address.");
-
-                    Console.WriteLine($"Discovery Service Address: {discoveryAddress}");
-
-                    // We should have this in Tinkwell.Services.Proto so that all the clients
-                    // automatically use this certificate. The point is how to pass them this
-                    // information without making tests a special case in the code.
-                    //var handler = new HttpClientHandler();
-                    //handler.ClientCertificates.Add(ClientCertificate);
-                    //handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
-
-                    //Channel = GrpcChannel.ForAddress(discoveryAddress, new GrpcChannelOptions { HttpHandler = handler });
-
-                    return;
-                }
-                Console.WriteLine($"Supervisor not ready yet: {response?.Trim()}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Attempt {i + 1} to connect to Supervisor failed: {ex.Message}");
-            }
-            await Task.Delay(delay);
-        }
-
-        throw new TimeoutException("Supervisor did not become ready within the expected time.");
+        //Channel = GrpcChannel.ForAddress(discoveryAddress, new GrpcChannelOptions { HttpHandler = handler });
     }
 
     public async Task DisposeAsync()
     {
-        if (Channel is not null)
-        {
-            await Channel.ShutdownAsync();
-            Channel.Dispose();
-        }
-
-        if (_supervisorProcess is not null && !_supervisorProcess.HasExited)
-        {
-            // Send shutdown command
-            try
-            {
-                var client = new NamedPipeClient();
-                await client.SendCommandToSupervisorAndDisconnectAsync(_config, "shutdown");
-                Console.WriteLine("Shutdown command sent to Supervisor.");
-
-                if (!_supervisorProcess.WaitForExit(TimeSpan.FromSeconds(30))) // Wait up to 30 seconds for graceful exit
-                {
-                    Console.WriteLine("Supervisor did not exit gracefully, forcing termination.");
-                    _supervisorProcess.Kill();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error during Supervisor shutdown: {ex.Message}");
-                if (!_supervisorProcess.HasExited)
-                {
-                    _supervisorProcess.Kill(); // Ensure it's terminated even if shutdown command failed
-                }
-            }
-        }
-
-        // Clean up temporary certificate files
-        if (Directory.Exists(_tempCertPath))
-        {
-            try
-            {
-                Directory.Delete(_tempCertPath, true);
-                Console.WriteLine($"Cleaned up temporary certificate directory: {_tempCertPath}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error cleaning up temporary directory {_tempCertPath}: {ex.Message}");
-            }
-        }
-
-        // Clean up Supervisor app data directory
-        if (Directory.Exists(SupervisorWorkingDirectory))
-        {
-            try
-            {
-                Directory.Delete(SupervisorWorkingDirectory, true);
-                Console.WriteLine($"Cleaned up Supervisor app data directory: {SupervisorWorkingDirectory}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error cleaning up Supervisor app data directory {SupervisorWorkingDirectory}: {ex.Message}");
-            }
-        }
+        await ShutdownSupervisorAsync();
+        RemoveTemporaryFiles();
 
         // Clear environment variables
         Environment.SetEnvironmentVariable(WellKnownNames.WebServerCertificatePath, null);
         Environment.SetEnvironmentVariable(WellKnownNames.WebServerCertificatePass, null);
         Environment.SetEnvironmentVariable(WellKnownNames.WorkingDirectoryEnvironmentVariable, null);
+        Environment.SetEnvironmentVariable(WellKnownNames.AppDataEnvironmentVariable, null);
+        Environment.SetEnvironmentVariable(WellKnownNames.UserDataEnvironmentVariable, null);
+    }
+
+    private Process? _supervisorProcess;
+    private string? _temporaryFolder;
+    private string? _certPath;
+    private readonly IConfiguration _config;
+
+    private async Task CreateIsolatedEnvironment()
+    {
+        // Create temporary directories, we do not want the app to leave traces in the system!
+        SupervisorWorkingDirectory = GetTempPath("Root", WellKnownNames.WorkingDirectoryEnvironmentVariable);
+        GetTempPath("AppData", WellKnownNames.AppDataEnvironmentVariable);
+        GetTempPath("UserData", WellKnownNames.UserDataEnvironmentVariable);
+
+        // Generate a self-signed certificate valid only for this session
+        _certPath = GetTempPath("Certs", null);
+        await CreateSelfSignedCertificate();
+
+        Environment.SetEnvironmentVariable(WellKnownNames.WebServerCertificatePath, Path.Combine(_certPath, "tinkwell-test-cert.pfx"));
+        Environment.SetEnvironmentVariable(WellKnownNames.WebServerCertificatePass, CertPassword);
+
+        var pemCertPath = Path.Combine(_certPath, "tinkwell-test-cert.pem");
+        ClientCertificate = new X509Certificate2(pemCertPath);
+    }
+
+    private async Task<string?> StartSupervisorAsync()
+    {
+        _supervisorProcess = RunProject(SupervisorProjectPath, $"--Supervisor:CommandServer:PipeName={SupervisorPipeName}");
+
+        using var client = new NamedPipeClient();
+        await TryAsync("Start the Supervisor", async () =>
+        {
+            var response = await client.SendCommandToSupervisorAndDisconnectAsync(_config, "ping");
+            return response?.Trim()?.Equals("OK", StringComparison.OrdinalIgnoreCase) ?? false;
+        });
+
+        return await client.SendCommandToSupervisorAndDisconnectAsync(_config, $"roles query {WellKnownNames.DiscoveryServiceRoleName}");
+    }
+
+    private async Task ShutdownSupervisorAsync()
+    {
+        if (_supervisorProcess is null || _supervisorProcess.HasExited)
+            return;
+
+        // We try to shutdown gracefully sending the "shutdown" command but if it takes
+        // too long then we go brute force and kill the process (all its child processes
+        // should follow because they should use the ParentProcessMonitor);
+        try
+        {
+            var client = new NamedPipeClient();
+            await client.SendCommandToSupervisorAndDisconnectAsync(_config, "shutdown");
+            Console.WriteLine("Shutdown command sent to Supervisor, waiting for exit.");
+
+            if (!_supervisorProcess.WaitForExit(TimeSpan.FromSeconds(MaximumWaitingToShutdownInSeconds)))
+            {
+                Console.WriteLine("Supervisor did not exit gracefully, forcing termination and waiting for child processes to terminate.");
+                _supervisorProcess.Kill();
+                await Task.Delay(TimeSpan.FromSeconds(MaximumWaitingToShutdownInSeconds));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during Supervisor shutdown: {ex.Message}");
+            if (!_supervisorProcess.HasExited)
+                _supervisorProcess.Kill();
+        }
+    }
+
+    private void RemoveTemporaryFiles()
+    {
+        if (string.IsNullOrEmpty(_temporaryFolder) || !Directory.Exists(_temporaryFolder))
+            return;
+
+        try
+        {
+            Directory.Delete(_temporaryFolder, true);
+            Console.WriteLine($"Removed temporary directory: {_temporaryFolder}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error cleaning up temporary directory {_temporaryFolder}: {e.Message}");
+        }
     }
 
     private async Task CreateSelfSignedCertificate()
     {
-        var command = $"run --project \"{CliProjectPath} certs create --export-path \"{_tempCertPath}\" --export-name tinkwell-test-cert --export-pem";
-        await RunCommandAndWaitForExitAsync(command, async stdin =>
+        var command = $"certs create --export-path \"{_certPath}\" --export-name tinkwell-test-cert --export-pem";
+        await RunProjectAndWaitForExitAsync(CliProjectPath, command, async stdin =>
         {
             await stdin.WriteLineAsync(CertPassword);
             await stdin.FlushAsync();
         });
     }
 
-    private Process RunCommand(string commandAndArgs)
+    private string GetTempPath(string name, string? environmentVariable)
     {
-        Console.WriteLine($"Executing dotnet {commandAndArgs}");
+        if (_temporaryFolder is null)
+        {
+            _temporaryFolder = Path.Combine(Path.GetTempPath(), $"Tinkwell.{Guid.NewGuid()}");
+            Directory.CreateDirectory(_temporaryFolder);
+        }
+
+        string path = Path.Combine(_temporaryFolder, name);
+        Directory.CreateDirectory(path);
+
+        if (environmentVariable is not null)
+            Environment.SetEnvironmentVariable(environmentVariable, path);
+
+        return path;
+    }
+
+    private async Task TryAsync(string description, Func<Task<bool>> action)
+    {
+        Console.WriteLine($"Attempting to '{description}'...");
+        for (int i = 0; i < MaximumNumberOfAttempts; ++i)
+        {
+            try
+            {
+                if (await action())
+                {
+                    Console.WriteLine($"Task '{description}' completed successfully.");
+                    return;
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Attempt {i + 1} of {MaximumNumberOfAttempts} to '{description}' failed: {e.Message}");
+            }
+
+            await Task.Delay(DelayBetweenAttemptsInSeconds * 1000);
+        }
+
+        Console.WriteLine($"Task '{description}' timed out.");
+        throw new TimeoutException($"Task '{description}' cannot be completed in the expected time.");
+    }
+
+    private Process RunProject(string projectPath, string commandAndArgs)
+    {
+        Console.WriteLine($"Executing project \"{projectPath}\" with {commandAndArgs}");
         var process = new Process
         {
             StartInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = commandAndArgs,
+                Arguments = $"run --project \"{projectPath}\" {commandAndArgs}",
                 WorkingDirectory = SupervisorWorkingDirectory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -200,9 +219,9 @@ public class SupervisorFixture : IAsyncLifetime
         return process;
     }
 
-    private async Task<string> RunCommandAndWaitForExitAsync(string commandAndArgs, Func<StreamWriter, Task>? whenReady = null)
+    private async Task<string> RunProjectAndWaitForExitAsync(string projectPath, string commandAndArgs, Func<StreamWriter, Task>? whenReady = null)
     {
-        var process = RunCommand(commandAndArgs);
+        var process = RunProject(projectPath, commandAndArgs);
 
         if (whenReady is not null)
             await whenReady(process.StandardInput);

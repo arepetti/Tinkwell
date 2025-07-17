@@ -169,6 +169,13 @@ public readonly struct MeasureValue : IEquatable<MeasureValue>
     }
 
     /// <summary>
+    /// Gets the value as a double.
+    /// </summary>
+    /// <returns>The value as a double.</returns>
+    public double AsDouble()
+        => (double)AsQuantity().Value;
+
+    /// <summary>
     /// Gets the value as a string.
     /// </summary>
     /// <returns>The value as a string.</returns>
@@ -264,7 +271,6 @@ public readonly struct MeasureValue : IEquatable<MeasureValue>
     /// <returns>true if the instances are not equal; otherwise, false.</returns>
     public static bool operator !=(MeasureValue lhs, MeasureValue rhs)
         => !lhs.Equals(rhs);
-
 
     /// <summary>
     /// Converts a <see cref="MeasureValue"/> to a double.

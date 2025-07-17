@@ -1,19 +1,23 @@
+using Tinkwell.Bootstrapper.Ensamble;
+
 namespace Tinkwell.Measures.Configuration.Parser;
 
-public sealed class TwmFileReader
+/// <summary>
+/// Reads a configuration file for measures and signals (.twm).
+/// </summary>
+public sealed class TwmFileReader : IConfigFileReader<ITwmFile>
 {
-    public async Task<ITwmFile> ReadFromFileAsync(
-        string filename,
-        CancellationToken cancellationToken)
+    /// <inheritdocs />
+    public async Task<ITwmFile> ReadAsync(string path, FileReaderOptions options, CancellationToken cancellationToken)
     {
         var file = new TwmFile();
-        var baseDirectory = Path.GetDirectoryName(filename);
-        await ReadFileRecursiveAsync(filename, baseDirectory, file, cancellationToken);
+        var baseDirectory = Path.GetDirectoryName(path);
+        await ReadFileRecursiveAsync(path, baseDirectory, file, cancellationToken);
 
         return file;
     }
 
-    sealed class TwmFile : ITwmFile
+    private sealed class TwmFile : ITwmFile
     {
         public IEnumerable<MeasureDefinition> Measures { get; set; } = [];
         public IEnumerable<SignalDefinition> Signals { get; set; } = [];

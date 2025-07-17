@@ -2,6 +2,7 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
+using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
@@ -29,7 +30,7 @@ sealed class Reactor : IAsyncDisposable
 
         var path = HostingInformation.GetFullPath(_options.Path);
         _logger.LogDebug("Loading signals from {Path}", path);
-        var file = await _fileReader.ReadFromFileAsync(path, cancellationToken);
+        var file = await _fileReader.ReadAsync(path, FileReaderOptions.Default, cancellationToken);
 
         var rootSignals = file.Signals.Select(signal => ShallowCloner.CopyAllPublicProperties(signal, new Signal()));
         var dependentSignals = file.Measures.SelectMany(measure =>
