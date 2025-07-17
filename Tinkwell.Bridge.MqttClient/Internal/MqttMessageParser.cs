@@ -39,13 +39,20 @@ public sealed record MqttMeasure(string Name, object Value)
 /// </summary>
 public sealed class MqttMessageParser
 {
-    public MqttMessageParser(MqttBridgeOptions options)
+    public int RuleCount => _mappings.Count();
+
+    public MqttMessageParser()
     {
-        _mappingPath = options.Mapping;
-        _mappings = TryLoadMapping();
+        _mappings = [DefaultMapping];
     }
 
-    public int RuleCount => _mappings.Count();
+    public void LoadMapping(string path)
+    {
+        _mappingPath = path;
+
+        if (!string.IsNullOrWhiteSpace(path))
+            _mappings = TryLoadMapping();
+    }
 
     public IEnumerable<MqttMeasure> Parse(string topic, string payload)
     {
@@ -73,8 +80,8 @@ public sealed class MqttMessageParser
         @"as\s+(?:(?<quotedName>""[^""]+"")|(?<literalName>[^\s""]+))$",
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
-    private readonly string? _mappingPath;
-    private readonly IEnumerable<Mapping> _mappings;
+    private string? _mappingPath;
+    private IEnumerable<Mapping> _mappings;
 
     private IEnumerable<Mapping> TryLoadMapping()
     {
@@ -83,9 +90,9 @@ public sealed class MqttMessageParser
 
         List<Mapping> mappings = new();
         ExpressionEvaluator evaluator = new();
-        var lines = File.ReadAllLines(HostingInformation.GetFullPath(_mappingPath))
+        var lines = File.ReadAllLines(_mappingPath)
             .Select(x => x.Trim())
-            .Where(string.IsNullOrEmpty);
+            .Where(x => !string.IsNullOrEmpty(x));
 
         foreach (var line in lines)
         {

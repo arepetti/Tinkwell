@@ -9,6 +9,7 @@ static class Extensions
 {
     public static int ClaimPort(this WebApplicationBuilder builder)
     {
+        Console.WriteLine("Claiming");
         var client = new NamedPipeClient();
         string? portNumber = client.SendCommandToSupervisorAndDisconnectAsync(
             builder.Configuration, $"endpoints claim \"{Environment.MachineName}\" \"{HostingInformation.RunnerName}\"")

@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
+using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Measures.Configuration.Parser;
+using Tinkwell.Services.Proto.Proxies;
 
 namespace Tinkwell.Reactor;
 
@@ -18,7 +20,9 @@ public sealed class Registrar : IHostedDllRegistrar
 
             services.AddHostedService<Worker>();
             services.AddSingleton<Reactor>();
-            services.AddTransient<TwmFileReader>();
+            services.AddTransient<IStore, StoreProxy>();
+            services.AddTransient<IEventsGateway, EventsGatewayProxy>();
+            services.AddTransient<IConfigFileReader<ITwmFile>, TwmFileReader>();
             services.AddTransient<ServiceLocator>();
         });
     }

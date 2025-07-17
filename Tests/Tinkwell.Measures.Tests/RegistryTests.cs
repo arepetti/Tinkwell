@@ -44,15 +44,15 @@ public class RegistryTests
     [InlineData(null, typeof(ArgumentNullException), "Value cannot be null. (Parameter 'Name')")]
     [InlineData("", typeof(ArgumentException), "The value cannot be an empty string or composed entirely of whitespace. (Parameter 'Name')")]
     [InlineData(" ", typeof(ArgumentException), "The value cannot be an empty string or composed entirely of whitespace. (Parameter 'Name')")]
-    public async Task RegisterMeasure_ThrowsExceptionForInvalidMeasureName(string? invalidName, Type expectedExceptionType, string expectedMessage)
+    public void RegisterMeasure_ThrowsExceptionForInvalidMeasureName(string? invalidName, Type expectedExceptionType, string expectedMessage)
     {
         // Arrange
         var storage = new InMemoryStorage();
         var registry = new Registry(storage);
         
         // Act & Assert
-        var exception = await Assert.ThrowsAsync(expectedExceptionType,
-            async () => new MeasureDefinition { Name = invalidName!, Type = MeasureType.Number });
+        var exception = Assert.Throws(expectedExceptionType,
+            () => new MeasureDefinition { Name = invalidName!, Type = MeasureType.Number });
         Assert.Equal(expectedMessage, exception.Message);
     }
 

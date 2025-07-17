@@ -10,9 +10,7 @@ public class MqttMessageParserTests
     [Fact]
     public void Parse_DefaultMapping_ParsesImmediateNumber()
     {
-        var options = new MqttBridgeOptions();
-        var parser = new MqttMessageParser(options);
-
+        var parser = new MqttMessageParser();
         var measures = parser.Parse("sensor/temperature", "25.5").ToList();
 
         Assert.Single(measures);
@@ -24,9 +22,7 @@ public class MqttMessageParserTests
     [Fact]
     public void Parse_DefaultMapping_ReturnsImmediateStringAsIs()
     {
-        var options = new MqttBridgeOptions();
-        var parser = new MqttMessageParser(options);
-
+        var parser = new MqttMessageParser();
         var measures = parser.Parse("sensor/status", "online").ToList();
 
         Assert.Single(measures);
@@ -38,9 +34,7 @@ public class MqttMessageParserTests
     [Fact]
     public void Parse_DefaultMapping_ExtractsSingleValueFromJson()
     {
-        var options = new MqttBridgeOptions();
-        var parser = new MqttMessageParser(options);
-
+        var parser = new MqttMessageParser();
         var measures = parser.Parse("sensor/data", "{\"value\": 123}").ToList();
 
         Assert.Single(measures);
@@ -52,9 +46,7 @@ public class MqttMessageParserTests
     [Fact]
     public void Parse_DefaultMapping_DefaultMapping_ReturnsAsIsIfUnknown()
     {
-        var options = new MqttBridgeOptions();
-        var parser = new MqttMessageParser(options);
-
+        var parser = new MqttMessageParser();
         var measures = parser.Parse("sensor/data", "{\"value1\": 123, \"value2\": 456}").ToList();
 
         Assert.Single(measures);
@@ -77,8 +69,8 @@ public class MqttMessageParserTests
     [MemberData(nameof(FilePaths))]
     public async Task CanParse(string path)
     {
-        var options = new MqttBridgeOptions { Mapping = path };
-        var parser = new MqttMessageParser(options);
+        var parser = new MqttMessageParser();
+        parser.LoadMapping(path);
 
         var measures = parser.Parse("sensor/data", "{\"value1\": 123, \"value2\": 456}").ToList();
 

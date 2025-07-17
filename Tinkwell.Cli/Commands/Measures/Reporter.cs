@@ -1,6 +1,6 @@
 using Spectre.Console;
-using Tinkwell.Measures;
 using Tinkwell.Services;
+using Tinkwell.Services.Proto.Proxies;
 
 namespace Tinkwell.Cli.Commands.Measures;
 

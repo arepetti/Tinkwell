@@ -54,18 +54,22 @@ public sealed class NamedPipeClient : INamedPipeClient
     /// <param name="pipeName">The pipe name.</param>
     public void Connect(string serverName, string pipeName)
     {
+        Console.WriteLine("Connecting for real");
         if (_disposed)
             throw new ObjectDisposedException(nameof(NamedPipeClient));
 
+        Console.WriteLine("Check I'm not connected already");
         if (IsConnected)
             return;
 
+        Console.WriteLine("Building the stream");
         _client = new NamedPipeClientStream(serverName, pipeName, PipeDirection.InOut);
         _client.Connect();
 
         _writer = new StreamWriter(_client, Encoding.UTF8);
         _reader = new StreamReader(_client, Encoding.UTF8);
         _writer.AutoFlush = true;
+        Console.WriteLine($"Finished {IsConnected}");
     }
 
     /// <summary>
@@ -149,6 +153,7 @@ public sealed class NamedPipeClient : INamedPipeClient
         if (_disposed)
             throw new ObjectDisposedException(nameof(NamedPipeClient));
 
+        Console.WriteLine($"'{command} {_client} --- {_client?.IsConnected} -- {Environment.StackTrace}");
         if (!IsConnected)
             throw new InvalidOperationException("Client is not connected. Call Connect() first.");
 

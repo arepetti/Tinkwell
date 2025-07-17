@@ -7,8 +7,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Ipc.Extensions;
-using Tinkwell.Measures;
 using Tinkwell.Services;
+using Tinkwell.Services.Proto.Proxies;
 
 namespace Tinkwell.Watchdog;
 

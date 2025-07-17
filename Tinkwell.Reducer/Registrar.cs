@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Hosting;
-using Tinkwell.Measures;
 using Tinkwell.Measures.Configuration.Parser;
+using Tinkwell.Services.Proto.Proxies;
 
 namespace Tinkwell.Reducer;
 

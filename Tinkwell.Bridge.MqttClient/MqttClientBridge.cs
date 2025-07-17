@@ -4,6 +4,7 @@ using MQTTnet;
 using MQTTnet.Protocol;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bridge.MqttClient.Internal;
 using Tinkwell.Services;
 
@@ -32,8 +33,13 @@ sealed class MqttClientBridge : IAsyncDisposable
             throw new ObjectDisposedException(nameof(MqttClientBridge));
 
         _logger.LogDebug("Starting MQTT client");
+
+        if (!string.IsNullOrWhiteSpace(_options.Mapping))
+            _messageParser.LoadMapping(HostingInformation.GetFullPath(_options.Mapping));
+    
         _store = await _locator.FindStoreAsync(cancellationToken);
         await CreateMqttClientAndConnectAsync(cancellationToken);
+
         _logger.LogInformation("MQTT client started successfully");
     }
 

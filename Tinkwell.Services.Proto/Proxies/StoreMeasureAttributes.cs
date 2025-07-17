@@ -1,4 +1,4 @@
-namespace Tinkwell.Measures;
+namespace Tinkwell.Services.Proto.Proxies;
 
 /// <summary>
 /// Defines attributes for a measure.

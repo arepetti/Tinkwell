@@ -30,11 +30,12 @@ sealed class MatchCommand : Command<MatchCommand.Settings>
 
     public override int Execute(CommandContext context, Settings settings)
     {
-        var parser = new MqttMessageParser(new() { Mapping = settings.Rules });
-
+        var parser = new MqttMessageParser();
         if (!string.IsNullOrWhiteSpace(settings.Rules))
+        {
+            parser.LoadMapping(settings.Rules);
             AnsiConsole.MarkupLine($"Loaded [blueviolet]{parser.RuleCount}[/] rule(s) from [blueviolet]{settings.Rules}[/]");
-
+        }
 
         var (firstRun, average, matches) = TimeIt(() => parser.Parse(settings.Topic, settings.Message).ToList());
         AnsiConsole.MarkupLine($"Found [blueviolet]{matches.Count}[/] match(es)");

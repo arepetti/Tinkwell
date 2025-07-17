@@ -51,7 +51,7 @@ public static class INamedPipeClientExtensions
         string serverName = configuration.GetValue("Supervisor:CommandServer:ServerName", ".");
         string pipeName = configuration.GetValue("Supervisor:CommandServer:PipeName",
             WellKnownNames.SupervisorCommandServerPipeName);
-
+        Console.WriteLine("Connecting");
         client.Connect(serverName, pipeName);
     }
 }

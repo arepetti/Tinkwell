@@ -26,5 +26,8 @@
 	  <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
 	  <ProjectReference Include="..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
 	</ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Reactor.Tests" />
+  </ItemGroup>
 </Project>
 
