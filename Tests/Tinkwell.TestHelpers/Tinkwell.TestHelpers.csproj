@@ -4,6 +4,7 @@
     <ProjectReference Include="..\..\Tinkwell.Measures.Configuration.Parser\Tinkwell.Measures.Configuration.Parser.csproj" />
     <ProjectReference Include="..\..\Tinkwell.Measures\Tinkwell.Measures.csproj" />
     <ProjectReference Include="..\..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
+    <ProjectReference Include="..\..\Tinkwell.Actions.Configuration.Parser\Tinkwell.Actions.Configuration.Parser.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

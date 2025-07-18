@@ -7,24 +7,23 @@ using Tinkwell.Actions.Executor.Agents;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Services;
+using Tinkwell.Services.Proto.Proxies;
 
 namespace Tinkwell.Actions.Executor;
 
 sealed class Executor : IAsyncDisposable
 {
-    public Executor(IServiceProvider serviceProvider, ILogger<Executor> logger, ServiceLocator locator, IConfigFileReader<ITwaFile> fileReader, ExecutorOptions options)
+    public Executor(ILogger<Executor> logger, IEventsGateway eventsGateway, IConfigFileReader<ITwaFile> fileReader, IIntentDispatcher dispatcher, ExecutorOptions options)
     {
-        _serviceProvider = serviceProvider;
         _logger = logger;
-        _locator = locator;
+        _eventsGateway = eventsGateway;
         _fileReader = fileReader;
+        _dispatcher = dispatcher;
         _options = options;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _eventsGateway = await _locator.FindEventsGatewayAsync(cancellationToken);
-
         var path = HostingInformation.GetFullPath(_options.Path);
         _logger.LogDebug("Loading actions from {Path}", path);
         var file = await _fileReader.ReadAsync(path, cancellationToken);
@@ -39,23 +38,16 @@ sealed class Executor : IAsyncDisposable
     {
         await _listeningWorker.StopAsync(CancellationToken.None);
         await _dispatchWorker.StopAsync(CancellationToken.None);
-
-        if (_locator is not null)
-            await _locator.DisposeAsync();
-
-        if (_eventsGateway is not null)
-            await _eventsGateway.DisposeAsync();
     }
 
-    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<Executor> _logger;
-    private readonly ServiceLocator _locator;
     private readonly IConfigFileReader<ITwaFile> _fileReader;
+    private readonly IIntentDispatcher _dispatcher;
     private readonly ExecutorOptions _options;
     private List<Listener>? _listeners;
     private readonly CancellableLongRunningTask _listeningWorker = new();
     private readonly CancellableLongRunningTask _dispatchWorker = new();
-    private GrpcService<EventsGateway.EventsGatewayClient>? _eventsGateway;
+    private readonly IEventsGateway _eventsGateway;
     private readonly BlockingCollection<Intent> _queue = new();
 
     private async Task SubscribeToEventsAsync(CancellationToken cancellationToken)
@@ -72,19 +64,14 @@ sealed class Executor : IAsyncDisposable
             MatchId = x.Id
         }).ToList();
 
-        var request = new SubscribeToMatchingManyEventsRequest
-        {
-            Matches = { eventsToWatch }
-        };
-
         _logger.LogDebug("Subscribing to events for {Count} listeners", _listeners.Count);
-        using var call = _eventsGateway.Client.SubscribeToMatchingMany(request, cancellationToken: cancellationToken);
+        using var call = await _eventsGateway.SubscribeManyAsync(eventsToWatch, cancellationToken);
         try
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
+            await foreach (var response in call.ReadAllAsync(cancellationToken))
             {
                 var listener = _listeners!.First(x => x.Id == response.MatchId);
                 if (!listener.Enabled)
@@ -120,30 +107,8 @@ sealed class Executor : IAsyncDisposable
 
     private async Task DispatchIntentsAsync(CancellationToken cancellationToken)
     {
-        var factory = new AgentFactory();
         foreach (var intent in _queue.GetConsumingEnumerable(cancellationToken))
-        {
-            try
-            {
-                IAgent? agent = null;
-                try
-                {
-                    agent = factory.Create(_serviceProvider, intent);
-                }
-                catch (ExecutorException e)
-                {
-                    _logger.LogError(e, "Disabling listener because it failed to create agent for intent '{IntentId}': {Message}.", intent.Event.Id, e.Message);
-                    intent.Listener.Enabled = false;
-                }
-                
-                if (agent is not null)
-                    await agent.ExecuteAsync(cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "An unexpected error occurred while executing the intent '{IntentId}': {Message}.", intent.Event.Id, e.Message);
-            }
-        }
+            await _dispatcher.DispatchAsync(intent, cancellationToken);
     }
 
     private Listener CreateListener(WhenDefinition definition)

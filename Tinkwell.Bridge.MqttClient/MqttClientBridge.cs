@@ -158,16 +158,11 @@ sealed class MqttClientBridge : IAsyncDisposable
         Debug.Assert(_mqttClient is not null);
         Debug.Assert(_clientOptions is not null);
 
+        _logger.LogWarning("MQTT client disconnected from broker. Reason: {Reason}", e.Reason);
         if (CanReconnect())
         {
-            _logger.LogWarning("MQTT client disconnected from broker. Reason: {Reason}", e.Reason);
             await Task.Delay(_options.RetryDelayInMilliseconds, CancellationToken.None);
             await ConnectAsync(CancellationToken.None);
-        }
-        else
-        {
-            _logger.LogError("MQTT client disconnected from broker. Reason: {Reason}. Reconnection is not allowed.",
-                e.Reason);
         }
 
         bool CanReconnect()

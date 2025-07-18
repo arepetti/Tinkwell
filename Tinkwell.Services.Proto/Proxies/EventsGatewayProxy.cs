@@ -3,6 +3,7 @@
 /// <summary>
 /// Implement <see cref="IEventsGateway"/>, a simplified interface for the Events Gateway service.
 /// </summary>
+
 public sealed class EventsGatewayProxy(ServiceLocator locator) : IEventsGateway
 {
     /// <inheritdocs />

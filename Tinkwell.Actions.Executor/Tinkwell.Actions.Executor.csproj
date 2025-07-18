@@ -22,4 +22,8 @@
 	  <ProjectReference Include="..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
 	</ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Actions.Executor.Tests" />
+  </ItemGroup>
+
 </Project>

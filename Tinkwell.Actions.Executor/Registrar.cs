@@ -2,6 +2,7 @@
 using Tinkwell.Actions.Configuration.Parser;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Hosting;
+using Tinkwell.Services.Proto.Proxies;
 
 namespace Tinkwell.Actions.Executor;
 
@@ -20,6 +21,8 @@ public sealed class Registrar : IHostedDllRegistrar
             services.AddSingleton<Executor>();
             services.AddTransient<IConfigFileReader<ITwaFile>, TwaFileReader>();
             services.AddTransient<ServiceLocator>();
+            services.AddTransient<IIntentDispatcher, IntentDispatcher>();
+            services.AddTransient<IEventsGateway, EventsGatewayProxy>();
         });
     }
 }
