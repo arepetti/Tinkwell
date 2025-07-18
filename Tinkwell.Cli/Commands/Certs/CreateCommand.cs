@@ -38,7 +38,7 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
         public bool SetEnvironmentVariable { get; set; }
             = string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePath));
 
-        [CommandOption("--unsafe-password")]
+        [CommandOption("--unsafe-password", IsHidden = true)]
         public string Password { get; set; } = "";
     }
 
@@ -50,7 +50,9 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
 
         var options = new SelfSignedCertificate.CreateOptions(settings.CommonName, settings.Validity, password);
         var certificate = SelfSignedCertificate.Create(options);
-        AnsiConsole.MarkupLineInterpolated($"Created certificate [cyan]{settings.CommonName}[/]");
+
+        if (!settings.IsOutputForTool)
+            AnsiConsole.MarkupLineInterpolated($"Created certificate [cyan]{settings.CommonName}[/]");
 
         SelfSignedCertificate.Export(
             certificate,
@@ -73,6 +75,14 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
             {
                 Consoles.Error.MarkupLine("[red]--set-environment is supported only on Windows.[/]");
             }
+        }
+
+        if (settings.IsOutputForTool)
+        {
+            foreach (string path in exportedFiles)
+                AnsiConsole.WriteLine(path);
+
+            return ExitCode.Ok;
         }
 
         foreach (string path in exportedFiles)

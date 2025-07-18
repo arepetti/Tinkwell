@@ -25,8 +25,9 @@ def create_temp_tinkwell_env(cli_tool_path, test_name):
 
     print(f"{COLOR_DARK_GRAY}Creating self-signed certificate...{COLOR_RESET}")
     tw_cli = TwCli(cli_tool_path)
-    tw_cli.create_cert("Tinkwell-Int-Tests", "tinkwell", os.path.join(temp_dir, "Cert"), False, "1234")
-    print(f"{COLOR_DARK_GRAY}Certificate saved as {COLOR_BLUE}{os.path.join(temp_dir, "Certs", "tinkwell.pfx")}{COLOR_RESET}")
+    tw_cli.create_cert("Tinkwell-Int-Tests", "tinkwell", os.path.join(temp_dir, "Cert"), True, "1234")
+    print(f"{COLOR_DARK_GRAY}Certificate (server) saved as {COLOR_BLUE}{os.path.join(temp_dir, "Cert", "tinkwell.pfx")}{COLOR_RESET}")
+    print(f"{COLOR_DARK_GRAY}Certificate (client) saved as {COLOR_BLUE}{os.path.join(temp_dir, "Cert", "tinkwell-cert.pem")}{COLOR_RESET}")
     return temp_dir
 
 def start_tinkwell_app(app_dll_path, app_path, temp_dir, verbose=False):
@@ -38,8 +39,9 @@ def start_tinkwell_app(app_dll_path, app_path, temp_dir, verbose=False):
     env["TINKWELL_WORKING_DIR_PATH"] = temp_dir
     env["TINKWELL_APP_DATA_PATH"] = os.path.join(temp_dir, "App")
     env["TINKWELL_USER_DATA_PATH"] = os.path.join(temp_dir, "User")
-    env["TINKWELL_CERT_PATH"] = os.path.join(temp_dir, "Certs", "tinkwell.pfx")
+    env["TINKWELL_CERT_PATH"] = os.path.join(temp_dir, "Cert", "tinkwell.pfx")
     env["TINKWELL_CERT_PASS"] = "1234"
+    env["TINKWELL_CLIENT_CERT_PATH"] = os.path.join(temp_dir, "Cert", "tinkwell-cert.pem")
 
     command = ["dotnet", app_dll_path]
     stdout_redirect = None if verbose else subprocess.PIPE
@@ -63,7 +65,7 @@ def stop_tinkwell_app(process, cli_tool_path):
 
             if process.poll() is None: # Check if still running after graceful attempt
                 print(f"{COLOR_DARK_GRAY}Tinkwell application (PID: {process.pid}) did not terminate gracefully, killing...{COLOR_RESET}")
-                process.kill() # Use portable kill()
+                process.kill()
                 process.wait()
             else:
                 print(f"{COLOR_DARK_GRAY}Tinkwell application (PID: {process.pid}) terminated gracefully.{COLOR_RESET}")

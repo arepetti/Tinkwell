@@ -57,7 +57,7 @@ class TwCli:
         Sends a 'tw supervisor send ping' command and interprets the result.
         Returns a PingStatus enum value.
         """
-        result = self.run_command("supervisor", "send", "ping", "-y")
+        result = self.run_command("supervisor", "send", "ping", "-y", "--stdout-format=tooling")
         if result["returncode"] != 0:
             return PingStatus.Error
         
@@ -73,16 +73,17 @@ class TwCli:
         """
         Sends a 'tw supervisor send shutdown' command.
         """
-        self.run_command("supervisor", "send", "shutdown", "-y")
+        self.run_command("supervisor", "send", "shutdown", "-y", "--stdout-format=tooling")
 
     def create_cert(self, common_name, export_name, export_path, export_pem, password):
         """
         Calls 'tw certs create' to generate a new self-signed certificate.
-        Handles sending the password to stdin.
         """
-        command_args = ["certs", "create", "--set-environment=false"]
+        command_args = ["certs", "create"]
         if common_name:
             command_args.append(common_name)
+        command_args.append("--stdout-format=tooling")
+        command_args.append("--set-environment=false")
         command_args.extend(["--export-name", export_name])
         command_args.extend(["--export-path", export_path])
         if export_pem:

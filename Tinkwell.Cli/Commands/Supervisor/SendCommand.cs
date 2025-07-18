@@ -16,7 +16,15 @@ sealed class SendCommand : AsyncCommand<SendCommand.Settings>
         public string Command { get; set; } = "";
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    {
+        if (settings.IsOutputForTool)
+            return ExecuteForToolAsync(context, settings);
+
+        return ExecuteForUserAsync(context, settings);
+    }
+
+    private async Task<int> ExecuteForUserAsync(CommandContext context, Settings settings)
     {
         using var client = new NamedPipeClient();
 
@@ -53,5 +61,28 @@ sealed class SendCommand : AsyncCommand<SendCommand.Settings>
         }
 
         return ExitCode.Ok;
+    }
+
+    private async Task<int> ExecuteForToolAsync(CommandContext context, Settings settings)
+    {
+        using var client = new NamedPipeClient();
+        int exitCode = ExitCode.Ok;
+        try
+        {
+            await client.ConnectAsync(settings.Machine, settings.Pipe, TimeSpan.FromSeconds(settings.Timeout));
+            string reply = await client.SendCommandAndWaitReplyAsync(settings.Command) ?? "";
+         
+            AnsiConsole.WriteLine(reply);
+            
+            if (reply.StartsWith("Error:"))
+                exitCode = ExitCode.Error;
+        }
+        finally
+        {
+            if (client.IsConnected)
+                await client.SendCommandAsync("exit");
+        }
+
+        return exitCode;
     }
 }

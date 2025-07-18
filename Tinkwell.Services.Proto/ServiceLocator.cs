@@ -1,5 +1,6 @@
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
+using System.Security.Cryptography.X509Certificates;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 
@@ -41,7 +42,7 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
                                                 $"Please ensure that the Supervisor is running and accessible.");
         }
 
-        var channel = GrpcChannel.ForAddress(address);
+        var channel = CreateChannel(address);
         _discovery = new GrpcService<Services.Discovery.DiscoveryClient>(channel, new Services.Discovery.DiscoveryClient(channel));
 
         return _discovery.Client;
@@ -62,7 +63,7 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
         var discovery = await FindDiscoveryAsync(cancellationToken);
         var request = new Services.DiscoveryFindRequest { Name = name };
         var addressInfo = await discovery.FindAsync(request, cancellationToken: cancellationToken);
-        var channel = GrpcChannel.ForAddress(addressInfo.Host);
+        var channel = CreateChannel(addressInfo.Host);
 
         return new GrpcService<T>(channel, factory(channel));
     }
@@ -105,6 +106,27 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
     private readonly INamedPipeClient _pipeClient;
     private GrpcService<Services.Discovery.DiscoveryClient>? _discovery;
     private bool _disposed;
+    private static X509Certificate2? _clientCertificate;
+
+    private GrpcChannel CreateChannel(string address)
+    {
+        if (_clientCertificate is null)
+        {
+            var clientCertificatePath = Environment.GetEnvironmentVariable(WellKnownNames.ClientCertificatePath);
+            if (!string.IsNullOrWhiteSpace(clientCertificatePath))
+                _clientCertificate = X509CertificateLoader.LoadCertificateFromFile(clientCertificatePath);
+        }
+
+        if (_clientCertificate is null)
+            return GrpcChannel.ForAddress(address);
+
+        var handler = new HttpClientHandler();
+        handler.ClientCertificates.Add(_clientCertificate);
+        handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+
+        return GrpcChannel.ForAddress(address, new GrpcChannelOptions { HttpHandler = handler });
+
+    }
 
     private async ValueTask DisposeAsync(bool disposing)
     {

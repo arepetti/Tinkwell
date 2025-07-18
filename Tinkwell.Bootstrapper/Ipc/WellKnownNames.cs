@@ -86,6 +86,15 @@ public static class WellKnownNames
     public static readonly string UserDataEnvironmentVariable = "TINKWELL_USER_DATA_PATH";
 
     /// <summary>
+    /// <strong>Internal</strong>. If possible try to use <c>ServiceLocator</c>.
+    /// <para>
+    /// The environment variable for the client certificate for gRPC HTTPS calls.
+    /// </para>
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static readonly string ClientCertificatePath = "TINKWELL_CLIENT_CERT_PATH";
+
+    /// <summary>
     /// <strong>Internal</strong>. If possible try to use an existing host.
     /// <para>
     /// The environment variable for the web server certificate path.

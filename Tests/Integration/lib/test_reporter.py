@@ -13,7 +13,7 @@ def generate_report(results):
         else:
             print(f"{COLOR_CYAN}{test}{COLOR_RESET}: {COLOR_RED}{status}{COLOR_RESET}")
             if message:
-                print(f"    Reason: {COLOR_RED}{message}{COLOR_RESET}")
+                print(f"  {COLOR_RED}{message}{COLOR_RESET}")
             overall_success = False
 
     if overall_success:
