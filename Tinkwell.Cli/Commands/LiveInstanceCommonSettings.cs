@@ -4,7 +4,17 @@ using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Cli.Commands;
 
-public abstract class LiveInstanceCommonSettings : CommandSettings
+public abstract class TinkwellCliCommandSettings : CommandSettings
+{
+    [CommandOption("--stdout-format <FORMAT>")]
+    [Description("The format to use for messages and reply. Formats: default, tooling.")]
+    public string StdoutFormat { get; set; } = ".";
+
+    internal bool IsOutputForTool
+        => string.Equals(StdoutFormat, "tooling", StringComparison.OrdinalIgnoreCase);
+}
+
+public abstract class LiveInstanceCommonSettings : TinkwellCliCommandSettings
 {
     [CommandOption("--machine <MACHINE_NAME>")]
     [Description("The name of the machine where the Supervisor is listening.")]

@@ -21,6 +21,7 @@ public sealed class Registrar : IHostedDllRegistrar
             services.AddSingleton<Executor>();
             services.AddTransient<IConfigFileReader<ITwaFile>, TwaFileReader>();
             services.AddTransient<ServiceLocator>();
+            services.AddTransient<AgentFactory>();
             services.AddTransient<IIntentDispatcher, IntentDispatcher>();
             services.AddTransient<IEventsGateway, EventsGatewayProxy>();
         });

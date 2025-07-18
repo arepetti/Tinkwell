@@ -37,15 +37,22 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
         [Description("Set the environment variables needed to run Tinkwell (Windows only).")]
         public bool SetEnvironmentVariable { get; set; }
             = string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePath));
+
+        [CommandOption("--unsafe-password", IsHidden = true)]
+        public string Password { get; set; } = "";
     }
 
     public override int Execute(CommandContext context, Settings settings)
     {
-        string password = AnsiConsole.Ask<string>("Password?");
+        string password = string.IsNullOrEmpty(settings.Password)
+            ? AnsiConsole.Ask<string>("Password?")
+            : settings.Password;
 
         var options = new SelfSignedCertificate.CreateOptions(settings.CommonName, settings.Validity, password);
         var certificate = SelfSignedCertificate.Create(options);
-        AnsiConsole.MarkupLineInterpolated($"Created certificate [cyan]{settings.CommonName}[/]");
+
+        if (!settings.IsOutputForTool)
+            AnsiConsole.MarkupLineInterpolated($"Created certificate [cyan]{settings.CommonName}[/]");
 
         SelfSignedCertificate.Export(
             certificate,
@@ -68,6 +75,14 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
             {
                 Consoles.Error.MarkupLine("[red]--set-environment is supported only on Windows.[/]");
             }
+        }
+
+        if (settings.IsOutputForTool)
+        {
+            foreach (string path in exportedFiles)
+                AnsiConsole.WriteLine(path);
+
+            return ExitCode.Ok;
         }
 
         foreach (string path in exportedFiles)

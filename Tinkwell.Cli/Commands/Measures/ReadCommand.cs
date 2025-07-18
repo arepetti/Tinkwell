@@ -19,16 +19,10 @@ sealed class ReadCommand : AsyncCommand<ReadCommand.Settings>
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
-        var response = await AnsiConsole.Status()
-            .Spinner(Spinner.Known.Default)
-            .StartAsync("Reading...", async ctx =>
-            {
-                var request = new Services.StoreFindRequest();
-                request.Name = settings.Name;
-
-                var store = await DiscoveryHelpers.FindStoreServiceAsync(settings);
-                return await store.Client.FindAsync(request);
-            });
+        var request = new Services.StoreFindRequest();
+        request.Name = settings.Name;
+        var store = await DiscoveryHelpers.FindStoreServiceAsync(settings);
+        var response = await store.Client.FindAsync(request);
 
         AnsiConsole.WriteLine(response.Value.FormatAsString());
 

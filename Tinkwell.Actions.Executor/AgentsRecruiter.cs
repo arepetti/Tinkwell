@@ -4,7 +4,10 @@ using Tinkwell.Bootstrapper;
 
 namespace Tinkwell.Actions.Executor;
 
-static class AgentsRecruiter
+/// <summary>
+/// <strong>Internal use</strong>. Search for the commands available in actions.
+/// </summary>
+public static class AgentsRecruiter
 {
     private static readonly List<Assembly> _additionalAssemblies = new();
 

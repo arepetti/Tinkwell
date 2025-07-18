@@ -1,4 +1,5 @@
 using Grpc.Net.Client;
+using System.Security.Cryptography.X509Certificates;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Services;
 
@@ -8,21 +9,21 @@ static class DiscoveryHelpers
 {
     public static async Task<GrpcService<Discovery.DiscoveryClient>> FindDiscoveryServiceAsync(LiveInstanceCommonSettings settings)
     {
-        var channel = GrpcChannel.ForAddress(await ResolveDiscoveryServiceAddressAsync(settings));
+        var channel = CreateChannel(await ResolveDiscoveryServiceAddressAsync(settings));
         var service = new Discovery.DiscoveryClient(channel);
         return new(channel, service);
     }
 
     public static async Task<GrpcService<Store.StoreClient>> FindStoreServiceAsync(LiveInstanceCommonSettings settings)
     {
-        var channel = GrpcChannel.ForAddress(await FindServiceAddressAsync(settings, Store.Descriptor.FullName));
+        var channel = CreateChannel(await FindServiceAddressAsync(settings, Store.Descriptor.FullName));
         var service = new Store.StoreClient(channel);
         return new(channel, service);
     }
 
     public static async Task<GrpcService<EventsGateway.EventsGatewayClient>> FindEventsGatewayServiceAsync(LiveInstanceCommonSettings settings)
     {
-        var channel = GrpcChannel.ForAddress(await FindServiceAddressAsync(settings, EventsGateway.Descriptor.FullName));
+        var channel = CreateChannel(await FindServiceAddressAsync(settings, EventsGateway.Descriptor.FullName));
         var service = new EventsGateway.EventsGatewayClient(channel);
         return new(channel, service);
     }
@@ -46,6 +47,28 @@ static class DiscoveryHelpers
             if (client.IsConnected)
                 await client.SendCommandAsync("exit");
         }
+    }
+
+    private static X509Certificate2? _clientCertificate;
+
+    private static GrpcChannel CreateChannel(string address)
+    {
+        if (_clientCertificate is null)
+        {
+            var clientCertificatePath = Environment.GetEnvironmentVariable(WellKnownNames.ClientCertificatePath);
+            if (!string.IsNullOrWhiteSpace(clientCertificatePath))
+                _clientCertificate = X509CertificateLoader.LoadCertificateFromFile(clientCertificatePath);
+        }
+
+        if (_clientCertificate is null)
+            return GrpcChannel.ForAddress(address);
+
+        var handler = new HttpClientHandler();
+        handler.ClientCertificates.Add(_clientCertificate);
+        handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+
+        return GrpcChannel.ForAddress(address, new GrpcChannelOptions { HttpHandler = handler });
+
     }
 
     private static async Task<string> FindServiceAddressAsync(LiveInstanceCommonSettings settings, string name)

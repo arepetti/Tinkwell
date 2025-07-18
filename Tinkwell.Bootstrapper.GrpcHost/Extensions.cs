@@ -37,7 +37,7 @@ static class Extensions
             Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePath) ?? "");
         var password = Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePass) ?? "";
 
-        return (path, password);
+        return (HostingInformation.GetFullPath(path), password);
     }
 
     public static Task DelegateConfigureServicesAsync(this IHostApplicationBuilder builder)

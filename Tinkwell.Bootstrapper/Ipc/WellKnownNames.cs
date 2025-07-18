@@ -45,6 +45,7 @@ public static class WellKnownNames
     /// <summary>
     /// An optional environment variable that contains the <em>environment</em> for this
     /// installation. It could be <c>"Development"</c> or <c>"Release"</c>.
+    /// <c>TINKWELL_ENVIRONMENT</c>.
     /// </summary>
     public static readonly string EnvironmentEnvironmentVariable = "TINKWELL_ENVIRONMENT";
 
@@ -52,6 +53,7 @@ public static class WellKnownNames
     /// An optional environment variable that contains the directory used to resolve
     /// relative file paths. If not specified then the working directory is used.
     /// It must be an absolute path.
+    /// <c>TINKWELL_WORKING_DIR_PATH</c>.
     /// </summary>
     /// <remarks>
     /// Do not use this variable directly, obtain the value from
@@ -63,6 +65,7 @@ public static class WellKnownNames
     /// An optional environment variable that contains the directory used as data directory
     /// at application level. If not specified it resolves to a directory shared among all users
     /// on the machine (or the user's profile if inaccessible). It must be an absolute path.
+    /// <c>TINKWELL_APP_DATA_PATH</c>.
     /// </summary>
     /// <remarks>
     /// Do not use this variable directly, obtain the value from
@@ -74,12 +77,22 @@ public static class WellKnownNames
     /// An optional environment variable that contains the directory used as data directory
     /// at user level. If not specified it resolves to a directory in the user's profile.
     /// It must be an absolute path.
+    /// <c>TINKWELL_USER_DATA_PATH</c>.
     /// </summary>
     /// <remarks>
     /// Do not use this variable directly, obtain the value from
     /// <see cref="Hosting.HostingInformation.UserDataDirectory"/>.
     /// </remarks>
     public static readonly string UserDataEnvironmentVariable = "TINKWELL_USER_DATA_PATH";
+
+    /// <summary>
+    /// <strong>Internal</strong>. If possible try to use <c>ServiceLocator</c>.
+    /// <para>
+    /// The environment variable for the client certificate for gRPC HTTPS calls.
+    /// </para>
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static readonly string ClientCertificatePath = "TINKWELL_CLIENT_CERT_PATH";
 
     /// <summary>
     /// <strong>Internal</strong>. If possible try to use an existing host.
