@@ -32,16 +32,15 @@ sealed class Interpreter
     {
         string? input = (await reader.ReadLineAsync(cancellationToken))?.Trim();
         if (string.IsNullOrWhiteSpace(input) || input.StartsWith('#'))
-            return ParsingResult.Continue;
+            return ParsingResult.Stop;
 
         try
         {
             try
             {
-                var app = ParseCommandLine(writer, input);
+                var app = ConfigureApp(writer);
                 int exitCode = await app.ExecuteAsync(TokenizeArguments());
                 return exitCode == TerminateParsingExitCode ? ParsingResult.Stop : ParsingResult.Continue;
-
             }
             catch (UnrecognizedCommandParsingException e)
             {
@@ -73,7 +72,7 @@ sealed class Interpreter
         string[] TokenizeArguments()
         {
             var regex = new Regex(@"[\""].+?[\""]|[^ ]+");
-            return [.. regex.Matches(input).Select(m => m.Value.Trim('"'))];
+            return [.. regex.Matches(input!).Select(m => m.Value.Trim('"'))];
         }
     }
 
@@ -82,24 +81,26 @@ sealed class Interpreter
     private readonly ILogger _logger;
     private readonly IRegistry _runnerRegistry;
 
-    private CommandLineApplication ParseCommandLine(StreamWriter writer, string input)
+    private CommandLineApplication ConfigureApp(StreamWriter writer)
     {
         var app = new CommandLineApplication();
 
-        app.Command("ping", exitCmd =>
+        app.Command("ping", pingCmd =>
         {
-            exitCmd.OnExecute(() => writer.WriteLine(IsReady ? "OK" : "Loading"));
+            pingCmd.OnExecute(() => writer.WriteLine(IsReady ? "OK" : "Loading"));
         });
 
-        app.Command("shutdown", exitCmd =>
+        app.Command("shutdown", shutdownCmd =>
         {
-            exitCmd.OnExecute(() => writer.WriteLine("OK"));
-            Environment.Exit(0);
+            shutdownCmd.OnExecute(() => {
+                writer.WriteLine("OK");
+                Environment.Exit(0);
+            });
         });
 
-        app.Command("pid", exitCmd =>
+        app.Command("pid", pidCmd =>
         {
-            exitCmd.OnExecute(() => writer.WriteLine(Environment.ProcessId.ToString()));
+            pidCmd.OnExecute(() => writer.WriteLine(Environment.ProcessId.ToString()));
         });
 
         app.Command("exit", exitCmd =>
@@ -213,7 +214,6 @@ sealed class Interpreter
                 {
                     ArgumentException.ThrowIfNullOrWhiteSpace(machineNameArgument.Value);
                     ArgumentException.ThrowIfNullOrWhiteSpace(runnerNameArgument.Value);
-
                     var ea = new InterpreterResolveValueEventArgs(machineNameArgument.Value!, runnerNameArgument.Value!);
                     ClaimUrl?.Invoke(this, ea);
                     if (string.IsNullOrWhiteSpace(ea.Value))

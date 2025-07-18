@@ -1,6 +1,4 @@
-﻿using Tinkwell.Services;
-
-namespace Tinkwell.Measures;
+﻿namespace Tinkwell.Services.Proto.Proxies;
 
 /// <summary>
 /// A simplified interface for <see cref="Store.StoreClient"/>.

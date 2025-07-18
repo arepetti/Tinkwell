@@ -1,7 +1,6 @@
 using Google.Protobuf.WellKnownTypes;
-using Tinkwell.Services;
 
-namespace Tinkwell.Measures;
+namespace Tinkwell.Services.Proto.Proxies;
 
 /// <summary>
 /// Provides a simplified facade over the <see cref="Store.StoreClient"/> for common measure operations.
@@ -15,6 +14,7 @@ public sealed class StoreProxy(ServiceLocator locator) : IStore
         await client.RegisterManyAsync(request, cancellationToken: cancellationToken);
     }
 
+    /// <inheritdocs />
     public async Task<StoreValueList> ReadManyAsync(IEnumerable<string> names, CancellationToken cancellationToken)
     {
         var client = await GetClient();
@@ -78,7 +78,7 @@ public sealed class StoreProxy(ServiceLocator locator) : IStore
     public ValueTask DisposeAsync()
     {
         if (_store is not null)
-            return ((IAsyncDisposable)_store).DisposeAsync();
+            return _store.DisposeAsync();
 
         return ValueTask.CompletedTask;
     }
@@ -86,7 +86,7 @@ public sealed class StoreProxy(ServiceLocator locator) : IStore
     private readonly ServiceLocator _locator = locator;
     private GrpcService<Store.StoreClient>? _store;
 
-    private async Task<Store.StoreClient> GetClient()
+    private async ValueTask<Store.StoreClient> GetClient()
     {
         if (_store is null)
             _store = await _locator.FindStoreAsync(CancellationToken.None);

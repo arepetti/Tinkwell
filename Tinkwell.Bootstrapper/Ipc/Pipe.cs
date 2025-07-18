@@ -3,17 +3,8 @@ using System.IO.Pipes;
 
 namespace Tinkwell.Bootstrapper.Ipc;
 
-/// <summary>
-/// Implements a named pipe server handler for inter-process communication.
-/// </summary>
 sealed class Pipe
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Pipe"/> class.
-    /// </summary>
-    /// <param name="pipeName">The name of the pipe.</param>
-    /// <param name="maxInstances">The maximum number of instances.</param>
-    /// <param name="abortTokenSource">The cancellation token source for aborting.</param>
     public Pipe(string pipeName, int maxInstances, CancellationTokenSource abortTokenSource)
     {
         _pipeName = pipeName;
@@ -21,22 +12,10 @@ sealed class Pipe
         _maxInstances = maxInstances;
     }
 
-    /// <summary>
-    /// Occurs when a client is connected.
-    /// </summary>
     public event EventHandler? Connected;
-    /// <summary>
-    /// Occurs when a client is disconnected.
-    /// </summary>
     public event EventHandler? Disconnected;
-    /// <summary>
-    /// Occurs when an error occurs in the pipe server.
-    /// </summary>
     public event EventHandler<NamedPipeServerErrorEventArgs>? Error;
-    /// <summary>
-    /// Occurs when a process event is triggered.
-    /// </summary>
-    public event EventHandler<NamedPipeServerProcessEventArgs>? Process;
+    public ProcessPipeDataDelegate? ProcessAsync;
 
     public void Start()
     {
@@ -67,23 +46,26 @@ sealed class Pipe
     private readonly int _maxInstances;
     private Thread? _thread;
 
-    private void Handler()
+    private async void Handler()
     {
         Debug.Assert(_abortTokenSource is not null);
 
         try
         {
             using var server = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, _maxInstances);
-            server.WaitForConnectionAsync(_abortTokenSource.Token).GetAwaiter().GetResult();
+            await server.WaitForConnectionAsync(_abortTokenSource.Token);
             using var reader = new StreamReader(server);
             using var writer = new StreamWriter(server) { AutoFlush = true };
 
             Connected?.Invoke(this, EventArgs.Empty);
 
+            if (ProcessAsync is null)
+                return;
+
             var args = new NamedPipeServerProcessEventArgs(reader, writer, _abortTokenSource.Token);
             while (!_abortTokenSource.Token.IsCancellationRequested && server.IsConnected)
             {
-                Process?.Invoke(this, args);
+                await ProcessAsync(args);
                 if (args.IsDisconnectionRequested)
                     break;
             }

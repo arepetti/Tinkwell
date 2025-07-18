@@ -24,9 +24,9 @@ public class NamedPipes_ClientServer
         var client = new NamedPipeClient();
         var message = "Hello, pipe!";
 
-        server.Process += (sender, args) =>
+        server.ProcessAsync = async args =>
         {
-            var received = args.Reader.ReadLine();
+            var received = await args.Reader.ReadLineAsync();
             args.Writer.WriteLine(received);
         };
 

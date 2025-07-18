@@ -1,8 +1,7 @@
 using Google.Protobuf.WellKnownTypes;
 using System.Globalization;
-using Tinkwell.Services;
 
-namespace Tinkwell.Measures;
+namespace Tinkwell.Services.Proto.Proxies;
 
 /// <summary>
 /// Helper methods for when working with the Store service.
@@ -59,9 +58,17 @@ public static class StoreExtensions
     /// (either a double or a string).
     /// </summary>
     /// <param name="value">The <see cref="StoreValue"/> to convert.</param>
-    /// <returns>The numeric or string value as an object.</returns>
+    /// <returns>The numeric or string value as an object or <c>null</c> if the value is undefined.</returns>
     public static object ToObject(this StoreValue value)
-        => value.HasNumberValue ? value.NumberValue : value.StringValue;
+    {
+        if (value.HasNumberValue)
+            return value.NumberValue;
+        
+        if (value.HasStringValue)
+            return value.StringValue;
+
+        return null!;
+    }
 
     /// <summary>
     /// Formats the <see cref="StoreValue"/> as a string, using invariant culture for numbers.

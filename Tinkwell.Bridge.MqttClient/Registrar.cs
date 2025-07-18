@@ -24,6 +24,7 @@ public sealed class Registrar : IHostedGrpcServerRegistrar
                 ClientId = host.GetPropertyString("client_id", MqttBridgeOptions.DefaultClientId)!,
                 Username = host.GetPropertyString("username", null),
                 Password = host.GetPropertyString("password", null),
+                Mapping = host.GetPropertyString("mapping", null),
             });
 
             services.AddHostedService<Worker>();

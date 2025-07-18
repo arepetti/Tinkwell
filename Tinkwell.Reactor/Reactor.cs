@@ -7,27 +7,25 @@ using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Reflection;
-using Tinkwell.Measures;
 using Tinkwell.Measures.Configuration.Parser;
 using Tinkwell.Services;
+using Tinkwell.Services.Proto.Proxies;
 
 namespace Tinkwell.Reactor;
 
 sealed class Reactor : IAsyncDisposable
 {
-    public Reactor(ILogger<Reactor> logger, ServiceLocator locator, TwmFileReader fileReader, ReactorOptions options)
+    public Reactor(ILogger<Reactor> logger, IConfigFileReader<ITwmFile> fileReader, IStore store, IEventsGateway eventsGateway, ReactorOptions options)
     {
         _logger = logger;
-        _locator = locator;
+        _store = store;
+        _eventsGateway = eventsGateway;
         _fileReader = fileReader;
         _options = options;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _store = await _locator.FindStoreAsync(cancellationToken);
-        _eventsGateway = await _locator.FindEventsGatewayAsync(cancellationToken);
-
         var path = HostingInformation.GetFullPath(_options.Path);
         _logger.LogDebug("Loading signals from {Path}", path);
         var file = await _fileReader.ReadAsync(path, FileReaderOptions.Default, cancellationToken);
@@ -54,47 +52,34 @@ sealed class Reactor : IAsyncDisposable
     }
 
     public async ValueTask DisposeAsync()
-    {
-        await _worker.StopAsync(CancellationToken.None);
-
-        if (_locator is not null)
-            await _locator.DisposeAsync();
-
-        if (_store is not null)
-            await _store.DisposeAsync();
-
-        if (_eventsGateway is not null)
-            await _eventsGateway.DisposeAsync();
-    }
+        => await _worker.StopAsync(CancellationToken.None);
 
     private const int NumberOfRetriesOnError = 3;
     private const int DelayBeforeRetryingOnError = 1000;
 
     private readonly ILogger<Reactor> _logger;
-    private readonly ServiceLocator _locator;
-    private readonly TwmFileReader _fileReader;
+    private readonly IConfigFileReader<ITwmFile> _fileReader;
+    private readonly IStore _store;
+    private readonly IEventsGateway _eventsGateway;
     private readonly ReactorOptions _options;
     private readonly CancellableLongRunningTask _worker = new();
     private readonly SignalDependencyWalker _dependencyWalker = new();
-    private GrpcService<Store.StoreClient>? _store;
-    private GrpcService<EventsGateway.EventsGatewayClient>? _eventsGateway;
 
     private async Task SubscribeToChangesAsync(CancellationToken cancellationToken)
     {
-        Debug.Assert(_store is not null);
+        var uniqueDependencies = _dependencyWalker.ForwardDependencyMap.Values
+            .SelectMany(x => x)
+            .Distinct()
+            .ToList();
 
-        var uniqueDependencies = _dependencyWalker.ForwardDependencyMap.Values.SelectMany(x => x).Distinct().ToList();
         if (uniqueDependencies.Count == 0)
             return;
 
         _logger.LogDebug("Subscribing to changes for {Count} dependencies", uniqueDependencies.Count);
-        var request = new SubscribeManyRequest();
-        request.Names.AddRange(uniqueDependencies);
-
-        using var call = _store.Client.SubscribeMany(request, cancellationToken: cancellationToken);
+        using var call = await _store.SubscribeManyAsync(uniqueDependencies, cancellationToken);
         try
         {
-            await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
+            await foreach (var response in call.ReadAllAsync(cancellationToken))
                 await HandleChangeAsync(response.Name, cancellationToken);
         }
         catch (RpcException e)
@@ -115,11 +100,11 @@ sealed class Reactor : IAsyncDisposable
         if (!_dependencyWalker.ReverseDependencyMap.TryGetValue(changedMeasure, out var affectedSignals))
             return;
 
-        var signalsToCalculate = _dependencyWalker.CalculationOrder.Where(x => affectedSignals.Contains(x));
+        var signalsToCalculate = _dependencyWalker.CalculationOrder.Where(affectedSignals.Contains);
         foreach (var signalName in signalsToCalculate)
         {
-            var measure = _dependencyWalker.Items.First(m => m.Name == signalName);
-            await CheckConditionAsync(measure, tryWait: false, cancellationToken);
+            var signal = _dependencyWalker.Items.First(m => m.Name == signalName);
+            await CheckConditionAsync(signal, tryWait: false, cancellationToken);
         }
     }
 
@@ -183,20 +168,17 @@ sealed class Reactor : IAsyncDisposable
         string? owningMeasure = signal.Owner;
         bool hasOwningMeasure = !string.IsNullOrWhiteSpace(owningMeasure);
 
-        var readManyRequest = new StoreReadManyRequest();
-        readManyRequest.Names.AddRange(signal.Dependencies);
+        var response = await _store.ReadManyAsync(signal.Dependencies, cancellationToken);
+        if (response.Items.Any(x => x.Value.PayloadCase == StoreValue.PayloadOneofCase.None))
+            return null; // No value? The measure is still undefined
 
-        var response = await _store.Client.ReadManyAsync(readManyRequest, cancellationToken: cancellationToken);
-
-        var parameters = new Dictionary<string, object>();
-        foreach (var item in response.Items)
-            parameters[item.Name] = item.Value.ToObject();
+        var parameters = response.ToDictionary();
 
         if (hasOwningMeasure)
         {
-            var owningMeasureValue = response.Items.FirstOrDefault(x => x.Name == owningMeasure);
-            if (owningMeasureValue is not null)
-                parameters["value"] = owningMeasureValue.Value.ToObject();
+            var owningMeasureValue = parameters[owningMeasure!];
+            if (owningMeasureValue is not null && !parameters.ContainsKey("value"))
+                parameters["value"] = owningMeasureValue;
         }
 
         return new ExpressionEvaluator().EvaluateBool(signal.When, parameters);
@@ -206,14 +188,14 @@ sealed class Reactor : IAsyncDisposable
     {
         Debug.Assert(_eventsGateway is not null);
 
-        await _eventsGateway.Client.PublishAsync(new()
+        await _eventsGateway.PublishAsync(new()
         {
             Topic = signal.Topic ?? WellKnownNames.EventTopicSignal,
             Subject = FromPayload(nameof(PublishEventsRequest.Subject), signal.Owner ?? "?"),
             Verb = FromPayloadEnum(nameof(PublishEventsRequest.Verb), Verb.Triggered),
             Object = FromPayload(nameof(PublishEventsRequest.Object), signal.Name),
             Payload = System.Text.Json.JsonSerializer.Serialize(signal.Payload),
-        });
+        }, cancellationToken);
 
         string FromPayload(string propertyName, string defaultValue)
         {

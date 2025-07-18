@@ -1,20 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <OutputPath>$(SolutionDir)build\</OutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="Tinkwell.Reducer.Tests" />
-  </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="Tinkwell.Reducer.Tests" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
-    <ProjectReference Include="..\Tinkwell.Measures.Configuration.Parser\Tinkwell.Measures.Configuration.Parser.csproj" />
-    <ProjectReference Include="..\Tinkwell.Measures\Tinkwell.Measures.csproj" />
-    <ProjectReference Include="..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Tinkwell.Bootstrapper\Tinkwell.Bootstrapper.csproj" />
+        <ProjectReference Include="..\Tinkwell.Measures.Configuration.Parser\Tinkwell.Measures.Configuration.Parser.csproj" />
+        <ProjectReference Include="..\Tinkwell.Measures\Tinkwell.Measures.csproj" />
+        <ProjectReference Include="..\Tinkwell.Services.Proto\Tinkwell.Services.Proto.csproj" />
+    </ItemGroup>
 
 </Project>

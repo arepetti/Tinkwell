@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using Tinkwell.Measures;
+using Tinkwell.Services.Proto.Proxies;
 
 namespace Tinkwell.Cli.Commands.Measures;
 

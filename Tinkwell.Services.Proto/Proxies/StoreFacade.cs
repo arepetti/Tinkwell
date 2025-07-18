@@ -1,7 +1,6 @@
 using Google.Protobuf.WellKnownTypes;
-using Tinkwell.Services;
 
-namespace Tinkwell.Measures;
+namespace Tinkwell.Services.Proto.Proxies;
 
 /// <summary>
 /// Provides a simplified facade over the <see cref="Store.StoreClient"/> for common measure operations.

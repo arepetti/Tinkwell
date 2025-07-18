@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using Tinkwell.Measures;
+using Tinkwell.Services.Proto.Proxies;
 
 namespace Tinkwell.Cli.Commands.Measures;
 

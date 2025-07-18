@@ -4,6 +4,7 @@ using System.Threading.Channels;
 using Tinkwell.Measures;
 using Tinkwell.Measures.Storage;
 using Tinkwell.Services;
+using Tinkwell.Services.Proto.Proxies;
 
 namespace Tinkwell.TestHelpers;
 
@@ -92,6 +93,9 @@ public class InMemoryStoreAdapter : IStore
 
     private void OnValueChanged(object? sender, ValueChangedEventArgs e)
     {
+        if (Subscribers == 0)
+            return;
+
         var change = new StoreValueChange
         {
             Name = e.Name,
@@ -125,10 +129,17 @@ public class InMemoryStoreAdapter : IStore
                 Timestamp = timestamp,
             };
         }
+        else if (value.Type == MeasureValueType.String)
+        {
+            return new StoreValue()
+            {
+                StringValue = value.AsString(),
+                Timestamp = timestamp,
+            };
+        }
 
         return new StoreValue()
         {
-            StringValue = value.AsString(),
             Timestamp = timestamp,
         };
     }

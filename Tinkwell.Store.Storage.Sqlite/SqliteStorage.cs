@@ -78,7 +78,7 @@ sealed class SqliteStorage : IStorage
         if (_sessionRegisteredMeasures.TryGetValue(definition.Name, out var _))
             return false;
 
-        // Measures are expected to exist, it's OK. TODO: we should update the record with the new values
+        // Proxies are expected to exist, it's OK. TODO: we should update the record with the new values
         // (in case they changed) or keep track of them all for historical reasons.
         if (FindDefinition(definition.Name) is not null)
             return true;

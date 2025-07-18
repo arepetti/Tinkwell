@@ -106,18 +106,19 @@ public sealed class NamedPipeClient : INamedPipeClient
         if (_client is null || _disposed)
             return;
 
+
         try
         {
             _writer?.Flush();
+
+            _writer?.Dispose();
+            _reader?.Dispose();
+            _client?.Dispose();
         }
         catch (IOException)
         {
             // Ignore any IO exceptions during flush, as the pipe might be closed.
         }
-
-        _writer?.Dispose();
-        _reader?.Dispose();
-        _client?.Dispose();
 
         _writer = null;
         _reader = null;
@@ -134,7 +135,7 @@ public sealed class NamedPipeClient : INamedPipeClient
             throw new ObjectDisposedException(nameof(NamedPipeClient));
 
         if (!IsConnected)
-            throw new InvalidOperationException("Client is not connected. Call Connect() first.");
+            throw new InvalidOperationException("Client is not connected. Call Connect() first. Command: " + command);
 
         _writer!.WriteLine(command);
     }
@@ -144,7 +145,7 @@ public sealed class NamedPipeClient : INamedPipeClient
     /// </summary>
     /// <param name="command">The command to send.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    public Task SendCommandAsync(string command, CancellationToken cancellationToken = default)
+    public async Task SendCommandAsync(string command, CancellationToken cancellationToken = default)
     {
         if (_disposed)
             throw new ObjectDisposedException(nameof(NamedPipeClient));
@@ -152,7 +153,7 @@ public sealed class NamedPipeClient : INamedPipeClient
         if (!IsConnected)
             throw new InvalidOperationException("Client is not connected. Call Connect() first.");
 
-        return _writer!.WriteLineAsync(command.AsMemory(), cancellationToken);
+        await _writer!.WriteLineAsync(command.AsMemory(), cancellationToken);
     }
 
     /// <summary>
@@ -175,7 +176,8 @@ public sealed class NamedPipeClient : INamedPipeClient
     public async Task<string?> SendCommandAndWaitReplyAsync(string command, CancellationToken cancellationToken = default)
     {
         await SendCommandAsync(command, cancellationToken);
-        return await _reader!.ReadLineAsync(cancellationToken);
+        var reply = await _reader!.ReadLineAsync(cancellationToken);
+        return reply;
     }
 
     /// <summary>

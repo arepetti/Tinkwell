@@ -7,12 +7,11 @@ namespace Tinkwell.Bootstrapper.GrpcHost;
 
 static class Extensions
 {
-    public static int ClaimPort(this WebApplicationBuilder builder)
+    public static async Task<int> ClaimPortAsync(this WebApplicationBuilder builder)
     {
-        var client = new NamedPipeClient();
-        string? portNumber = client.SendCommandToSupervisorAndDisconnectAsync(
-            builder.Configuration, $"endpoints claim \"{Environment.MachineName}\" \"{HostingInformation.RunnerName}\"")
-            .GetAwaiter().GetResult();
+        using var client = new NamedPipeClient();
+        string? portNumber = await client.SendCommandToSupervisorAndDisconnectAsync(
+            builder.Configuration, $"endpoints claim \"{Environment.MachineName}\" \"{HostingInformation.RunnerName}\"");
 
         if (string.IsNullOrWhiteSpace(portNumber))
             throw new InvalidOperationException($"Failed to claim an endpoint for runner '{HostingInformation.RunnerName}' on machine '{Environment.MachineName}'.");
@@ -20,18 +19,16 @@ static class Extensions
         return int.Parse(portNumber, CultureInfo.InvariantCulture);
     }
 
-    public static bool TryClaimRole(this WebApplicationBuilder builder, string role, out string? masterAddress, out string? localAddress)
+    public static async Task<(bool IsMaster, string? MasterAddress, string? LocalAddress)> ClaimRoleAsync(this WebApplicationBuilder builder, string role)
     {
-        var client = new NamedPipeClient();
-        masterAddress = client.SendCommandToSupervisorAndDisconnectAsync(
-            builder.Configuration, $"roles claim \"{role}\" \"{Environment.MachineName}\" \"{HostingInformation.RunnerName}\"")
-            .GetAwaiter().GetResult();
+        using var client = new NamedPipeClient();
+        var masterAddress = await client.SendCommandToSupervisorAsync(
+            builder.Configuration, $"roles claim \"{role}\" \"{Environment.MachineName}\" \"{HostingInformation.RunnerName}\"");
 
-        localAddress = client.SendCommandToSupervisorAndDisconnectAsync(
-            builder.Configuration, $"endpoints query \"{HostingInformation.RunnerName}\"")
-            .GetAwaiter().GetResult();
+        var localAddress = await client.SendCommandToSupervisorAndDisconnectAsync(
+            builder.Configuration, $"endpoints query \"{HostingInformation.RunnerName}\"");
 
-        return string.IsNullOrWhiteSpace(masterAddress);
+        return (string.IsNullOrWhiteSpace(masterAddress), masterAddress, localAddress);
     }
 
     public static (string Path, string Password) ResolveCertificate(this IHostApplicationBuilder builder)
