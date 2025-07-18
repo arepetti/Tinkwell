@@ -72,15 +72,13 @@ public class AgentFactoryTests
 }
 
 [Agent("mock")]
-public class MockAgent : IAgent
+public sealed class MockAgent : IAgent
 {
     public object? Settings => _settings;
     private readonly MockAgentSettings _settings = new();
 
     public Task ExecuteAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+        => Task.CompletedTask;
 
     public class MockAgentSettings
     {
