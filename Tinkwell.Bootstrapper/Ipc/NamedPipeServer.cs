@@ -3,16 +3,30 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Tinkwell.Bootstrapper.Ipc;
 
+/// <summary>
+/// Server implementation for a named pipe server which accepts
+/// multiple simultaneous connections.
+/// </summary>
 public sealed class NamedPipeServer : INamedPipeServer
 {
+    /// <summary>
+    /// Default number of concurrent connections.
+    /// </summary>
     public static readonly int DefaultMaxConcurrentConnections = 4;
 
+    /// <inheritsdocs />
     public int MaxConcurrentConnections { get; set; } = DefaultMaxConcurrentConnections;
 
+    /// <inheritsdocs />
     public event EventHandler? Connected;
-    public event EventHandler? Disconnected;
-    public event EventHandler<NamedPipeServerProcessEventArgs>? Process;
 
+    /// <inheritsdocs />
+    public event EventHandler? Disconnected;
+
+    /// <inheritsdocs />
+    public ProcessPipeDataDelegate? ProcessAsync {  get; set; }
+
+    /// <inheritsdocs />
     public void Open(string pipeName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(pipeName);
@@ -26,6 +40,7 @@ public sealed class NamedPipeServer : INamedPipeServer
         CreatePipe();
     }
 
+    /// <inheritsdocs />
     public void Close()
     {
         if (!IsOpen)
@@ -65,7 +80,7 @@ public sealed class NamedPipeServer : INamedPipeServer
 
         var pipe = new Pipe(_pipeName, MaxConcurrentConnections, _abortTokenSource);
 
-        pipe.Process += (_, args) => Process?.Invoke(this, args);
+        pipe.ProcessAsync = ProcessAsync;
         pipe.Connected += (_, _) =>
         {
             Connected?.Invoke(this, EventArgs.Empty);

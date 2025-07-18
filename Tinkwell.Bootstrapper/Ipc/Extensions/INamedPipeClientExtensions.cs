@@ -2,6 +2,9 @@
 
 namespace Tinkwell.Bootstrapper.Ipc.Extensions;
 
+/// <summary>
+/// Extension methods for <c>INamedPipeClient</c>.
+/// </summary>
 public static class INamedPipeClientExtensions
 {
     public static string? SendCommandToSupervisorAndDisconnect(this INamedPipeClient client, IConfiguration configuration, string command)
@@ -16,6 +19,12 @@ public static class INamedPipeClientExtensions
             client.SendCommand("exit");
             client.Disconnect();
         }
+    }
+
+    public static Task<string?> SendCommandToSupervisorAsync(this INamedPipeClient client, IConfiguration configuration, string command, CancellationToken cancellationToken = default)
+    {
+        client.Connect(configuration);
+        return client.SendCommandAndWaitReplyAsync(command);
     }
 
     public static async Task<string?> SendCommandToSupervisorAndDisconnectAsync(this INamedPipeClient client, IConfiguration configuration, string command, CancellationToken cancellationToken = default)
@@ -51,7 +60,6 @@ public static class INamedPipeClientExtensions
         string serverName = configuration.GetValue("Supervisor:CommandServer:ServerName", ".");
         string pipeName = configuration.GetValue("Supervisor:CommandServer:PipeName",
             WellKnownNames.SupervisorCommandServerPipeName);
-        Console.WriteLine("Connecting");
         client.Connect(serverName, pipeName);
     }
 }

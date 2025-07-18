@@ -9,10 +9,15 @@ static class IRegistryExtensions
         var text = new StringBuilder();
         foreach (var service in registry.Services)
         {
-            string? name = string.IsNullOrWhiteSpace(service.FriendlyName) ? service.Name : service.FriendlyName;
-            if (!string.IsNullOrWhiteSpace(service.FamilyName) && !string.Equals(name, service.FamilyName, StringComparison.OrdinalIgnoreCase))
-                name = $"{name} ({service.FamilyName})";
-            text.AppendLine($"{name}={service.Url}");
+            string[] columns =
+            [
+                service.Name ?? "?",
+                service.FamilyName ?? "",
+                service.Host ?? "",
+                service.Url ?? ""
+            ];
+
+            text.AppendLine(string.Join(',', columns.Select(x => $"\"{x}\"")));
         }
         return text.ToString();
     }

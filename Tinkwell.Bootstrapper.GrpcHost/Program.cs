@@ -10,11 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // We need to respect the order Port then Role.
 // The supervisor has to have a full address for us before we can claim a role.
-int port = builder.ClaimPort();
-bool isMasterDiscovery = builder.TryClaimRole(
-    WellKnownNames.DiscoveryServiceRoleName,
-    out var masterAddress,
-    out var localAddress);
+int port = await builder.ClaimPortAsync();
+var (isMasterDiscovery, masterAddress, localAddress) = await builder.ClaimRoleAsync(
+    WellKnownNames.DiscoveryServiceRoleName);
 
 builder.WebHost.ConfigureKestrel(options =>
 {

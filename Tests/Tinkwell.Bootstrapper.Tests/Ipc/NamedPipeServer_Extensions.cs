@@ -23,9 +23,9 @@ public class NamedPipeServer_Extensions
             })
             .Build();
 
-        server.Process += (sender, args) =>
+        server.ProcessAsync = async args =>
         {
-            var received = args.Reader.ReadLine();
+            var received = await args.Reader.ReadLineAsync();
             if (received == "exit") return;
             args.Writer.WriteLine(received);
         };
@@ -52,9 +52,9 @@ public class NamedPipeServer_Extensions
             })
             .Build();
 
-        server.Process += (sender, args) =>
+        server.ProcessAsync = async args =>
         {
-            var received = args.Reader.ReadLine();
+            var received = await args.Reader.ReadLineAsync();
             if (received == "exit") return;
             args.Writer.WriteLine(received);
         };
@@ -82,9 +82,9 @@ public class NamedPipeServer_Extensions
             })
             .Build();
 
-        server.Process += (sender, args) =>
+        server.ProcessAsync = async args =>
         {
-            var received = args.Reader.ReadLine();
+            var received = await args.Reader.ReadLineAsync();
             if (received == "exit") return;
             args.Writer.WriteLine(received);
         };

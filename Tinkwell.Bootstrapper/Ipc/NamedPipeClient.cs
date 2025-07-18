@@ -54,22 +54,18 @@ public sealed class NamedPipeClient : INamedPipeClient
     /// <param name="pipeName">The pipe name.</param>
     public void Connect(string serverName, string pipeName)
     {
-        Console.WriteLine("Connecting for real");
         if (_disposed)
             throw new ObjectDisposedException(nameof(NamedPipeClient));
 
-        Console.WriteLine("Check I'm not connected already");
         if (IsConnected)
             return;
 
-        Console.WriteLine("Building the stream");
         _client = new NamedPipeClientStream(serverName, pipeName, PipeDirection.InOut);
         _client.Connect();
 
         _writer = new StreamWriter(_client, Encoding.UTF8);
         _reader = new StreamReader(_client, Encoding.UTF8);
         _writer.AutoFlush = true;
-        Console.WriteLine($"Finished {IsConnected}");
     }
 
     /// <summary>
@@ -110,18 +106,19 @@ public sealed class NamedPipeClient : INamedPipeClient
         if (_client is null || _disposed)
             return;
 
+
         try
         {
             _writer?.Flush();
+
+            _writer?.Dispose();
+            _reader?.Dispose();
+            _client?.Dispose();
         }
         catch (IOException)
         {
             // Ignore any IO exceptions during flush, as the pipe might be closed.
         }
-
-        _writer?.Dispose();
-        _reader?.Dispose();
-        _client?.Dispose();
 
         _writer = null;
         _reader = null;
@@ -138,7 +135,7 @@ public sealed class NamedPipeClient : INamedPipeClient
             throw new ObjectDisposedException(nameof(NamedPipeClient));
 
         if (!IsConnected)
-            throw new InvalidOperationException("Client is not connected. Call Connect() first.");
+            throw new InvalidOperationException("Client is not connected. Call Connect() first. Command: " + command);
 
         _writer!.WriteLine(command);
     }
@@ -148,16 +145,15 @@ public sealed class NamedPipeClient : INamedPipeClient
     /// </summary>
     /// <param name="command">The command to send.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    public Task SendCommandAsync(string command, CancellationToken cancellationToken = default)
+    public async Task SendCommandAsync(string command, CancellationToken cancellationToken = default)
     {
         if (_disposed)
             throw new ObjectDisposedException(nameof(NamedPipeClient));
 
-        Console.WriteLine($"'{command} {_client} --- {_client?.IsConnected} -- {Environment.StackTrace}");
         if (!IsConnected)
             throw new InvalidOperationException("Client is not connected. Call Connect() first.");
 
-        return _writer!.WriteLineAsync(command.AsMemory(), cancellationToken);
+        await _writer!.WriteLineAsync(command.AsMemory(), cancellationToken);
     }
 
     /// <summary>
@@ -180,7 +176,8 @@ public sealed class NamedPipeClient : INamedPipeClient
     public async Task<string?> SendCommandAndWaitReplyAsync(string command, CancellationToken cancellationToken = default)
     {
         await SendCommandAsync(command, cancellationToken);
-        return await _reader!.ReadLineAsync(cancellationToken);
+        var reply = await _reader!.ReadLineAsync(cancellationToken);
+        return reply;
     }
 
     /// <summary>

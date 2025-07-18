@@ -14,6 +14,7 @@ public sealed class StoreProxy(ServiceLocator locator) : IStore
         await client.RegisterManyAsync(request, cancellationToken: cancellationToken);
     }
 
+    /// <inheritdocs />
     public async Task<StoreValueList> ReadManyAsync(IEnumerable<string> names, CancellationToken cancellationToken)
     {
         var client = await GetClient();
