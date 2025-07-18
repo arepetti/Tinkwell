@@ -1,4 +1,5 @@
 import subprocess
+import os
 from lib.colors import *
 
 class PingStatus:
@@ -7,8 +8,8 @@ class PingStatus:
     Error = "Error"
 
 class TwCli:
-    def __init__(self, cli_tool_dll_path):
-        self.cli_tool_dll_path = cli_tool_dll_path
+    def __init__(self, context):
+        self.context = context
 
     def run_command(self, *args, input_data=None):
         """
@@ -16,7 +17,12 @@ class TwCli:
         Returns a dictionary with 'stdout', 'stderr', and 'returncode'.
         'input_data' can be a string to send to the command's stdin.
         """
-        command = ["dotnet", self.cli_tool_dll_path] + list(args)
+        command = ["dotnet", self.context.cli_tool_dll_path] + list(args)
+        
+        env = os.environ.copy()
+        if self.context.client_certificate_path:
+            env["TINKWELL_CLIENT_CERT_PATH"] = self.context.client_certificate_path
+
         try:
             result = subprocess.run(
                 command,
@@ -24,14 +30,15 @@ class TwCli:
                 text=True, # Decode stdout/stderr as text
                 check=False, # Do not raise an exception for non-zero exit codes
                 timeout=30, # Add a timeout to prevent hanging tests
-                input=input_data # Pass input data to stdin
+                input=input_data, # Pass input data to stdin
+                env=env # Pass the modified environment
             )
             if result.returncode != 0:
                 print(f"{COLOR_DARK_GRAY}Command: {' '.join(command)}{COLOR_RESET}")
                 print(f"{COLOR_DARK_GRAY}Exit code: {result.returncode}{COLOR_RESET}")
-                print(f"{COLOR_DARK_GRAY}stdout:\n{result.stdout.strip()}{COLOR_RESET}")
+                print(f"{COLOR_DARK_GRAY}stdout (length {len(result.stdout)}):\n{result.stdout}{COLOR_RESET}") # Removed .strip()
                 if result.stderr:
-                    print(f"{COLOR_DARK_GRAY}stderr:\n{COLOR_RED}{result.stderr.strip()}{COLOR_RESET}")
+                    print(f"{COLOR_DARK_GRAY}stderr (length {len(result.stderr)}):\n{COLOR_RED}{result.stderr}{COLOR_RESET}") # Removed .strip()
             return {
                 "stdout": result.stdout,
                 "stderr": result.stderr,

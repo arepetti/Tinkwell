@@ -25,6 +25,9 @@ sealed class ListCommand : AsyncCommand<ListCommand.Settings>
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
+        if (settings.IsOutputForTool)
+            return await ExecuteForToolAsync(context, settings);
+
         var response = await AnsiConsole.Status()
             .Spinner(Spinner.Known.Default)
             .StartAsync("Querying...", async ctx =>
@@ -42,6 +45,25 @@ sealed class ListCommand : AsyncCommand<ListCommand.Settings>
             services = services.Where(x => string.Equals(x.Host, settings.Host, StringComparison.OrdinalIgnoreCase)).ToArray();
 
         Reporter.PrintToConsole(services, settings.Verbose);
+
+        return ExitCode.Ok;
+    }
+
+    private async Task<int> ExecuteForToolAsync(CommandContext context, Settings settings)
+    {
+        var request = new Tinkwell.Services.DiscoveryListRequest();
+        if (!string.IsNullOrWhiteSpace(settings.Search))
+            request.Query = settings.Search;
+
+        var discovery = await DiscoveryHelpers.FindDiscoveryServiceAsync(settings);
+        var response = await discovery.Client.ListAsync(request);
+
+        var services = response.Services.ToArray();
+        if (!string.IsNullOrWhiteSpace(settings.Host))
+            services = services.Where(x => string.Equals(x.Host, settings.Host, StringComparison.OrdinalIgnoreCase)).ToArray();
+
+        foreach (var service in services)
+            AnsiConsole.WriteLine($"{service.Name} @ {service.Host}");
 
         return ExitCode.Ok;
     }

@@ -2,14 +2,16 @@
 	type: "ElectricPotential"
 	unit: "Volt"
 	expression: "5"
-	minimum: 1
-	maximum: 50
 }
 
 measure current {
 	type: "ElectricCurrent"
 	unit: "Ampere"
 	expression: "2"
-	minimum: 0
-	maximum: 10
+}
+
+measure power {
+	type: "Power"
+	unit: "Watt"
+	expression: "voltage * current"
 }

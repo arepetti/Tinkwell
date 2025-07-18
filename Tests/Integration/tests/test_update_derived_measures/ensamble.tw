@@ -8,16 +8,12 @@ runner measures "Tinkwell.Bootstrapper.DllHost" {
 	service runner reducer "Tinkwell.Reducer.dll" {
 		properties {
 			path: "./measures.twm"
+			use_constants: "false"
 		}
 	}
 	service runner reactor "Tinkwell.Reactor.dll" {
 		properties {
 			path: "./measures.twm"
-		}
-	}
-	service runner executor "Tinkwell.Actions.Executor.dll" {
-		properties {
-			path: "./actions.twa"
 		}
 	}
 }
