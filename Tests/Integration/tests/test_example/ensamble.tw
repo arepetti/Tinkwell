@@ -1,0 +1,23 @@
+runner system "Tinkwell.Bootstrapper.GrpcHost" {
+	service runner orchestrator "Tinkwell.Orchestrator.dll" {}
+	service runner store "Tinkwell.Store.dll" {}
+	service runner events "Tinkwell.EventsGateway.dll" {}
+}
+
+runner measures "Tinkwell.Bootstrapper.DllHost" {
+	service runner reducer "Tinkwell.Reducer.dll" {
+		properties {
+			path: "./measures.twm"
+		}
+	}
+	service runner reactor "Tinkwell.Reactor.dll" {
+		properties {
+			path: "./measures.twm"
+		}
+	}
+	service runner executor "Tinkwell.Actions.Executor.dll" {
+		properties {
+			path: "./actions.twa"
+		}
+	}
+}

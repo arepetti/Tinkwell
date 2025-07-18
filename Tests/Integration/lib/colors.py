@@ -1,0 +1,8 @@
+# ANSI escape codes for colors
+COLOR_RED = "\033[91m"
+COLOR_GREEN = "\033[92m"
+COLOR_BLUE = "\033[94m"
+COLOR_YELLOW = "\033[93m"
+COLOR_DARK_GRAY = "\033[90m"
+COLOR_CYAN = "\033[36m"
+COLOR_RESET = "\033[0m"

@@ -1,0 +1,26 @@
+//when event signal {
+//  verb: "triggered"
+
+//  then {
+//    http {
+//      method: "POST"
+//      url: "https://example.local/alerts"
+//      body: {
+//        sender: "Tinkwell"
+//        sensor: $"{{ subject }}"
+//        alert: $"{{ object }}"
+//        severity: $"{{ data.severity }}"
+//        timestamp: @"now()"
+//      }
+//    }
+//  }
+//}
+
+when event signal {
+	object: "high_load"
+	then {
+		log {
+			message: $"{{ subject }} {{ verb }} {{ object}} with severity {{ payload.severity }}"
+		}
+	}
+}
