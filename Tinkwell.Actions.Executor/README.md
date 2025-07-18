@@ -37,6 +37,7 @@ graph TD
     INT(Intent):::data
     Q([Queue]):::data
     W(Worker):::runtime
+    D(Dispatcher):::runtime
     A(Agent):::runtime
 
     TWA -- "1 reads" --> EX
@@ -49,7 +50,8 @@ graph TD
     EX -- "7 creates intent (directive + payload)" --> INT
     INT -- "8 enqueues" --> Q
     W -- "9 dequeues" --> Q
-    W -- "10 executes" --> A
+    W -- "10 dispatches" --> D
+    D -- "11 executes" --> A
 
     linkStyle 0 stroke:cornflowerblue,stroke-width:1.5px,color:cornflowerblue;
     linkStyle 1 stroke:cornflowerblue,stroke-width:1.5px,color:cornflowerblue;

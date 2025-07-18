@@ -6,6 +6,15 @@ These patterns are "git-like" and are converted into regular expressions for mat
 
 ## Supported Syntax
 
+| Pattern       | Meaning                                                   |
+|---------------|-----------------------------------------------------------|
+| `*`           | Matches any sequence of characters (including none)       |
+| `?`           | Matches exactly one character                             |
+| `[abc]`       | Matches a single character: `a`, `b`, or `c`              |
+| `[^abc]`      | Matches any character **except** `a`, `b`, or `c`         |
+| `[a-z]`       | Matches a single character in the given range             |
+
+
 Unless otherwise noted pattern matching is always **case-insensitive** and matchin is always performed using a neutral culture (`en-US`):
 
 *   The pattern `foo` will match `foo`, `FOO`, `Foo`.

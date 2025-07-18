@@ -34,7 +34,7 @@ Timeout (in seconds) when waiting to estabilish a connection. You should never n
 
 ## Text Matching
 
-Tinkwell CLI supports flexible wildcard-based runner filtering using a syntax similar to shell-style globbing — not full Git pathspec and not regex, but powerful enough for targeted matching. Note that search/filtering is always case insensitive (whilst normal exact matching is always case sensitive).
+Tinkwell CLI supports flexible [wildcard](./Wildcards.md)-based filtering using a syntax similar to shell-style globbing — not full Git pathspec and not regex, but powerful enough for targeted matching. Note that search/filtering is always case insensitive (whilst normal exact matching is always case sensitive).
 
 ### Supported Wildcard Syntax
 
@@ -655,11 +655,11 @@ You can use this command to create _trace files_ containing a set of predefined 
 ```bash
 # User will be prompted to answer all the questions from this meta-template
 # but we are not going to generate anything locally: we're interested in the answers
-tw templates meta_template_example --trace ./meta_trace.json --dry-run
+tw templates use meta_template_example --trace ./meta_trace.json --dry-run
 
 # Now you can distribute meta_trace.json and you can use it to always generate
 # the same configuration anywhere
-tw templates meta_template_example --input ./meta_trace.json
+tw templates use meta_template_example --input ./meta_trace.json
 ```
 
 ### ARGUMENTS

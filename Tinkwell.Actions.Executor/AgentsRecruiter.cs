@@ -1,15 +1,28 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Tinkwell.Bootstrapper;
 
 namespace Tinkwell.Actions.Executor;
 
-public static class AgentsRecruiter
+static class AgentsRecruiter
 {
+    private static readonly List<Assembly> _additionalAssemblies = new();
+
+    public static void RegisterAssembly(Assembly assembly)
+    {
+        _additionalAssemblies.Add(assembly);
+        _types = null; // Invalidate the cache
+    }
+
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     internal static Type? FindAgent(string name)
     {
-        _types ??= StrategyAssemblyLoader.FindTypesImplementing<IAgent>(typeof(AgentsRecruiter).Assembly);
+        if (_types is null)
+        {
+            var assemblies = new List<Assembly> { typeof(AgentsRecruiter).Assembly };
+            assemblies.AddRange(_additionalAssemblies);
+            _types = assemblies.SelectMany(StrategyAssemblyLoader.FindTypesImplementing<IAgent>).ToArray();
+        }
 
         return _types.FirstOrDefault(type =>
             string.Equals(name, type.GetCustomAttribute<AgentAttribute>()?.Name, StringComparison.Ordinal));

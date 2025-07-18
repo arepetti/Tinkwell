@@ -10,6 +10,8 @@ namespace Tinkwell.TestHelpers;
 /// </summary>
 public class MockEventsGateway : IEventsGateway
 {
+    private List<SubscribeToMatchingManyEventsRequest.Types.Match> _matches = new();
+
     public Task PublishAsync(PublishEventsRequest request, CancellationToken cancellationToken)
     {
         PublishedEvents.Add(request);
@@ -27,8 +29,9 @@ public class MockEventsGateway : IEventsGateway
     public ValueTask<IStreamingResponse<SubscribeEventsResponse>> SubscribeManyAsync(IEnumerable<SubscribeToMatchingManyEventsRequest.Types.Match> matches, CancellationToken cancellationToken)
     {
         ++Subscribers;
+        _matches.AddRange(matches);
         return new ValueTask<IStreamingResponse<SubscribeEventsResponse>>(
-            new StreamingResponse(_channel.Reader));
+            new StreamingResponse(_channel.Reader, _matches));
     }
 
     public ValueTask DisposeAsync()
@@ -44,26 +47,34 @@ public class MockEventsGateway : IEventsGateway
 
 file sealed class StreamingResponse : IStreamingResponse<SubscribeEventsResponse>
 {
-    public StreamingResponse(ChannelReader<PublishEventsRequest> reader)
+    private readonly List<SubscribeToMatchingManyEventsRequest.Types.Match> _matches;
+
+    public StreamingResponse(ChannelReader<PublishEventsRequest> reader, List<SubscribeToMatchingManyEventsRequest.Types.Match> matches)
     {
         _reader = reader;
+        _matches = matches;
     }
 
     public async IAsyncEnumerable<SubscribeEventsResponse> ReadAllAsync(CancellationToken cancellationToken = default)
     {
         await foreach (var request in _reader.ReadAllAsync(cancellationToken))
         {
-            yield return new SubscribeEventsResponse
+            var match = _matches.FirstOrDefault(m => m.Topic == request.Topic);
+            if (match != null)
             {
-                Id = Guid.NewGuid().ToString(),
-                Topic = request.Topic,
-                Subject = request.Subject,
-                Verb = request.Verb,
-                Object = request.Object,
-                Payload = request.Payload ?? string.Empty,
-                CorrelationId = request.CorrelationId ?? Guid.NewGuid().ToString(),
-                OccurredAt = request.OccurredAt,
-            };
+                yield return new SubscribeEventsResponse
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Topic = request.Topic,
+                    Subject = request.Subject,
+                    Verb = request.Verb,
+                    Object = request.Object,
+                    Payload = request.Payload ?? string.Empty,
+                    CorrelationId = request.CorrelationId ?? Guid.NewGuid().ToString(),
+                    OccurredAt = request.OccurredAt,
+                    MatchId = match.MatchId
+                };
+            }
         }
     }
 
