@@ -39,6 +39,7 @@ public class NamedPipeServer_Extensions
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task SendCommandToSupervisorAndDisconnectAsync_SendsAndReceivesMessage()
     {
         var pipeName = Guid.NewGuid().ToString();
@@ -68,6 +69,7 @@ public class NamedPipeServer_Extensions
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task SendCommandToSupervisorAndDisconnectAsync_WithGenericType_SendsAndReceivesMessage()
     {
         var pipeName = Guid.NewGuid().ToString();

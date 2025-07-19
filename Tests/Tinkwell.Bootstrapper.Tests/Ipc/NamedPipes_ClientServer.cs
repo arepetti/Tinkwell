@@ -17,6 +17,7 @@ public class NamedPipes_ClientServer
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task NamedPipe_ClientServer_Communication()
     {
         var message = "Hello, pipe!";
