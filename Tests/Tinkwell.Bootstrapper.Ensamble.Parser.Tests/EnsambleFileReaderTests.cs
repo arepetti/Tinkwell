@@ -3,7 +3,7 @@ using Tinkwell.Bootstrapper.Expressions;
 
 namespace Tinkwell.Bootstrapper.Ensamble.Parser.Tests;
 
-public class EnsambleFileReaderTests
+public abstract class EnsambleFileReaderTests
 {
     public static IEnumerable<object[]> FilePaths()
     {

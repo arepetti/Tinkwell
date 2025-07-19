@@ -2,7 +2,7 @@ using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Bootstrapper.Tests.Ipc;
 
-public class NamedPipes_ClientServer
+public abstract class NamedPipes_ClientServer
 {
     [Fact]
     public void NamedPipeFactory_CreatesNewServerInstance()

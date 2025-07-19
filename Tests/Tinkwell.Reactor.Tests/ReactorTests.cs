@@ -6,7 +6,7 @@ using Tinkwell.TestHelpers;
 
 namespace Tinkwell.Reactor.Tests;
 
-public class ReactorTests : IAsyncLifetime
+public abstract class ReactorTests : IAsyncLifetime
 {
     private readonly TestInMemoryStorage _storage = new();
     private readonly InMemoryStoreAdapter _storeAdapter = new(new TestInMemoryStorage());

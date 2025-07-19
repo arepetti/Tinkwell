@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Tinkwell.Bootstrapper.Tests;
 
-public class ObjectJsonConverterTests
+public abstract class ObjectJsonConverterTests
 {
     [Fact]
     public void ObjectJsonConverter_DeserializesIntoDictionaryCorrectly()

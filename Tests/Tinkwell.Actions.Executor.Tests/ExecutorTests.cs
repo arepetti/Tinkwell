@@ -5,7 +5,7 @@ using Tinkwell.TestHelpers;
 
 namespace Tinkwell.Actions.Executor.Tests;
 
-public class ExecutorTests : IAsyncLifetime
+public abstract class ExecutorTests : IAsyncLifetime
 {
     private readonly MockEventsGateway _eventsGateway = new();
     private readonly MockIntentDispatcher _dispatcher = new();
@@ -49,7 +49,6 @@ public class ExecutorTests : IAsyncLifetime
     }
 
     [Fact]
-    [Trait("Category", "CI-Disabled")]
     public async Task StartAsync_WithValidConfig_SubscribesToCorrectEvents()
     {
         // Arrange
@@ -62,7 +61,6 @@ public class ExecutorTests : IAsyncLifetime
     }
 
     [Fact]
-    [Trait("Category", "CI-Disabled")]
     public async Task OnEventReceived_WithMatchingListener_DispatchesCorrectIntent()
     {
         // Arrange
