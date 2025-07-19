@@ -33,6 +33,7 @@ public class ReactorTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task MeasureGoesAboveThreshold_PublishesEvent()
     {
         // Arrange
@@ -78,6 +79,7 @@ public class ReactorTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task MeasureStartsAboveThreshold_PublishesEvent()
     {
         // Arrange

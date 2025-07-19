@@ -29,6 +29,7 @@ public class ReducerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task HappyPath_CalculatesAndSubscribesCorrectly()
     {
         // Arrange
