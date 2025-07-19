@@ -25,7 +25,7 @@ jobs:
       run: dotnet build Tinkwell.sln --configuration Release --no-restore
 
     - name: Run unit tests
-      run: dotnet test Tinkwell.sln --no-build --configuration Release --verbosity detailed
+      run: dotnet test Tinkwell.sln --no-build --configuration Release --verbosity normal
 
     - name: Create directory for integration test artifacts
       run: mkdir ./app

@@ -53,7 +53,7 @@ public class ReactorTests
 
         // Act - Above threshold
         await _storeAdapter.WriteQuantityAsync(measure.Name, 101, default);
-        await Task.Delay(100); // Give time for the change to propagate
+        await AsyncTestHelper.WaitForCondition(() => _eventsGateway.PublishedEvents.Count == 1, failureMessage: "Event was not published after measure went above threshold");
 
         // Assert - Event published
         Assert.Single(_eventsGateway.PublishedEvents);
@@ -90,7 +90,7 @@ public class ReactorTests
 
         // Act - Initial check, above threshold
         await reactor.StartAsync(default);
-        await Task.Delay(100); // Give time for the change to propagate
+        await AsyncTestHelper.WaitForCondition(() => _eventsGateway.PublishedEvents.Count == 1, failureMessage: "Event was not published on startup when measure was already above threshold");
 
         // Assert - The event is already there
         Assert.Single(_eventsGateway.PublishedEvents);

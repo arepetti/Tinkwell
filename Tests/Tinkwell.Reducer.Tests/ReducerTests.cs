@@ -32,11 +32,11 @@ public class ReducerTests
         Assert.Equal(3, c.Value.AsDouble()); // 1 + 2
 
         await _storeAdapter.WriteQuantityAsync("A", 10, default);
-        await Task.Delay(100); // Give time for the change to propagate
+        await AsyncTestHelper.WaitForCondition(() => _storage.Find("C")?.Value.AsDouble() == 12, failureMessage: "Measure 'C' did not update to 12 after changing 'A'");
         Assert.Equal(12, _storage.Find("C")!.Value.AsDouble()); // 10 + 2
 
         await _storeAdapter.WriteQuantityAsync("B", 5, default);
-        await Task.Delay(100); // Give time for the change to propagate
+        await AsyncTestHelper.WaitForCondition(() => _storage.Find("C")?.Value.AsDouble() == 15, failureMessage: "Measure 'C' did not update to 15 after changing 'B'");
         Assert.Equal(15, _storage.Find("C")!.Value.AsDouble()); // 10 + 5
     }
 

@@ -37,7 +37,7 @@ public class ExecutorTests
 
         // Act
         await executor.StartAsync(CancellationToken.None);
-        await Task.Delay(100);
+        await AsyncTestHelper.WaitForCondition(() => eventsGateway.Subscribers == 1, failureMessage: "Executor did not subscribe to events gateway on startup.");
 
         // Assert
         Assert.Equal(1, eventsGateway.Subscribers);
@@ -70,7 +70,7 @@ public class ExecutorTests
 
         // Act
         await eventsGateway.PublishAsync(eventToSend, CancellationToken.None);
-        await Task.Delay(100);
+        await AsyncTestHelper.WaitForCondition(() => dispatcher.Intents.Count == 1, failureMessage: "Intent was not dispatched after a matching event was published.");
 
         // Assert
         Assert.Single(dispatcher.Intents);
