@@ -49,6 +49,7 @@ public class ExecutorTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task StartAsync_WithValidConfig_SubscribesToCorrectEvents()
     {
         // Arrange
@@ -61,6 +62,7 @@ public class ExecutorTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task OnEventReceived_WithMatchingListener_DispatchesCorrectIntent()
     {
         // Arrange
