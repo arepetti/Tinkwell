@@ -2,8 +2,34 @@ using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Bootstrapper.Tests.Ipc;
 
-public class NamedPipes_ClientServer
+public class NamedPipes_ClientServer : IAsyncLifetime
 {
+    private NamedPipeServer _server = default!;
+    private NamedPipeClient _client = default!;
+    private string _pipeName = default!;
+
+    public Task InitializeAsync()
+    {
+        _pipeName = Guid.NewGuid().ToString();
+        _server = new NamedPipeServer();
+        _client = new NamedPipeClient();
+
+        _server.ProcessAsync = async args =>
+        {
+            var received = await args.Reader.ReadLineAsync();
+            args.Writer.WriteLine(received);
+        };
+
+        _server.Open(_pipeName);
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        _client.Disconnect();
+        _server.Close();
+        await Task.CompletedTask;
+    }
     [Fact]
     public void NamedPipeFactory_CreatesNewServerInstance()
     {
@@ -19,25 +45,11 @@ public class NamedPipes_ClientServer
     [Fact]
     public async Task NamedPipe_ClientServer_Communication()
     {
-        var pipeName = Guid.NewGuid().ToString();
-        var server = new NamedPipeServer();
-        var client = new NamedPipeClient();
         var message = "Hello, pipe!";
 
-        server.ProcessAsync = async args =>
-        {
-            var received = await args.Reader.ReadLineAsync();
-            args.Writer.WriteLine(received);
-        };
-
-        server.Open(pipeName);
-
-        await client.ConnectAsync(".", pipeName, TimeSpan.FromSeconds(5));
-        var reply = await client.SendCommandAndWaitReplyAsync(message);
+        await _client.ConnectAsync(".", _pipeName, TimeSpan.FromSeconds(5));
+        var reply = await _client.SendCommandAndWaitReplyAsync(message);
 
         Assert.Equal(message, reply);
-
-        client.Disconnect();
-        server.Close();
     }
 }
