@@ -31,10 +31,10 @@ jobs:
       run: mkdir ./app-for-testing
 
     - name: Publish Tinkwell.Supervisor
-      run: dotnet publish Tinkwell.Supervisor -c Release -o ./app-for-testing
+      run: dotnet publish Tinkwell.Supervisor -c Release -o ./app
     
     - name: Publish Tinkwell.Cli
-      run: dotnet publish Tinkwell.Cli -c Release -o ./app-for-testing
+      run: dotnet publish Tinkwell.Cli -c Release -o ./app
 
     - name: Setup Python
       uses: actions/setup-python@v5
@@ -42,4 +42,4 @@ jobs:
         python-version: '3.13.5'
 
     - name: Run integration tests
-      run: python Tests/Integration/run_tests.py --app-path ./app-for-testing --verbose
+      run: python Tests/Integration/run_tests.py --app-path ./app --verbose
