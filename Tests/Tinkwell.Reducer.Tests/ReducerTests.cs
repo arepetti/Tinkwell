@@ -3,7 +3,7 @@ using Tinkwell.TestHelpers;
 
 namespace Tinkwell.Reducer.Tests;
 
-public abstract class ReducerTests : IAsyncLifetime
+public class ReducerTests : IAsyncLifetime
 {
     private readonly TestInMemoryStorage _storage = new();
     private readonly InMemoryStoreAdapter _storeAdapter = new(new TestInMemoryStorage());

@@ -3,7 +3,7 @@ using UnitsNet;
 
 namespace Tinkwell.Measures.Tests;
 
-public abstract class RegistryTests
+public class RegistryTests
 {
     [Fact]
     public async Task RegisterMeasure_SuccessfullyRegistersMeasure()
