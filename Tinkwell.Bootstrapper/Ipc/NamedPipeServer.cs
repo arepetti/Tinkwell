@@ -61,7 +61,6 @@ public sealed class NamedPipeServer : INamedPipeServer
         }
 
         _pipes.Clear();
-
         _abortTokenSource.Dispose();
         _abortTokenSource = null;
     }
