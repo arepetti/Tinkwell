@@ -10,7 +10,7 @@ public class ExecutorTests : IAsyncLifetime
     private readonly MockEventsGateway _eventsGateway = new();
     private readonly MockIntentDispatcher _dispatcher = new();
     private readonly ILogger<Executor> _logger = new LoggerFactory().CreateLogger<Executor>();
-    private readonly MockTwaFileReader _fileReader = new();
+    private MockTwaFileReader _fileReader = new();
     private readonly ExecutorOptions _options = new() { Path = "fake.twa" };
     private Executor _executor = default!;
 
@@ -19,10 +19,28 @@ public class ExecutorTests : IAsyncLifetime
         AgentsRecruiter.RegisterAssembly(typeof(ExecutorTests).Assembly);
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
+        _fileReader = new MockTwaFileReader(
+            new WhenDefinition
+            {
+                Topic = "topic1",
+                Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
+            },
+            new WhenDefinition
+            {
+                Topic = "topic2",
+                Subject = "subject2",
+                Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
+            },
+            new WhenDefinition
+            {
+                Topic = "test-topic",
+                Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
+            }
+        );
         _executor = new Executor(_logger, _eventsGateway, _fileReader, _dispatcher, _options);
-        return Task.CompletedTask;
+        await _executor.StartAsync(CancellationToken.None);
     }
 
     public async Task DisposeAsync()
@@ -34,40 +52,18 @@ public class ExecutorTests : IAsyncLifetime
     public async Task StartAsync_WithValidConfig_SubscribesToCorrectEvents()
     {
         // Arrange
-        _fileReader.AddListener(
-            new WhenDefinition
-            {
-                Topic = "topic1",
-                Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
-            },
-            new WhenDefinition
-            {
-                Topic = "topic2",
-                Subject = "subject2",
-                Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
-            }
-        );
 
         // Act
-        await _executor.StartAsync(CancellationToken.None);
-        await AsyncTestHelper.WaitForCondition(() => eventsGateway.Subscribers == 1, failureMessage: "Executor did not subscribe to events gateway on startup.");
+        await AsyncTestHelper.WaitForCondition(() => _eventsGateway.Subscribers == 1, failureMessage: "Executor did not subscribe to events gateway on startup.");
 
         // Assert
-        Assert.Equal(1, eventsGateway.Subscribers);
+        Assert.Equal(1, _eventsGateway.Subscribers);
     }
 
     [Fact]
     public async Task OnEventReceived_WithMatchingListener_DispatchesCorrectIntent()
     {
         // Arrange
-        _fileReader.AddListener(
-            new WhenDefinition
-            {
-                Topic = "test-topic",
-                Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
-            }
-        );
-        await _executor.StartAsync(CancellationToken.None);
         await Task.Delay(100);
 
         var eventToSend = new PublishEventsRequest
@@ -77,12 +73,12 @@ public class ExecutorTests : IAsyncLifetime
         };
 
         // Act
-        await eventsGateway.PublishAsync(eventToSend, CancellationToken.None);
-        await AsyncTestHelper.WaitForCondition(() => dispatcher.Intents.Count == 1, failureMessage: "Intent was not dispatched after a matching event was published.");
+        await _eventsGateway.PublishAsync(eventToSend, CancellationToken.None);
+        await AsyncTestHelper.WaitForCondition(() => _dispatcher.Intents.Count == 1, failureMessage: "Intent was not dispatched after a matching event was published.");
 
         // Assert
-        Assert.Single(dispatcher.Intents);
-        var intent = dispatcher.Intents[0];
+        Assert.Single(_dispatcher.Intents);
+        var intent = _dispatcher.Intents[0];
         Assert.Equal("test-topic", intent.Event.Topic);
         Assert.Equal("{\"key\":\"value\"}", intent.Payload);
         Assert.Equal(typeof(MockAgent), intent.Directive.AgentType);
