@@ -94,6 +94,12 @@ public class InMemoryStoreAdapter : IStore
 
     private void OnValueChanged(object? sender, ValueChangedEventArgs e)
     {
+        // Log the event receipt
+        Console.WriteLine($"InMemoryStoreAdapter: ValueChanged event received for {e.Name}");
+
+        if (Subscribers == 0)
+            return;
+
         var change = new StoreValueChange
         {
             Name = e.Name,
@@ -102,9 +108,6 @@ public class InMemoryStoreAdapter : IStore
 
         if (e.OldValue is not null)
             change.OldValue = ToStoreValue(e.OldValue.Value);
-
-            if (Subscribers == 0)
-            return;
 
         _channel.Writer.TryWrite(change);
     }
