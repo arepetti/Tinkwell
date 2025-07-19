@@ -38,6 +38,7 @@ public class ReducerTests : IAsyncLifetime
 
         // Act
         await _reducer.StartAsync(default);
+        await _reducer.WaitForSubscriptionReadyAsync();
 
         // Assert
         var c = _storage.Find("C");
@@ -58,6 +59,7 @@ public class ReducerTests : IAsyncLifetime
     {
         // Act
         await _reducer.StartAsync(default);
+        await _reducer.WaitForSubscriptionReadyAsync();
 
         // Assert
         Assert.Contains(_logger.Logs, l => l.Item1 == Microsoft.Extensions.Logging.LogLevel.Warning && l.Item2.Contains("No derived measures to calculate"));
@@ -72,6 +74,7 @@ public class ReducerTests : IAsyncLifetime
 
         // Act
         await _reducer.StartAsync(default);
+        await _reducer.WaitForSubscriptionReadyAsync();
 
         // Assert
         Assert.Contains(_logger.Logs, l => l.Item1 == Microsoft.Extensions.Logging.LogLevel.Critical && l.Item2.Contains("Circular dependency detected"));
@@ -85,6 +88,7 @@ public class ReducerTests : IAsyncLifetime
 
         // Act
         await _reducer.StartAsync(default);
+        await _reducer.WaitForSubscriptionReadyAsync();
 
         // Assert
         var c = _storage.Find("C");
@@ -103,6 +107,7 @@ public class ReducerTests : IAsyncLifetime
 
         // Act
         await _reducer.StartAsync(default);
+        await _reducer.WaitForSubscriptionReadyAsync();
         await _storeAdapter.WriteQuantityAsync("A", 10, default);
         await _storeAdapter.WriteQuantityAsync("B", 0, default); // Division by zero
         await Task.Delay(100);
