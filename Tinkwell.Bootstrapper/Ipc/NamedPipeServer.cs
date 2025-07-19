@@ -48,17 +48,22 @@ public sealed class NamedPipeServer : INamedPipeServer
 
         _abortTokenSource.Cancel();
 
+        var stopTasks = new List<Task>();
         foreach (var pipe in _pipes.ToArray())
         {
             try
             {
-                pipe.Stop();
+                stopTasks.Add(pipe.StopAsync());
             }
             catch (IOException)
             {
                 // Ignore IO exceptions that may occur if the pipe is already closed.
             }
         }
+
+        // Synchronously wait for all stop tasks to complete.
+        // This is necessary because Close() is a synchronous method.
+        Task.WhenAll(stopTasks).Wait();
 
         _pipes.Clear();
         _abortTokenSource.Dispose();
