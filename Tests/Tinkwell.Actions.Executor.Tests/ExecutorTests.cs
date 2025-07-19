@@ -5,21 +5,36 @@ using Tinkwell.TestHelpers;
 
 namespace Tinkwell.Actions.Executor.Tests;
 
-public class ExecutorTests
+public class ExecutorTests : IAsyncLifetime
 {
+    private readonly MockEventsGateway _eventsGateway = new();
+    private readonly MockIntentDispatcher _dispatcher = new();
+    private readonly ILogger<Executor> _logger = new LoggerFactory().CreateLogger<Executor>();
+    private readonly MockTwaFileReader _fileReader = new();
+    private readonly ExecutorOptions _options = new() { Path = "fake.twa" };
+    private Executor _executor = default!;
+
     public ExecutorTests()
     {
         AgentsRecruiter.RegisterAssembly(typeof(ExecutorTests).Assembly);
+    }
+
+    public Task InitializeAsync()
+    {
+        _executor = new Executor(_logger, _eventsGateway, _fileReader, _dispatcher, _options);
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _executor.DisposeAsync();
     }
 
     [Fact]
     public async Task StartAsync_WithValidConfig_SubscribesToCorrectEvents()
     {
         // Arrange
-        var eventsGateway = new MockEventsGateway();
-        var dispatcher = new MockIntentDispatcher();
-        var logger = new LoggerFactory().CreateLogger<Executor>();
-        var fileReader = new MockTwaFileReader(
+        _fileReader.AddListener(
             new WhenDefinition
             {
                 Topic = "topic1",
@@ -32,11 +47,9 @@ public class ExecutorTests
                 Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
             }
         );
-        var options = new ExecutorOptions { Path = "fake.twa" };
-        var executor = new Executor(logger, eventsGateway, fileReader, dispatcher, options);
 
         // Act
-        await executor.StartAsync(CancellationToken.None);
+        await _executor.StartAsync(CancellationToken.None);
         await AsyncTestHelper.WaitForCondition(() => eventsGateway.Subscribers == 1, failureMessage: "Executor did not subscribe to events gateway on startup.");
 
         // Assert
@@ -47,19 +60,14 @@ public class ExecutorTests
     public async Task OnEventReceived_WithMatchingListener_DispatchesCorrectIntent()
     {
         // Arrange
-        var eventsGateway = new MockEventsGateway();
-        var dispatcher = new MockIntentDispatcher();
-        var logger = new LoggerFactory().CreateLogger<Executor>();
-        var fileReader = new MockTwaFileReader(
+        _fileReader.AddListener(
             new WhenDefinition
             {
                 Topic = "test-topic",
                 Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
             }
         );
-        var options = new ExecutorOptions { Path = "fake.twa" };
-        var executor = new Executor(logger, eventsGateway, fileReader, dispatcher, options);
-        await executor.StartAsync(CancellationToken.None);
+        await _executor.StartAsync(CancellationToken.None);
         await Task.Delay(100);
 
         var eventToSend = new PublishEventsRequest

@@ -6,16 +6,30 @@ using Tinkwell.TestHelpers;
 
 namespace Tinkwell.Reactor.Tests;
 
-public class ReactorTests
+public class ReactorTests : IAsyncLifetime
 {
+    private readonly InMemoryStorage _storage = new();
+    private readonly InMemoryStoreAdapter _storeAdapter;
+    private readonly MockTwmFileReader _fileReader = new();
+    private readonly MockEventsGateway _eventsGateway = new();
+    private readonly MockLogger<Reactor> _logger = new();
+    private readonly ReactorOptions _options = new() { Path = "test.twm", CheckOnStartup = true };
+    private Reactor _reactor = default!;
+
     public ReactorTests()
     {
-        _storage = new InMemoryStorage();
         _storeAdapter = new InMemoryStoreAdapter(_storage);
-        _fileReader = new MockTwmFileReader();
-        _eventsGateway = new MockEventsGateway();
-        _logger = new MockLogger<Reactor>();
-        _options = new ReactorOptions { Path = "test.twm", CheckOnStartup = true };
+    }
+
+    public Task InitializeAsync()
+    {
+        _reactor = new Reactor(_logger, _fileReader, _storeAdapter, _eventsGateway, _options);
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _reactor.DisposeAsync();
     }
 
     [Fact]
@@ -39,10 +53,8 @@ public class ReactorTests
         await _storage.RegisterAsync(measure, new MeasureMetadata(DateTime.UtcNow), default);
         _fileReader.AddSignal(signal);
 
-        var reactor = new Reactor(_logger, _fileReader, _storeAdapter, _eventsGateway, _options);
-
         // Act - Initial check, undefined value.
-        await reactor.StartAsync(default);
+        await _reactor.StartAsync(default);
 
         // Act - Below threshold.
         await _storeAdapter.WriteQuantityAsync(measure.Name, 90, default);
@@ -86,10 +98,8 @@ public class ReactorTests
         await _storeAdapter.WriteQuantityAsync(measure.Name, 101, default);
         
         _fileReader.AddSignal(signal);
-        var reactor = new Reactor(_logger, _fileReader, _storeAdapter, _eventsGateway, _options);
-
         // Act - Initial check, above threshold
-        await reactor.StartAsync(default);
+        await _reactor.StartAsync(default);
         await AsyncTestHelper.WaitForCondition(() => _eventsGateway.PublishedEvents.Count == 1, failureMessage: "Event was not published on startup when measure was already above threshold");
 
         // Assert - The event is already there

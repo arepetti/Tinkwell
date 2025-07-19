@@ -3,15 +3,29 @@ using Tinkwell.TestHelpers;
 
 namespace Tinkwell.Reducer.Tests;
 
-public class ReducerTests
+public class ReducerTests : IAsyncLifetime
 {
+    private readonly InMemoryStorage _storage = new();
+    private readonly InMemoryStoreAdapter _storeAdapter;
+    private readonly MockTwmFileReader _fileReader = new();
+    private readonly MockLogger<Reducer> _logger = new();
+    private readonly ReducerOptions _options = new() { Path = "test.twm" };
+    private Reducer _reducer = default!;
+
     public ReducerTests()
     {
-        _storage = new InMemoryStorage();
         _storeAdapter = new InMemoryStoreAdapter(_storage);
-        _fileReader = new MockTwmFileReader();
-        _logger = new MockLogger<Reducer>();
-        _options = new ReducerOptions { Path = "test.twm" };
+    }
+
+    public Task InitializeAsync()
+    {
+        _reducer = new Reducer(_logger, _storeAdapter, _fileReader, _options);
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _reducer.DisposeAsync();
     }
 
     [Fact]
@@ -21,10 +35,9 @@ public class ReducerTests
         _fileReader.AddScalar("A", "1");
         _fileReader.AddScalar("B", "2");
         _fileReader.AddScalar("C", "A + B");
-        var reducer = new Reducer(_logger, _storeAdapter, _fileReader, _options);
 
         // Act
-        await reducer.StartAsync(default);
+        await _reducer.StartAsync(default);
 
         // Assert
         var c = _storage.Find("C");
@@ -43,11 +56,8 @@ public class ReducerTests
     [Fact]
     public async Task NoDerivedMeasures_SitsIdle()
     {
-        // Arrange
-        var reducer = new Reducer(_logger, _storeAdapter, _fileReader, _options);
-
         // Act
-        await reducer.StartAsync(default);
+        await _reducer.StartAsync(default);
 
         // Assert
         Assert.Contains(_logger.Logs, l => l.Item1 == Microsoft.Extensions.Logging.LogLevel.Warning && l.Item2.Contains("No derived measures to calculate"));
@@ -59,10 +69,9 @@ public class ReducerTests
         // Arrange
         _fileReader.AddScalar("A", "B");
         _fileReader.AddScalar("B", "A");
-        var reducer = new Reducer(_logger, _storeAdapter, _fileReader, _options);
 
         // Act
-        await reducer.StartAsync(default);
+        await _reducer.StartAsync(default);
 
         // Assert
         Assert.Contains(_logger.Logs, l => l.Item1 == Microsoft.Extensions.Logging.LogLevel.Critical && l.Item2.Contains("Circular dependency detected"));
@@ -73,10 +82,9 @@ public class ReducerTests
     {
         // Arrange
         _fileReader.AddScalar("C", "10 * 2");
-        var reducer = new Reducer(_logger, _storeAdapter, _fileReader, _options);
 
         // Act
-        await reducer.StartAsync(default);
+        await _reducer.StartAsync(default);
 
         // Assert
         var c = _storage.Find("C");
@@ -92,10 +100,9 @@ public class ReducerTests
         _fileReader.AddScalar("A", "0");
         _fileReader.AddScalar("B", "0");
         _fileReader.AddScalar("C", "A / B");
-        var reducer = new Reducer(_logger, _storeAdapter, _fileReader, _options);
 
         // Act
-        await reducer.StartAsync(default);
+        await _reducer.StartAsync(default);
         await _storeAdapter.WriteQuantityAsync("A", 10, default);
         await _storeAdapter.WriteQuantityAsync("B", 0, default); // Division by zero
         await Task.Delay(100);
