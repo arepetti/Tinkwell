@@ -47,6 +47,7 @@ sealed class Pipe
         {
             using var server = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, _maxInstances);
             await server.WaitForConnectionAsync(_abortTokenSource.Token);
+            _abortTokenSource.Token.ThrowIfCancellationRequested(); // Ensure cancellation is observed after connection
             using var reader = new StreamReader(server);
             using var writer = new StreamWriter(server) { AutoFlush = true };
 
@@ -58,6 +59,7 @@ sealed class Pipe
             var args = new NamedPipeServerProcessEventArgs(reader, writer, _abortTokenSource.Token);
             while (!_abortTokenSource.Token.IsCancellationRequested && server.IsConnected)
             {
+                _abortTokenSource.Token.ThrowIfCancellationRequested(); // Ensure cancellation is observed within the loop
                 await ProcessAsync(args);
                 if (args.IsDisconnectionRequested)
                     break;
