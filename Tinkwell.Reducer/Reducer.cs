@@ -61,6 +61,7 @@ sealed class Reducer : IAsyncDisposable
         {
             await _worker.StartAsync(SubscribeToChangesAsync, cancellationToken);
             _logger.LogDebug("Reducer started successfully, now watching for changes");
+            _subscriptionReadyTcs.SetResult(true);
         }
     }
 
@@ -78,6 +79,9 @@ sealed class Reducer : IAsyncDisposable
     private readonly ReducerOptions _options;
     private readonly DependencyWalker<Measure> _dependencyWalker;
     private readonly CancellableLongRunningTask _worker = new();
+    private readonly TaskCompletionSource<bool> _subscriptionReadyTcs = new();
+
+    public Task WaitForSubscriptionReadyAsync() => _subscriptionReadyTcs.Task;
     
     private async Task RegisterDerivedMeasuresAsync(CancellationToken cancellationToken)
     {

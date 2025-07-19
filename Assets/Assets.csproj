@@ -20,11 +20,6 @@
 	  <DebugType>none</DebugType>
 	</PropertyGroup>
 
-	<Target Name="PruneEmptyAssembly" AfterTargets="Build">
-		<Message Text="Removing stub assembly $(TargetPath)" Importance="Low" />
-		<Delete Files="$(TargetPath)" ContinueOnError="true" />
-	</Target>
-
 	<ItemGroup>
 	  <None Update="appsettings.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>

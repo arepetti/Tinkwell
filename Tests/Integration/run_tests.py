@@ -72,7 +72,7 @@ def main():
 
     for test_index, (priority, test_name, test_file_path) in enumerate(tests_to_run, 1):
         print(f"\n{COLOR_YELLOW}--- Running Test: {test_name} ---{COLOR_RESET}")
-        print(f"{COLOR_DARK_GRAY}Test {COLOR_RESET}{test_index}{COLOR_DARK_GRAY} of {test_count}")
+        print(f"{COLOR_DARK_GRAY}Test {COLOR_RESET}{test_index} of {test_count}{COLOR_RESET}")
         
         context = TestContext(app_path=args.app_path, app_dll_path=tinkwell_supervisor_dll_path, cli_tool_dll_path=tw_cli_dll_path)
 

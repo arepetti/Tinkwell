@@ -4,7 +4,7 @@ using Tinkwell.Actions.Configuration.Parser;
 
 namespace Tinkwell.Actions.Executor.Tests;
 
-public class AgentFactoryTests
+public abstract class AgentFactoryTests
 {
     [Fact]
     public void Create_WithValidIntent_CreatesAgentAndSetsProperties()

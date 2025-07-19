@@ -19,34 +19,27 @@ sealed class Pipe
 
     public void Start()
     {
-        Debug.Assert(_thread is null);
+        Debug.Assert(_handlerTask is null);
 
-        _thread = new Thread(Handler)
-        {
-            IsBackground = true,
-            Priority = ThreadPriority.Lowest,
-            Name = $"Named pipe handler for {_pipeName}"
-        };
-        _thread.Start();
+        _handlerTask = HandlerAsync();
     }
 
-    public void Stop()
+    public async Task StopAsync()
     {
-        if (_thread is null || _abortTokenSource is null)
+        if (_handlerTask is null || _abortTokenSource is null)
             return;
 
-        if (_thread.IsAlive)
-            _thread.Join();
+        await _handlerTask;
 
-        _thread = null;
+        _handlerTask = null;
     }
 
     private readonly string _pipeName;
     private readonly CancellationTokenSource _abortTokenSource;
     private readonly int _maxInstances;
-    private Thread? _thread;
+    private Task? _handlerTask;
 
-    private async void Handler()
+    private async Task HandlerAsync()
     {
         Debug.Assert(_abortTokenSource is not null);
 
@@ -54,6 +47,7 @@ sealed class Pipe
         {
             using var server = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, _maxInstances);
             await server.WaitForConnectionAsync(_abortTokenSource.Token);
+            _abortTokenSource.Token.ThrowIfCancellationRequested(); // Ensure cancellation is observed after connection
             using var reader = new StreamReader(server);
             using var writer = new StreamWriter(server) { AutoFlush = true };
 
@@ -65,6 +59,7 @@ sealed class Pipe
             var args = new NamedPipeServerProcessEventArgs(reader, writer, _abortTokenSource.Token);
             while (!_abortTokenSource.Token.IsCancellationRequested && server.IsConnected)
             {
+                _abortTokenSource.Token.ThrowIfCancellationRequested(); // Ensure cancellation is observed within the loop
                 await ProcessAsync(args);
                 if (args.IsDisconnectionRequested)
                     break;

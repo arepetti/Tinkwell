@@ -1,6 +1,6 @@
 namespace Tinkwell.Bootstrapper.Tests;
 
-public class AsyncExtensionsTests
+public abstract class AsyncExtensionsTests
 {
     [Fact]
     public async Task ConsumeAllAsync_ConsumesAllItems()

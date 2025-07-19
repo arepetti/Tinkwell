@@ -36,7 +36,7 @@ public sealed class CancellableLongRunningTask
             catch (OperationCanceledException)
             {
             }
-        }, TaskCreationOptions.LongRunning);
+        }, _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default); // Pass CancellationToken to StartNew
         return Task.CompletedTask;
     }
 
@@ -53,16 +53,16 @@ public sealed class CancellableLongRunningTask
             throw new InvalidOperationException("Worker task is already running.");
 
         _cts = new CancellationTokenSource();
-        _worker = Task.Factory.StartNew(async () =>
+        _worker = Task.Run(async () => // Use Task.Run for async delegates
         {
             try
             {
-                await task(_cts.Token);
+                await task(_cts.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
             }
-        }, TaskCreationOptions.LongRunning);
+        }, _cts.Token); // Pass CancellationToken to Task.Run
         return Task.CompletedTask;
     }
 
@@ -76,8 +76,19 @@ public sealed class CancellableLongRunningTask
         if (IsRunning)
         {
             _cts!.Cancel();
-            await _worker.WaitAsync(cancellationToken);
-            _worker = null;
+            try
+            {
+                await _worker.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // This exception is expected if the external cancellationToken is cancelled
+                // or if the worker task itself was cancelled.
+            }
+            finally
+            {
+                _worker = null;
+            }
         }
     }
 

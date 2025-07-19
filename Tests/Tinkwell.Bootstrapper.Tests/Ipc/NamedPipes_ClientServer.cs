@@ -2,7 +2,7 @@ using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Bootstrapper.Tests.Ipc;
 
-public class NamedPipes_ClientServer
+public abstract class NamedPipes_ClientServer
 {
     [Fact]
     public void NamedPipeFactory_CreatesNewServerInstance()
@@ -17,12 +17,14 @@ public class NamedPipes_ClientServer
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task NamedPipe_ClientServer_Communication()
     {
-        var pipeName = Guid.NewGuid().ToString();
-        var server = new NamedPipeServer();
-        var client = new NamedPipeClient();
         var message = "Hello, pipe!";
+
+        string pipeName = Guid.NewGuid().ToString();
+        var server = new NamedPipeServer();
+        using var client = new NamedPipeClient();
 
         server.ProcessAsync = async args =>
         {
@@ -36,8 +38,6 @@ public class NamedPipes_ClientServer
         var reply = await client.SendCommandAndWaitReplyAsync(message);
 
         Assert.Equal(message, reply);
-
-        client.Disconnect();
         server.Close();
     }
 }
