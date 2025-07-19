@@ -23,7 +23,7 @@ def wait_for_tinkwell_ready(tw_cli):
         status = tw_cli.send_ping()
 
         if status == PingStatus.OK:
-            print(f"{COLOR_DARK_GRAY}Tinkwell supervisor is{COLOR_RESET} ready.")
+            print(f"{COLOR_DARK_GRAY}Tinkwell supervisor is{COLOR_RESET} ready")
             return True
         elif status == PingStatus.Loading:
             print(f"{COLOR_DARK_GRAY}Tinkwell supervisor is Loading. Retrying in {RETRY_WAIT_SECONDS} seconds...{COLOR_RESET}")
