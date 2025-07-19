@@ -84,7 +84,11 @@ sealed class Reactor : IAsyncDisposable
         try
         {
             await foreach (var response in call.ReadAllAsync(cancellationToken))
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break; // Explicitly break if cancellation is requested
                 await HandleChangeAsync(response.Name, cancellationToken);
+            }
         }
         catch (RpcException e)
         {
