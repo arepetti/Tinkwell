@@ -94,9 +94,6 @@ public class InMemoryStoreAdapter : IStore
 
     private void OnValueChanged(object? sender, ValueChangedEventArgs e)
     {
-        // Log the event receipt
-        Console.WriteLine($"InMemoryStoreAdapter: ValueChanged event received for {e.Name}");
-
         if (Subscribers == 0)
             return;
 

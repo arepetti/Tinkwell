@@ -117,10 +117,7 @@ sealed class Reducer : IAsyncDisposable
         try
         {
             await foreach (var response in call.ReadAllAsync(cancellationToken))
-            {
-                _logger.LogDebug("Reducer: Change received for {MeasureName}", response.Name);
                 await HandleChangeAsync(response.Name, cancellationToken);
-            }
         }
         catch (RpcException e)
         {
@@ -137,7 +134,6 @@ sealed class Reducer : IAsyncDisposable
 
     private async Task HandleChangeAsync(string changedMeasure, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Reducer: Handling change for {ChangedMeasure}", changedMeasure);
         // TODO: we should really really REALLY publish these changes in batch: collect all the recalculated
         // measures and then publish them all at once, instead of one by one.
         if (_dependencyWalker.ReverseDependencyMap.TryGetValue(changedMeasure, out var affectedMeasures))
@@ -164,7 +160,6 @@ sealed class Reducer : IAsyncDisposable
 
     private async Task RecalculateMeasureAsync(Measure measure, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Reducer: Recalculating measure {MeasureName}", measure.Name);
         Debug.Assert(_store is not null);
 
         // No op if this measure has been disabled before because an update failed or if
