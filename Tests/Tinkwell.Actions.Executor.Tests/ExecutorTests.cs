@@ -89,7 +89,7 @@ public class ExecutorTests : IAsyncLifetime
     }
 }
 
-file sealed class MockIntentDispatcher : IIntentDispatcher
+sealed class MockIntentDispatcher : IIntentDispatcher
 {
     public List<Intent> Intents { get; } = new();
 
