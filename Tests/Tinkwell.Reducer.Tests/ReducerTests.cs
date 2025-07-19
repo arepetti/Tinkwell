@@ -5,8 +5,8 @@ namespace Tinkwell.Reducer.Tests;
 
 public class ReducerTests : IAsyncLifetime
 {
-    private readonly InMemoryStorage _storage = new();
-    private readonly InMemoryStoreAdapter _storeAdapter;
+    private readonly TestInMemoryStorage _storage = new();
+    private readonly InMemoryStoreAdapter _storeAdapter = new(new TestInMemoryStorage());
     private readonly MockTwmFileReader _fileReader = new();
     private readonly MockLogger<Reducer> _logger = new();
     private readonly ReducerOptions _options = new() { Path = "test.twm" };

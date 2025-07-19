@@ -5,7 +5,7 @@ namespace Tinkwell.Measures.Storage;
 /// <summary>
 /// Represents an in-memory thread-safe storage provider for measures.
 /// </summary>
-public sealed class InMemoryStorage : IStorage
+public class InMemoryStorage : IStorage
 {
     /// <inheritdoc />
     public event EventHandler<ValueChangedEventArgs>? ValueChanged;
@@ -43,8 +43,7 @@ public sealed class InMemoryStorage : IStorage
 
                 if (oldValue != value)
                 {
-                    // Raise the event on a thread pool thread to avoid blocking the update operation.
-                    _ = Task.Run(() => ValueChanged?.Invoke(this, new ValueChangedEventArgs(name, oldValue, value)));
+                    OnValueChangedInternal(name, oldValue, value);
                 }
 
                 return updatedMeasure;
@@ -105,6 +104,15 @@ public sealed class InMemoryStorage : IStorage
     public void Dispose()
     {
         _store.Clear();
+    }
+
+    protected void OnValueChangedInternal(object sender, ValueChangedEventArgs e)
+        => ValueChanged?.Invoke(e, e);
+
+    protected virtual void OnValueChangedInternal(string name, MeasureValue oldValue, MeasureValue newValue)
+    {
+        // Raise the event on a thread pool thread to avoid blocking the update operation.
+        _ = Task.Run(() => OnValueChangedInternal(this, new ValueChangedEventArgs(name, oldValue, newValue)));
     }
 
     private static readonly StringComparer _comparer = StringComparer.Ordinal;

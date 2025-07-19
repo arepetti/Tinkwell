@@ -1,5 +1,6 @@
 
 using Google.Protobuf.WellKnownTypes;
+using System.Collections.Concurrent;
 using System.Threading.Channels;
 using Tinkwell.Measures;
 using Tinkwell.Measures.Storage;
@@ -10,7 +11,7 @@ namespace Tinkwell.TestHelpers;
 
 public class InMemoryStoreAdapter : IStore
 {
-    public InMemoryStoreAdapter(IStorage storage)
+    public InMemoryStoreAdapter(TestInMemoryStorage storage)
     {
         _storage = storage;
         _storage.ValueChanged += OnValueChanged;
@@ -93,9 +94,6 @@ public class InMemoryStoreAdapter : IStore
 
     private void OnValueChanged(object? sender, ValueChangedEventArgs e)
     {
-        if (Subscribers == 0)
-            return;
-
         var change = new StoreValueChange
         {
             Name = e.Name,
@@ -104,6 +102,9 @@ public class InMemoryStoreAdapter : IStore
 
         if (e.OldValue is not null)
             change.OldValue = ToStoreValue(e.OldValue.Value);
+
+            if (Subscribers == 0)
+            return;
 
         _channel.Writer.TryWrite(change);
     }

@@ -8,8 +8,8 @@ namespace Tinkwell.Reactor.Tests;
 
 public class ReactorTests : IAsyncLifetime
 {
-    private readonly InMemoryStorage _storage = new();
-    private readonly InMemoryStoreAdapter _storeAdapter;
+    private readonly TestInMemoryStorage _storage = new();
+    private readonly InMemoryStoreAdapter _storeAdapter = new(new TestInMemoryStorage());
     private readonly MockTwmFileReader _fileReader = new();
     private readonly MockEventsGateway _eventsGateway = new();
     private readonly MockLogger<Reactor> _logger = new();
