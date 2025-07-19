@@ -110,10 +110,4 @@ public class ReducerTests : IAsyncLifetime
         // Assert
         Assert.Contains(_logger.Logs, l => l.Item1 == Microsoft.Extensions.Logging.LogLevel.Error && l.Item2.Contains("Failed to recalculate"));
     }
-
-    private readonly InMemoryStorage _storage;
-    private readonly InMemoryStoreAdapter _storeAdapter;
-    private readonly MockTwmFileReader _fileReader;
-    private readonly MockLogger<Reducer> _logger;
-    private readonly ReducerOptions _options;
 }

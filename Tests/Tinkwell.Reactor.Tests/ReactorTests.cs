@@ -105,11 +105,4 @@ public class ReactorTests : IAsyncLifetime
         // Assert - The event is already there
         Assert.Single(_eventsGateway.PublishedEvents);
     }
-
-    private readonly InMemoryStorage _storage;
-    private readonly InMemoryStoreAdapter _storeAdapter;
-    private readonly MockTwmFileReader _fileReader;
-    private readonly MockEventsGateway _eventsGateway;
-    private readonly MockLogger<Reactor> _logger;
-    private readonly ReactorOptions _options;
 }
