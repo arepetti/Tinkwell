@@ -63,7 +63,16 @@ public sealed class NamedPipeServer : INamedPipeServer
 
         // Synchronously wait for all stop tasks to complete.
         // This is necessary because Close() is a synchronous method.
-        Task.WhenAll(stopTasks).Wait();
+        try
+        {
+            Task.WhenAll(stopTasks).Wait(TimeSpan.FromSeconds(5));
+        }
+        catch (AggregateException ex)
+        {
+            // Log the exception, but don't rethrow, as Close() is synchronous.
+            // This indicates that some pipes did not stop gracefully.
+            Debug.WriteLine($"Error stopping pipes: {ex.Message}");
+        }
 
         _pipes.Clear();
         _abortTokenSource.Dispose();
