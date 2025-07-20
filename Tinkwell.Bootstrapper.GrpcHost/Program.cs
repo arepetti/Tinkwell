@@ -6,6 +6,8 @@ using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Ipc.Extensions;
 using Tinkwell.Bootstrapper.Rpc.ServerHost.Services;
 
+using System.Net;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // We need to respect the order Port then Role.
@@ -18,19 +20,23 @@ builder.WebHost.ConfigureKestrel(options =>
 {
     var certificate = builder.ResolveCertificate();
 
-    if (builder.Configuration.GetValue("GrpcHost:AllowLocal", true))
+    // Dynamically resolve host IP addresses
+    var hostName = Dns.GetHostName();
+    var ipAddresses = Dns.GetHostEntry(hostName).AddressList;
+
+    foreach (var ipAddress in ipAddresses)
     {
-        options.ListenLocalhost(port, configure =>
+        // Only listen on IPv4 and IPv6 addresses
+        if (ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ||
+            ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
         {
-            configure.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
-            configure.UseHttps(certificate.Path, certificate.Password);
-        });
+            options.Listen(ipAddress, port, configure =>
+            {
+                configure.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+                configure.UseHttps(certificate.Path, certificate.Password);
+            });
+        }
     }
-    options.ListenAnyIP(port, configure =>
-    {
-        configure.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
-        configure.UseHttps(certificate.Path, certificate.Password);
-    });
 });
 
 builder.Services

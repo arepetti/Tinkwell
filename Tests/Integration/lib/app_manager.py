@@ -88,8 +88,7 @@ def start_tinkwell_app(context, verbose=False):
     # Pass the dynamic port to the application
     command = ["dotnet", context.app_dll_path,
                f"--Supervisor:StartingPort={context.app_port}",
-               "--Supervisor:KeepAlive=false",
-               "--GrpcHost::AllowLocal=false"]
+               "--Supervisor:KeepAlive=false"]
 
     stdout_redirect = None if verbose else subprocess.PIPE
     stderr_redirect = None if verbose else subprocess.PIPE

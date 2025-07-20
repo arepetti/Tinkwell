@@ -40,7 +40,6 @@ static class Extensions
         if (!File.Exists(resolvedPath))
             throw new FileNotFoundException($"Certificate file not found at: {resolvedPath}");
 
-        Console.WriteLine(">>>> Certificate file path: {0}", resolvedPath);
         return (resolvedPath, password);
     }
 
