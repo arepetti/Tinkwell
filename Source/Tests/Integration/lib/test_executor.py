@@ -8,11 +8,7 @@ from lib.app_manager import start_tinkwell_app, stop_tinkwell_app, create_temp_t
 from lib.tw_cli import TwCli, PingStatus
 from lib.colors import *
 from lib.formatting import calculate_elapsed_time
-
-INITIAL_WAIT_SECONDS = 5
-SHUTDOWN_WAIT_SECONDS = 2
-RETRY_WAIT_SECONDS = 2
-MAX_PING_RETRIES = 5
+from lib.settings import *
 
 def wait_for_tinkwell_ready(tw_cli):
     print(f"{COLOR_DARK_GRAY}Waiting {INITIAL_WAIT_SECONDS} seconds for Tinkwell to initialize...{COLOR_RESET}")
@@ -107,7 +103,6 @@ def execute_test(test_name, test_file_path, context, keep_temp_dir, verbose):
         if app_process:
             print(f"{COLOR_DARK_GRAY}Stopping application...{COLOR_RESET}")
             stop_tinkwell_app(app_process, context)
-            time.sleep(SHUTDOWN_WAIT_SECONDS) # Give the application time to shut down
 
         print(f"{COLOR_DARK_GRAY}Cleaning up...{COLOR_RESET}")
         if context.temp_dir and os.path.exists(context.temp_dir) and not keep_temp_dir:

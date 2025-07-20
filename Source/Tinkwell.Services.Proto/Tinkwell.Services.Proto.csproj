@@ -12,12 +12,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Protobuf Include="..\Protos\tinkwell.discovery.proto" Link="Protos\tinkwell.discovery.proto" />
-		<Protobuf Include="..\Protos\tinkwell.events_gateway.proto" Link="Protos\tinkwell.events_gateway.proto" />
-		<Protobuf Include="..\Protos\tinkwell.health_check.proto" Link="Protos\tinkwell.health_check.proto" />
-		<Protobuf Include="..\Protos\tinkwell.orchestrator.proto" Link="Protos\tinkwell.orchestrator.proto" />
-		<Protobuf Include="..\Protos\tinkwell.store.proto" Link="Protos\tinkwell.store.proto" />
-		<Protobuf Include="..\Protos\tinkwell.mqtt_client.proto" Link="Protos\tinkwell.mqtt_client.proto" />
+		<Protobuf Include="..\..\Protos\tinkwell.discovery.proto" Link="Protos\tinkwell.discovery.proto" />
+		<Protobuf Include="..\..\Protos\tinkwell.events_gateway.proto" Link="Protos\tinkwell.events_gateway.proto" />
+		<Protobuf Include="..\..\Protos\tinkwell.health_check.proto" Link="Protos\tinkwell.health_check.proto" />
+		<Protobuf Include="..\..\Protos\tinkwell.orchestrator.proto" Link="Protos\tinkwell.orchestrator.proto" />
+		<Protobuf Include="..\..\Protos\tinkwell.store.proto" Link="Protos\tinkwell.store.proto" />
+		<Protobuf Include="..\..\Protos\tinkwell.mqtt_client.proto" Link="Protos\tinkwell.mqtt_client.proto" />
 	</ItemGroup>
 
 	<ItemGroup>
