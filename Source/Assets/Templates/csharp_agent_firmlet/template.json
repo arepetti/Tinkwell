@@ -1,0 +1,50 @@
+{
+  "id": "csharp_agent_firmlet",
+  "name": "C# firmlet (agent)",
+  "description": "An empty C# project with the boilerplate for an agent firmlet.",
+  "author": "Adriano Repetti",
+  "copyright": "Copyright (c) Adriano Repetti 2025",
+  "website": "https://github.com/arepetti/Tinkwell",
+  "version": "1.0.0",
+  "hidden": false,
+  "type": "standard",
+  "questions": [
+    {
+      "name": "name",
+      "prompt": "Project name (valid C# class name):",
+      "type": "text"
+    },
+    {
+      "name": "namespace",
+      "prompt": "Full namespace:",
+      "type": "text"
+    }
+  ],
+  "files": [
+    {
+      "original": "ProjectName.xml",
+      "target": "{{namespace}}.{{name}}/{{namespace}}.{{name}}.csproj",
+      "mode": "copy"
+    },
+    {
+      "original": "Implementation.cs",
+      "target": "{{namespace}}.{{name}}/{{name}}.cs",
+      "mode": "copy"
+    },
+    {
+      "original": "Options.cs",
+      "target": "{{namespace}}.{{name}}/Options.cs",
+      "mode": "copy"
+    },
+    {
+      "original": "Registrar.cs",
+      "target": "{{namespace}}.{{name}}/Registrar.cs",
+      "mode": "copy"
+    },
+    {
+      "original": "Worker.cs",
+      "target": "{{namespace}}.{{name}}/Worker.cs",
+      "mode": "copy"
+    }
+  ]
+}

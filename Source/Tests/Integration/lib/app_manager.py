@@ -4,13 +4,11 @@ import tempfile
 import uuid
 import time
 
-import socket # Import socket for finding available port
+import socket
 
 from lib.tw_cli import TwCli
 from lib.colors import *
-
-DEFAULT_CERT_PASSWORD = "1234"
-DEFAULT_HOST_PORT = 5000
+from lib.settings import *
 
 class TestContext:
     def __init__(self, app_path, app_dll_path, cli_tool_dll_path):
@@ -23,7 +21,7 @@ class TestContext:
         self.app_port = None # New: Store the dynamically assigned port
 
 def find_available_port():
-    """Finds an available port on localhost, or defaults to 5000 if an error occurs."""
+    """Finds an available port on localhost, or defaults to DEFAULT_HOST_PORT if an error occurs."""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('localhost', 0))
@@ -103,10 +101,10 @@ def stop_tinkwell_app(process, context):
     """
     if process.poll() is None: # Check if the process is still running
         try:
-            # Attempt graceful shutdown via CLI
+            # Attempt graceful shutdown sending the shutdown command
             tw_cli = TwCli(context)
             tw_cli.send_shutdown()
-            time.sleep(5) # Wait for graceful shutdown
+            time.sleep(GRACEFUL_SHUTDOWN_SECONDS) # Wait for graceful shutdown
 
             if process.poll() is None: # Check if still running after graceful attempt
                 print(f"{COLOR_DARK_GRAY}Application (PID: {process.pid}) did not terminate gracefully, killing...{COLOR_RESET}")
