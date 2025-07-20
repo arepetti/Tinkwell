@@ -17,11 +17,15 @@ var (isMasterDiscovery, masterAddress, localAddress) = await builder.ClaimRoleAs
 builder.WebHost.ConfigureKestrel(options =>
 {
     var certificate = builder.ResolveCertificate();
-    options.ListenLocalhost(port, configure =>
+
+    if (builder.Configuration.GetValue("GrpcHost:AllowLocal", true))
     {
-        configure.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
-        configure.UseHttps(certificate.Path, certificate.Password);
-    });
+        options.ListenLocalhost(port, configure =>
+        {
+            configure.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+            configure.UseHttps(certificate.Path, certificate.Password);
+        });
+    }
     options.ListenAnyIP(port, configure =>
     {
         configure.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
