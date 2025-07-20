@@ -58,7 +58,11 @@ def start_tinkwell_app(context, verbose=False):
     env["TINKWELL_CERT_PASS"] = "1234"
     env["TINKWELL_CLIENT_CERT_PATH"] = context.client_certificate_path
 
-    command = ["dotnet", context.app_dll_path, "--Supervisor:StartingPort=6000", "--GrpcHost::AllowLocal=false"]
+    command = ["dotnet", context.app_dll_path,
+               "--Supervisor:StartingPort=6000",
+               "--Supervisor:KeepAlive=false",
+               "--GrpcHost::AllowLocal=false"]
+
     stdout_redirect = None if verbose else subprocess.PIPE
     stderr_redirect = None if verbose else subprocess.PIPE
 

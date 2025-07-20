@@ -44,7 +44,7 @@ jobs:
 
     - name: Check open TCP ports
       run: |
-        sudo lsof -i -P -n | grep LISTEN
+        sudo lsof -iTCP -sTCP:LISTEN
 
     - name: Run integration tests
       run: python Tests/Integration/run_tests.py --app-path ./app --verbose

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Tinkwell.Bootstrapper;
@@ -10,8 +11,9 @@ namespace Tinkwell.Supervisor.Sentinel;
 
 sealed class SentinelProcessBuilder : IChildProcessBuilder
 {
-    public SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger)
+    public SentinelProcessBuilder(IConfiguration configuration, ILogger<SentinelProcessBuilder> logger)
     {
+        _configuration = configuration;
         _logger = logger;
         _logger.LogInformation("Working directory: {Path}", HostingInformation.WorkingDirectory);
         _logger.LogInformation("Current directory: {Path}", Environment.CurrentDirectory);
@@ -20,31 +22,36 @@ sealed class SentinelProcessBuilder : IChildProcessBuilder
 
     public IChildProcess Create(RunnerDefinition definition)
     {
-        _logger.LogInformation("Creating process for '{Path}'", definition.Path);
+        _logger.LogDebug("Creating process for '{Path}'", definition.Path);
         var psi = CreatePsi(definition);
-        _logger.LogInformation("Path: '{Path}', arguments: '{Arguments}'", psi.FileName, psi.Arguments);
+        _logger.LogDebug("Path: '{Path}', arguments: '{Arguments}'", psi.FileName, psi.Arguments);
 
         psi.EnvironmentVariables[WellKnownNames.RunnerNameEnvironmentVariable] = definition.Name;
         psi.EnvironmentVariables[WellKnownNames.SupervisorPidEnvironmentVariable] = Environment.ProcessId.ToString();
 
-        if (definition.ShouldKeepAlive())
+        bool keepAlive = _configuration.GetValue("Supervisor:KeepAlive", true);
+        if (keepAlive && definition.ShouldKeepAlive())
             return new SupervisionedChildProcess(_logger, psi, definition);
 
         return new ChildProcess(_logger, psi, definition);
     }
 
     private readonly ILogger<SentinelProcessBuilder> _logger;
+    private readonly IConfiguration _configuration;
 
-    private static ProcessStartInfo CreatePsi(RunnerDefinition definition)
+    private ProcessStartInfo CreatePsi(RunnerDefinition definition)
     {
         string fileName = definition.Path;
         string arguments = definition.Arguments ?? "";
 
-        string? dotNetExecutable = GetDotNetExecutable();
-        if (dotNetExecutable is not null)
+        if (_configuration.GetValue("Supervisor:GuessDotNetProcesses", true))
         {
-            fileName = "dotnet";
-            arguments = $"\"{dotNetExecutable}\" {arguments}";
+            string? dotNetExecutable = GetDotNetExecutable();
+            if (dotNetExecutable is not null)
+            {
+                fileName = "dotnet";
+                arguments = $"\"{dotNetExecutable}\" {arguments}";
+            }
         }
 
         return new ProcessStartInfo()
