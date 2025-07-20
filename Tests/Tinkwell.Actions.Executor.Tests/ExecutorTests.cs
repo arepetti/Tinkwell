@@ -5,23 +5,26 @@ using Tinkwell.TestHelpers;
 
 namespace Tinkwell.Actions.Executor.Tests;
 
-public abstract class ExecutorTests : IAsyncLifetime
+public class ExecutorTests
 {
-    private readonly MockEventsGateway _eventsGateway = new();
-    private readonly MockIntentDispatcher _dispatcher = new();
-    private readonly ILogger<Executor> _logger = new LoggerFactory().CreateLogger<Executor>();
-    private MockTwaFileReader _fileReader = new();
     private readonly ExecutorOptions _options = new() { Path = "fake.twa" };
-    private Executor _executor = default!;
 
     public ExecutorTests()
     {
         AgentsRecruiter.RegisterAssembly(typeof(ExecutorTests).Assembly);
     }
 
-    public async Task InitializeAsync()
+    [Fact]
+    [Trait("Category", "CI-Disabled")]
+    public async Task StartAsync_WithValidConfig_SubscribesToCorrectEvents()
     {
-        _fileReader = new MockTwaFileReader(
+        // Arrange
+        MockEventsGateway eventsGateway = new();
+        MockIntentDispatcher dispatcher = new();
+        ILogger<Executor> logger = new LoggerFactory().CreateLogger<Executor>();
+        MockTwaFileReader fileReader = new();
+
+        fileReader = new MockTwaFileReader(
             new WhenDefinition
             {
                 Topic = "topic1",
@@ -39,32 +42,51 @@ public abstract class ExecutorTests : IAsyncLifetime
                 Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
             }
         );
-        _executor = new Executor(_logger, _eventsGateway, _fileReader, _dispatcher, _options);
-        await _executor.StartAsync(CancellationToken.None);
-    }
 
-    public async Task DisposeAsync()
-    {
-        await _executor.DisposeAsync();
-    }
-
-    [Fact]
-    public async Task StartAsync_WithValidConfig_SubscribesToCorrectEvents()
-    {
-        // Arrange
+        Executor executor = new Executor(logger, eventsGateway, fileReader, dispatcher, _options);
+        await executor.StartAsync(CancellationToken.None);
 
         // Act
-        await AsyncTestHelper.WaitForCondition(() => _eventsGateway.Subscribers == 1, failureMessage: "Executor did not subscribe to events gateway on startup.");
+        await AsyncTestHelper.WaitForCondition(() => eventsGateway.Subscribers == 1, failureMessage: "Executor did not subscribe to events gateway on startup.");
 
         // Assert
-        Assert.Equal(1, _eventsGateway.Subscribers);
+        Assert.Equal(1, eventsGateway.Subscribers);
+
+        // Clen up
+        await executor.DisposeAsync();
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task OnEventReceived_WithMatchingListener_DispatchesCorrectIntent()
     {
         // Arrange
-        await Task.Delay(100);
+        MockEventsGateway eventsGateway = new();
+        MockIntentDispatcher dispatcher = new();
+        ILogger<Executor> logger = new LoggerFactory().CreateLogger<Executor>();
+        MockTwaFileReader fileReader = new();
+
+        fileReader = new MockTwaFileReader(
+            new WhenDefinition
+            {
+                Topic = "topic1",
+                Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
+            },
+            new WhenDefinition
+            {
+                Topic = "topic2",
+                Subject = "subject2",
+                Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
+            },
+            new WhenDefinition
+            {
+                Topic = "test-topic",
+                Actions = new[] { new ActionDefinition("mock", new Dictionary<string, object>()) }.ToList()
+            }
+        );
+
+        Executor executor = new Executor(logger, eventsGateway, fileReader, dispatcher, _options);
+        await executor.StartAsync(CancellationToken.None);
 
         var eventToSend = new PublishEventsRequest
         {
@@ -73,15 +95,18 @@ public abstract class ExecutorTests : IAsyncLifetime
         };
 
         // Act
-        await _eventsGateway.PublishAsync(eventToSend, CancellationToken.None);
-        await AsyncTestHelper.WaitForCondition(() => _dispatcher.Intents.Count == 1, failureMessage: "Intent was not dispatched after a matching event was published.");
+        await eventsGateway.PublishAsync(eventToSend, CancellationToken.None);
+        await AsyncTestHelper.WaitForCondition(() => dispatcher.Intents.Count == 1, failureMessage: "Intent was not dispatched after a matching event was published.");
 
         // Assert
-        Assert.Single(_dispatcher.Intents);
-        var intent = _dispatcher.Intents[0];
+        Assert.Single(dispatcher.Intents);
+        var intent = dispatcher.Intents[0];
         Assert.Equal("test-topic", intent.Event.Topic);
         Assert.Equal("{\"key\":\"value\"}", intent.Payload);
         Assert.Equal(typeof(MockAgent), intent.Directive.AgentType);
+
+        // Clen up
+        await executor.DisposeAsync();
     }
 }
 

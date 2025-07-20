@@ -6,7 +6,7 @@ using Tinkwell.Bootstrapper.Ipc.Extensions;
 
 namespace Tinkwell.Bootstrapper.Tests.Ipc;
 
-public abstract class NamedPipeServer_Extensions
+public class NamedPipeServer_Extensions
 {
     [Fact]
     [Trait("Category", "CI-Disabled")]

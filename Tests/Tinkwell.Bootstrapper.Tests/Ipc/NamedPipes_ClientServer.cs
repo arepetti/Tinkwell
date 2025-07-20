@@ -2,7 +2,7 @@ using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Bootstrapper.Tests.Ipc;
 
-public abstract class NamedPipes_ClientServer
+public class NamedPipes_ClientServer
 {
     [Fact]
     public void NamedPipeFactory_CreatesNewServerInstance()
@@ -17,7 +17,7 @@ public abstract class NamedPipes_ClientServer
     }
 
     [Fact]
-    [Trait("Category", "CI-Disabled")]
+    // [Trait("Category", "CI-Disabled")]
     public async Task NamedPipe_ClientServer_Communication()
     {
         var message = "Hello, pipe!";

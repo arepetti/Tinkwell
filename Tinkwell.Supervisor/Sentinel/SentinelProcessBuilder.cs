@@ -20,8 +20,9 @@ sealed class SentinelProcessBuilder : IChildProcessBuilder
 
     public IChildProcess Create(RunnerDefinition definition)
     {
-        _logger.LogDebug("Creating process for {Path}", definition.Path);
+        _logger.LogInformation("Creating process for '{Path}'", definition.Path);
         var psi = CreatePsi(definition);
+        _logger.LogInformation("Path: '{Path}', arguments: '{Arguments}'", psi.FileName, psi.Arguments);
 
         psi.EnvironmentVariables[WellKnownNames.RunnerNameEnvironmentVariable] = definition.Name;
         psi.EnvironmentVariables[WellKnownNames.SupervisorPidEnvironmentVariable] = Environment.ProcessId.ToString();

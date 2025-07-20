@@ -62,8 +62,8 @@ def start_tinkwell_app(context, verbose=False):
     stdout_redirect = None if verbose else subprocess.PIPE
     stderr_redirect = None if verbose else subprocess.PIPE
 
-    process = subprocess.Popen(command, stdout=stdout_redirect, stderr=stderr_redirect, env=env, cwd=context.app_path)
-    print(f"{COLOR_DARK_GRAY}Tinkwell application started with PID{COLOR_RESET} {process.pid}")
+    process = subprocess.Popen(command, stdout=stdout_redirect, stderr=stderr_redirect, env=env, cwd=context.temp_dir)
+    print(f"{COLOR_DARK_GRAY}Application started with PID{COLOR_RESET} {process.pid}")
     return process
 
 def stop_tinkwell_app(process, context):
@@ -78,15 +78,15 @@ def stop_tinkwell_app(process, context):
             time.sleep(5) # Wait for graceful shutdown
 
             if process.poll() is None: # Check if still running after graceful attempt
-                print(f"{COLOR_DARK_GRAY}Tinkwell application (PID: {process.pid}) did not terminate gracefully, killing...{COLOR_RESET}")
+                print(f"{COLOR_DARK_GRAY}Application (PID: {process.pid}) did not terminate gracefully, killing...{COLOR_RESET}")
                 process.kill()
                 process.wait()
             else:
-                print(f"{COLOR_DARK_GRAY}Tinkwell application (PID: {process.pid}) terminated gracefully.{COLOR_RESET}")
+                print(f"{COLOR_DARK_GRAY}Application (PID: {process.pid}) terminated gracefully.{COLOR_RESET}")
 
         except Exception as e: # Catch general Exception for robustness
             print(f"{COLOR_RED}Error during graceful shutdown attempt for PID {process.pid}: {e}. Forcing kill...{COLOR_RESET}")
             process.kill()
             process.wait()
     else:
-        print(f"{COLOR_DARK_GRAY}Tinkwell application (PID: {process.pid}) was already stopped.{COLOR_RESET}")
+        print(f"{COLOR_DARK_GRAY}Application (PID: {process.pid}) was already stopped.{COLOR_RESET}")
