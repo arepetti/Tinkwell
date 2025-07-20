@@ -42,5 +42,13 @@ jobs:
       with:
         python-version: '3.13.5'
 
+    - name: List open ports (before)
+      run: |
+        sudo lsof -i -P -n | grep LISTEN
+
     - name: Run integration tests
       run: python Tests/Integration/run_tests.py --app-path ./app --verbose
+
+    - name: List open ports (after cleanup)
+      run: |
+        sudo lsof -i -P -n | grep LISTEN
