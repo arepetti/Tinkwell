@@ -5,7 +5,7 @@ namespace Tinkwell.Cli.Commands.Certs;
 
 public static class SelfSignedCertificate
 {
-    public record CreateOptions(string CommonName, int ValidityYears, string Password, List<string>? SubjectAlternativeNames = null);
+    public record CreateOptions(string CommonName, int ValidityYears, string Password, string[]? SubjectAlternativeNames = null);
 
     public static X509Certificate2 Create(CreateOptions options)
     {

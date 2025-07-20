@@ -43,7 +43,7 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
 
         [CommandOption("--san")]
         [Description("Adds a Subject Alternative Name (SAN) to the certificate. Can be specified multiple times (e.g., --san DNS:localhost --san IP:127.0.0.1).")]
-        public List<string> SubjectAlternativeNames { get; set; } = new List<string>();
+        public string[] SubjectAlternativeNames { get; set; } = [];
     }
 
     public override int Execute(CommandContext context, Settings settings)

@@ -30,15 +30,15 @@ class TwCli:
                 text=True, # Decode stdout/stderr as text
                 check=False, # Do not raise an exception for non-zero exit codes
                 timeout=30, # Add a timeout to prevent hanging tests
-                input=input_data, # Pass input data to stdin
-                env=env # Pass the modified environment
+                input=input_data,
+                env=env
             )
-            if result.returncode != 0 or True:
+            if result.returncode != 0 or len(result.stderr) > 0:
                 print(f"{COLOR_DARK_GRAY}Command: {' '.join(command)}{COLOR_RESET}")
                 print(f"{COLOR_DARK_GRAY}Exit code: {result.returncode}{COLOR_RESET}")
-                print(f"{COLOR_DARK_GRAY}stdout (length {len(result.stdout)}):\n{result.stdout}{COLOR_RESET}") # Removed .strip()
+                print(f"{COLOR_DARK_GRAY}stdout (length {len(result.stdout)}):\n{result.stdout}{COLOR_RESET}")
                 if result.stderr:
-                    print(f"{COLOR_DARK_GRAY}stderr (length {len(result.stderr)}):\n{COLOR_RED}{result.stderr}{COLOR_RESET}") # Removed .strip()
+                    print(f"{COLOR_DARK_GRAY}stderr (length {len(result.stderr)}):\n{COLOR_RED}{result.stderr}{COLOR_RESET}")
             return {
                 "stdout": result.stdout,
                 "stderr": result.stderr,
