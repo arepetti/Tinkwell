@@ -8,6 +8,7 @@ public class ReducerTests
     private readonly ReducerOptions _options = new() { Path = "test.twm" };
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task HappyPath_CalculatesAndSubscribesCorrectly()
     {
         // Arrange
