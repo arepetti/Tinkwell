@@ -63,14 +63,11 @@ sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger) : IC
             if (File.Exists(definition.Path))
                 return null;
 
-            string directory = Path.IsPathRooted(definition.Path)
-                ? Path.GetDirectoryName(definition.Path)!
-                : Assembly.GetExecutingAssembly().Location;
-
             if (Path.IsPathRooted(definition.Path))
                 return File.Exists(definition.Path + ".dll") ? definition.Path + ".dll" : null;
 
-            string altPath = Path.Combine(Environment.CurrentDirectory, definition.Path) + ".dll";
+            string directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly()?.Location)!;
+            string altPath = Path.Combine(directory, definition.Path) + ".dll";
             return File.Exists(altPath) ? altPath : null;
         }
 
