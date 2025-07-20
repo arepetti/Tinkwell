@@ -119,11 +119,17 @@ sealed class RegisterServicesActivity : IActivity
         if (definition.Children.Any(x => x.Activation.Count != 0))
             _logger.LogWarning("One or more children of {Name} have activation requirements which are not supported and they're going to be ignored.", HostingInformation.RunnerName);
 
-        return [.. _evaluator.Filter(definition.Children).Select(x => new HostedGrpcServer
-        {
-            Name = x.Name,
-            Path = x.Path,
-            Properties = x.Properties,
+        return [.. _evaluator.Filter(definition.Children).Select(x => {
+            var path = Path.IsPathRooted(x.Path)
+            ? x.Path
+            : Path.Combine(StrategyAssemblyLoader.GetAppPath(), x.Path);
+
+            return new HostedGrpcServer
+            {
+                Name = x.Name,
+                Path = path,
+                Properties = x.Properties,
+            };
         })];
     }
 

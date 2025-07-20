@@ -17,8 +17,8 @@ def find_tests(test_dir, trait=None, test_name=None):
         # Try prepending 'test_' if exact match not found (test_example.py for test_name='example')
         test_file_path_prefixed = os.path.join(test_dir, f"test_{test_name}.py")
 
-        print(f"{COLOR_DARK_GRAY}  Debug: Checking exact path: {test_file_path_exact} (exists: {os.path.exists(test_file_path_exact)}){COLOR_RESET}")
-        print(f"{COLOR_DARK_GRAY}  Debug: Checking prefixed path: {test_file_path_prefixed} (exists: {os.path.exists(test_file_path_prefixed)}){COLOR_RESET}")
+        print(f"{COLOR_DARK_GRAY}Debug: Checking exact path: {test_file_path_exact} (exists: {os.path.exists(test_file_path_exact)}){COLOR_RESET}")
+        print(f"{COLOR_DARK_GRAY}Debug: Checking prefixed path: {test_file_path_prefixed} (exists: {os.path.exists(test_file_path_prefixed)}){COLOR_RESET}")
 
         target_test_file = None
         if os.path.exists(test_file_path_exact):
@@ -50,12 +50,13 @@ def find_tests(test_dir, trait=None, test_name=None):
             spec.loader.exec_module(test_module)
             
             priority = getattr(test_module, 'TEST_PRIORITY', 100)
+            friendly_name = getattr(test_module, 'TEST_NAME', current_test_name.removeprefix("test_"))
 
             if trait:
                 if hasattr(test_module, 'TRAIT') and test_module.TRAIT == trait:
-                    discovered_tests.append((priority, current_test_name, test_path))
+                    discovered_tests.append((priority, current_test_name, test_path, friendly_name))
             else:
-                discovered_tests.append((priority, current_test_name, test_path))
+                discovered_tests.append((priority, current_test_name, test_path, friendly_name))
 
     # Sort tests by priority
     discovered_tests.sort(key=lambda x: x[0])

@@ -87,8 +87,11 @@ sealed class RegisterDllsActivity : IActivity
             _logger.LogWarning("One or more children of {Name} have activation requirements which are not supported and they're going to be ignored.", HostingInformation.RunnerName);
 
         return _evaluator.Filter(definition.Children)
-            .Select(x => new HostedDll(x.Name, x.Path, x.Properties))
+            .Select(x => new HostedDll(x.Name, ResolvePath(x.Path), x.Properties))
             .ToArray();
+
+        static string ResolvePath(string path)
+            => Path.IsPathRooted(path) ? path : Path.Combine(StrategyAssemblyLoader.GetAppPath(), path);
     }
 
     private sealed class HostProxy(IHostBuilder builder) : IConfigurableHost

@@ -9,8 +9,8 @@ from lib.tw_cli import TwCli, PingStatus
 from lib.colors import *
 from lib.formatting import calculate_elapsed_time
 
-# Health Check Constants
 INITIAL_WAIT_SECONDS = 5
+SHUTDOWN_WAIT_SECONDS = 2
 RETRY_WAIT_SECONDS = 2
 MAX_PING_RETRIES = 5
 
@@ -19,11 +19,11 @@ def wait_for_tinkwell_ready(tw_cli):
     time.sleep(INITIAL_WAIT_SECONDS)
 
     for attempt in range(1, MAX_PING_RETRIES + 1):
-        print(f"{COLOR_DARK_GRAY}Pinging Tinkwell supervisor (Attempt {attempt}/{MAX_PING_RETRIES})...{COLOR_RESET}")
+        print(f"{COLOR_DARK_GRAY}Pinging Supervisor (Attempt {attempt}/{MAX_PING_RETRIES})...{COLOR_RESET}")
         status = tw_cli.send_ping()
 
         if status == PingStatus.OK:
-            print(f"{COLOR_DARK_GRAY}Tinkwell supervisor is{COLOR_RESET} ready")
+            print(f"{COLOR_DARK_GRAY}Supervisor is{COLOR_RESET} ready")
             return True
         elif status == PingStatus.Loading:
             print(f"{COLOR_DARK_GRAY}Tinkwell supervisor is Loading. Retrying in {RETRY_WAIT_SECONDS} seconds...{COLOR_RESET}")
@@ -46,6 +46,7 @@ def execute_test(test_name, test_file_path, context, keep_temp_dir, verbose):
 
     try:
         start_time = time.time()
+
         # Create isolated environment
         create_temp_tinkwell_env(context, test_name)
 
@@ -61,15 +62,13 @@ def execute_test(test_name, test_file_path, context, keep_temp_dir, verbose):
                 else:
                     shutil.copy2(s, d)
 
-        # Start the application
-        print(f"{COLOR_DARK_GRAY}Starting Tinkwell application {COLOR_BLUE}{context.app_dll_path}{COLOR_RESET}")
+        # Start the application and wait for it to be fully loaded
+        print(f"{COLOR_DARK_GRAY}Starting application {COLOR_BLUE}{context.app_dll_path}{COLOR_RESET}")
         app_process = start_tinkwell_app(context, verbose)
-        time.sleep(3) # Give the application time to fully start up
 
-        # Wait for the application to be fully loaded
         tw_cli = TwCli(context)
         if not wait_for_tinkwell_ready(tw_cli):
-            return False, "Tinkwell application did not become ready for this test."
+            return False, "Tinkwell did not become ready for this test."
 
         # Load and execute the individual test module
         spec = importlib.util.spec_from_file_location(test_name, test_file_path)
@@ -105,14 +104,12 @@ def execute_test(test_name, test_file_path, context, keep_temp_dir, verbose):
         print(f"  {COLOR_RED}{failure_message}{COLOR_RESET}")
     finally:
         print(f"{COLOR_DARK_GRAY}Shutting down...{COLOR_RESET}")
-        # Close the process
         if app_process:
-            print(f"{COLOR_DARK_GRAY}Stopping Tinkwell application...{COLOR_RESET}")
+            print(f"{COLOR_DARK_GRAY}Stopping application...{COLOR_RESET}")
             stop_tinkwell_app(app_process, context)
-            time.sleep(1) # Give the application time to shut down
+            time.sleep(SHUTDOWN_WAIT_SECONDS) # Give the application time to shut down
 
-        # Clean up temporary directory
-        print(f"{COLOR_DARK_GRAY}Removing the isolated environment...{COLOR_RESET}")
+        print(f"{COLOR_DARK_GRAY}Cleaning up...{COLOR_RESET}")
         if context.temp_dir and os.path.exists(context.temp_dir) and not keep_temp_dir:
             print(f"{COLOR_DARK_GRAY}Deleting temporary directory {COLOR_BLUE}{context.temp_dir}{COLOR_RESET}")
             shutil.rmtree(context.temp_dir)

@@ -2,16 +2,26 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 
 namespace Tinkwell.Supervisor.Sentinel;
 
-sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger) : IChildProcessBuilder
+sealed class SentinelProcessBuilder : IChildProcessBuilder
 {
+    public SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger)
+    {
+        _logger = logger;
+        _logger.LogInformation("Working directory: {Path}", HostingInformation.WorkingDirectory);
+        _logger.LogInformation("Current directory: {Path}", Environment.CurrentDirectory);
+        _logger.LogInformation("Executables directory: {Path}", StrategyAssemblyLoader.GetAppPath());
+    }
+
     public IChildProcess Create(RunnerDefinition definition)
     {
+        _logger.LogDebug("Creating process for {Path}", definition.Path);
         var psi = CreatePsi(definition);
 
         psi.EnvironmentVariables[WellKnownNames.RunnerNameEnvironmentVariable] = definition.Name;
@@ -23,7 +33,7 @@ sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger) : IC
         return new ChildProcess(_logger, psi, definition);
     }
 
-    private readonly ILogger<SentinelProcessBuilder> _logger = logger;
+    private readonly ILogger<SentinelProcessBuilder> _logger;
 
     private static ProcessStartInfo CreatePsi(RunnerDefinition definition)
     {
@@ -66,7 +76,7 @@ sealed class SentinelProcessBuilder(ILogger<SentinelProcessBuilder> logger) : IC
             if (Path.IsPathRooted(definition.Path))
                 return File.Exists(definition.Path + ".dll") ? definition.Path + ".dll" : null;
 
-            string directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly()?.Location)!;
+            string directory = StrategyAssemblyLoader.GetAppPath();
             string altPath = Path.Combine(directory, definition.Path) + ".dll";
             return File.Exists(altPath) ? altPath : null;
         }
