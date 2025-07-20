@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ensamble;
