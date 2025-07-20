@@ -61,7 +61,7 @@ def create_temp_tinkwell_env(context, test_name):
         os.path.join(context.temp_dir, "Cert"),
         True,
         DEFAULT_CERT_PASSWORD,
-        sans=["DNS:localhost", "IP:127.0.0.1", "IP::1"]
+        sans=["DNS:localhost", "IP:127.0.0.1", "IP:::1"]
     )
     
     context.server_certificate_path = os.path.join(context.temp_dir, "Cert", "tinkwell.pfx")

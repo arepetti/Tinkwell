@@ -41,7 +41,13 @@ public static class SelfSignedCertificate
                 if (san.StartsWith("DNS:", StringComparison.OrdinalIgnoreCase))
                     sanBuilder.AddDnsName(san.Substring(4));
                 else if (san.StartsWith("IP:", StringComparison.OrdinalIgnoreCase))
-                    sanBuilder.AddIpAddress(System.Net.IPAddress.Parse(san.Substring(3)));
+                {
+                    string ipAddressString = san.Substring(3);
+                    if (ipAddressString.Equals("::1", StringComparison.OrdinalIgnoreCase))
+                        sanBuilder.AddIpAddress(System.Net.IPAddress.IPv6Loopback); // Use IPv6Loopback for ::1
+                    else
+                        sanBuilder.AddIpAddress(System.Net.IPAddress.Parse(ipAddressString));
+                }
                 else if (san.StartsWith("URI:", StringComparison.OrdinalIgnoreCase))
                     sanBuilder.AddUri(new Uri(san.Substring(4)));
                 else
