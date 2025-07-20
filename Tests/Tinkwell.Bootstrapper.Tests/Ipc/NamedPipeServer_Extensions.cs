@@ -9,7 +9,7 @@ namespace Tinkwell.Bootstrapper.Tests.Ipc;
 public class NamedPipeServer_Extensions
 {
     [Fact]
-    [Trait("Category", "CI-Disabled")]
+    //[Trait("Category", "CI-Disabled")]
     public void SendCommandToSupervisorAndDisconnect_SendsAndReceivesMessage()
     {
         var pipeName = Guid.NewGuid().ToString();
@@ -39,7 +39,7 @@ public class NamedPipeServer_Extensions
     }
 
     [Fact]
-    [Trait("Category", "CI-Disabled")]
+    //[Trait("Category", "CI-Disabled")]
     public async Task SendCommandToSupervisorAndDisconnectAsync_SendsAndReceivesMessage()
     {
         var pipeName = Guid.NewGuid().ToString();
@@ -69,7 +69,7 @@ public class NamedPipeServer_Extensions
     }
 
     [Fact]
-    [Trait("Category", "CI-Disabled")]
+    //[Trait("Category", "CI-Disabled")]
     public async Task SendCommandToSupervisorAndDisconnectAsync_WithGenericType_SendsAndReceivesMessage()
     {
         var pipeName = Guid.NewGuid().ToString();

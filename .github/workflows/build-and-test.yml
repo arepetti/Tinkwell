@@ -30,11 +30,12 @@ jobs:
     - name: Create directory for integration test artifacts
       run: mkdir ./app
 
-    - name: Publish Tinkwell.Supervisor
-      run: dotnet publish Tinkwell.Supervisor -c Release -o ./app
-    
-    - name: Publish Tinkwell.Cli
-      run: dotnet publish Tinkwell.Cli -c Release -o ./app
+    - name: Publish Application
+      run: |
+        for proj in $(find . -name "*.csproj" | grep -v -i "Tests/"); do
+          echo "Publishing $proj..."
+          dotnet publish "$proj" -c Release -o "./app"
+        done
 
     - name: Setup Python
       uses: actions/setup-python@v5
