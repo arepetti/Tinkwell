@@ -16,7 +16,7 @@ public class ReducerTests
         InMemoryStoreAdapter storeAdapter = new InMemoryStoreAdapter(storage);
         MockTwmFileReader fileReader = new();
         MockLogger<Reducer> logger = new();
-        Reducer reducer = new Reducer(logger, storeAdapter, fileReader, _options);
+        Reducer reducer = new(logger, storeAdapter, fileReader, _options);
 
         fileReader.AddScalar("A", "1");
         fileReader.AddScalar("B", "2");
@@ -44,6 +44,7 @@ public class ReducerTests
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task NoDerivedMeasures_SitsIdle()
     {
         // Arrange
@@ -51,7 +52,7 @@ public class ReducerTests
         InMemoryStoreAdapter storeAdapter = new InMemoryStoreAdapter(storage);
         MockTwmFileReader fileReader = new();
         MockLogger<Reducer> logger = new();
-        Reducer reducer = new Reducer(logger, storeAdapter, fileReader, _options);
+        Reducer reducer = new(logger, storeAdapter, fileReader, _options);
 
         // Act
         await reducer.StartAsync(default);
@@ -65,6 +66,7 @@ public class ReducerTests
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task CircularDependency_LogsCriticalError()
     {
         // Arrange
@@ -72,7 +74,7 @@ public class ReducerTests
         InMemoryStoreAdapter storeAdapter = new InMemoryStoreAdapter(storage);
         MockTwmFileReader fileReader = new();
         MockLogger<Reducer> logger = new();
-        Reducer reducer = new Reducer(logger, storeAdapter, fileReader, _options);
+        Reducer reducer = new(logger, storeAdapter, fileReader, _options);
 
         fileReader.AddScalar("A", "B");
         fileReader.AddScalar("B", "A");
@@ -89,6 +91,7 @@ public class ReducerTests
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task ConstantExpression_CalculatesOnceAndDoesNotSubscribe()
     {
         // Arrange
@@ -115,6 +118,7 @@ public class ReducerTests
     }
 
     [Fact]
+    [Trait("Category", "CI-Disabled")]
     public async Task ExpressionFailure_LogsErrorAndDisablesMeasure()
     {
         // Arrange

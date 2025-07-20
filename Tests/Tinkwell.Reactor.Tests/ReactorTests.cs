@@ -20,7 +20,7 @@ public class ReactorTests
         MockTwmFileReader fileReader = new();
         MockEventsGateway eventsGateway = new();
         MockLogger<Reactor> logger = new();
-        Reactor reactor = new Reactor(logger, fileReader, storeAdapter, eventsGateway, _options);
+        Reactor reactor = new(logger, fileReader, storeAdapter, eventsGateway, _options);
 
         var measure = new Measures.MeasureDefinition { Name = "temperature", Type = MeasureType.Number, QuantityType = "Temperature", Unit = "DegreeCelsius" };
         var signal = new SignalDefinition
@@ -76,7 +76,7 @@ public class ReactorTests
         MockTwmFileReader fileReader = new();
         MockEventsGateway eventsGateway = new();
         MockLogger<Reactor> logger = new();
-        Reactor reactor = new Reactor(logger, fileReader, storeAdapter, eventsGateway, _options);
+        Reactor reactor = new(logger, fileReader, storeAdapter, eventsGateway, _options);
 
         var measure = new Measures.MeasureDefinition { Name = "temperature", Type = MeasureType.Number, QuantityType = "Temperature", Unit = "DegreeCelsius" };
         var signal = new SignalDefinition
