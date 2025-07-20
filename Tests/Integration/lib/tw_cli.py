@@ -82,9 +82,10 @@ class TwCli:
         """
         self.run_command("supervisor", "send", "shutdown", "-y", "--stdout-format=tooling")
 
-    def create_cert(self, common_name, export_name, export_path, export_pem, password):
+    def create_cert(self, common_name, export_name, export_path, export_pem, password, sans=None):
         """
         Calls 'tw certs create' to generate a new self-signed certificate.
+        'sans' should be a list of strings, e.g., ["DNS:localhost", "IP:127.0.0.1"].
         """
         command_args = ["certs", "create"]
         if common_name:
@@ -98,4 +99,9 @@ class TwCli:
         if password:
             command_args.append(f"--unsafe-password={password}")
         
+        # Add SANs if provided
+        if sans:
+            for san_entry in sans:
+                command_args.extend(["--san", san_entry])
+
         return self.run_command(*command_args)

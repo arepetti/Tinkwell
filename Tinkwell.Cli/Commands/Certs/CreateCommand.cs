@@ -40,6 +40,10 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
 
         [CommandOption("--unsafe-password", IsHidden = true)]
         public string Password { get; set; } = "";
+
+        [CommandOption("--san")]
+        [Description("Adds a Subject Alternative Name (SAN) to the certificate. Can be specified multiple times (e.g., --san DNS:localhost --san IP:127.0.0.1).")]
+        public List<string> SubjectAlternativeNames { get; set; } = new List<string>();
     }
 
     public override int Execute(CommandContext context, Settings settings)
@@ -48,7 +52,12 @@ sealed class CreateCommand : Command<CreateCommand.Settings>
             ? AnsiConsole.Ask<string>("Password?")
             : settings.Password;
 
-        var options = new SelfSignedCertificate.CreateOptions(settings.CommonName, settings.Validity, password);
+        var options = new SelfSignedCertificate.CreateOptions(
+            settings.CommonName,
+            settings.Validity,
+            password,
+            settings.SubjectAlternativeNames
+        );
         var certificate = SelfSignedCertificate.Create(options);
 
         if (!settings.IsOutputForTool)
