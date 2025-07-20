@@ -8,7 +8,6 @@ public class ReducerTests
     private readonly ReducerOptions _options = new() { Path = "test.twm" };
 
     [Fact]
-    [Trait("Category", "CI-Disabled")]
     public async Task HappyPath_CalculatesAndSubscribesCorrectly()
     {
         // Arrange
@@ -24,7 +23,6 @@ public class ReducerTests
 
         // Act
         await reducer.StartAsync(default);
-        await reducer.WaitForSubscriptionReadyAsync();
 
         // Assert
         var c = storage.Find("C");
@@ -44,7 +42,6 @@ public class ReducerTests
     }
 
     [Fact]
-    [Trait("Category", "CI-Disabled")]
     public async Task NoDerivedMeasures_SitsIdle()
     {
         // Arrange
@@ -56,7 +53,6 @@ public class ReducerTests
 
         // Act
         await reducer.StartAsync(default);
-        await reducer.WaitForSubscriptionReadyAsync();
 
         // Assert
         Assert.Contains(logger.Logs, l => l.Item1 == Microsoft.Extensions.Logging.LogLevel.Warning && l.Item2.Contains("No derived measures to calculate"));
@@ -66,7 +62,6 @@ public class ReducerTests
     }
 
     [Fact]
-    [Trait("Category", "CI-Disabled")]
     public async Task CircularDependency_LogsCriticalError()
     {
         // Arrange
@@ -81,7 +76,6 @@ public class ReducerTests
 
         // Act
         await reducer.StartAsync(default);
-        await reducer.WaitForSubscriptionReadyAsync();
 
         // Assert
         Assert.Contains(logger.Logs, l => l.Item1 == Microsoft.Extensions.Logging.LogLevel.Critical && l.Item2.Contains("Circular dependency detected"));
@@ -91,7 +85,6 @@ public class ReducerTests
     }
 
     [Fact]
-    [Trait("Category", "CI-Disabled")]
     public async Task ConstantExpression_CalculatesOnceAndDoesNotSubscribe()
     {
         // Arrange
@@ -105,7 +98,6 @@ public class ReducerTests
 
         // Act
         await reducer.StartAsync(default);
-        await reducer.WaitForSubscriptionReadyAsync();
 
         // Assert
         var c = storage.Find("C");
@@ -118,7 +110,6 @@ public class ReducerTests
     }
 
     [Fact]
-    [Trait("Category", "CI-Disabled")]
     public async Task ExpressionFailure_LogsErrorAndDisablesMeasure()
     {
         // Arrange
@@ -134,7 +125,6 @@ public class ReducerTests
 
         // Act
         await reducer.StartAsync(default);
-        await reducer.WaitForSubscriptionReadyAsync();
         await storeAdapter.WriteQuantityAsync("A", 10, default);
         await storeAdapter.WriteQuantityAsync("B", 0, default); // Division by zero
         await Task.Delay(100);

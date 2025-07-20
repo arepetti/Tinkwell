@@ -37,9 +37,6 @@ static class Extensions
         var resolvedPath = HostingInformation.GetFullPath(
             Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePath) ?? "");
 
-        if (!File.Exists(resolvedPath))
-            throw new FileNotFoundException($"Certificate file not found at: {resolvedPath}");
-
         return (resolvedPath, password);
     }
 

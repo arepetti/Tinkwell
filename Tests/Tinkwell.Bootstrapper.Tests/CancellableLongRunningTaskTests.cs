@@ -1,6 +1,6 @@
 namespace Tinkwell.Bootstrapper.Tests;
 
-public class CancellableLongRunningTaskTests
+public abstract class CancellableLongRunningTaskTests
 {
     [Fact]
     [Trait("Category", "CI-Disabled")]

@@ -49,7 +49,6 @@ sealed class Reactor : IAsyncDisposable
 
         await _worker.StartAsync(SubscribeToChangesAsync);
         _logger.LogDebug("Reactor started successfully, now watching for changes");
-        _subscriptionReadyTcs.SetResult(true);
     }
 
     public async ValueTask DisposeAsync()
@@ -65,9 +64,6 @@ sealed class Reactor : IAsyncDisposable
     private readonly ReactorOptions _options;
     private readonly CancellableLongRunningTask _worker = new();
     private readonly SignalDependencyWalker _dependencyWalker = new();
-    private readonly TaskCompletionSource<bool> _subscriptionReadyTcs = new();
-
-    public Task WaitForSubscriptionReadyAsync() => _subscriptionReadyTcs.Task;
 
     private async Task SubscribeToChangesAsync(CancellationToken cancellationToken)
     {

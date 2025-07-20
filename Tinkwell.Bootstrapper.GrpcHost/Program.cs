@@ -1,3 +1,5 @@
+using System.Net;
+
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.GrpcHost;
@@ -5,8 +7,6 @@ using Tinkwell.Bootstrapper.Hosting;
 using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Bootstrapper.Ipc.Extensions;
 using Tinkwell.Bootstrapper.Rpc.ServerHost.Services;
-
-using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -41,7 +41,6 @@ public class ReactorTests
 
         // Act - Initial check, undefined value.
         await reactor.StartAsync(default);
-        await reactor.WaitForSubscriptionReadyAsync();
 
         // Act - Below threshold.
         await storeAdapter.WriteQuantityAsync(measure.Name, 90, default);
@@ -96,9 +95,9 @@ public class ReactorTests
         await storeAdapter.WriteQuantityAsync(measure.Name, 101, default);
         
         fileReader.AddSignal(signal);
+
         // Act - Initial check, above threshold
         await reactor.StartAsync(default);
-        await reactor.WaitForSubscriptionReadyAsync();
         await AsyncTestHelper.WaitForCondition(() => eventsGateway.PublishedEvents.Count == 1, failureMessage: "Event was not published on startup when measure was already above threshold");
 
         // Assert - The event is already there

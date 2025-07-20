@@ -61,7 +61,6 @@ sealed class Reducer : IAsyncDisposable
         {
             await _worker.StartAsync(SubscribeToChangesAsync, cancellationToken);
             _logger.LogDebug("Reducer started successfully, now watching for changes");
-            _subscriptionReadyTcs.SetResult(true);
         }
     }
 
@@ -79,10 +78,7 @@ sealed class Reducer : IAsyncDisposable
     private readonly ReducerOptions _options;
     private readonly DependencyWalker<Measure> _dependencyWalker;
     private readonly CancellableLongRunningTask _worker = new();
-    private readonly TaskCompletionSource<bool> _subscriptionReadyTcs = new();
 
-    public Task WaitForSubscriptionReadyAsync() => _subscriptionReadyTcs.Task;
-    
     private async Task RegisterDerivedMeasuresAsync(CancellationToken cancellationToken)
     {
         var request = new StoreRegisterManyRequest();
@@ -106,22 +102,24 @@ sealed class Reducer : IAsyncDisposable
 
     private async Task SubscribeToChangesAsync(CancellationToken cancellationToken)
     {
-        Debug.Assert(_store is not null);
-
         var uniqueDependencies = _dependencyWalker.ForwardDependencyMap.Values
             .SelectMany(x => x)
             .Distinct()
-            .ToArray();
+            .ToList();
 
-        if (uniqueDependencies.Length == 0)
+        if (uniqueDependencies.Count == 0)
             return;
 
-        _logger.LogDebug("Subscribing to changes for {Count} dependencies", uniqueDependencies.Length);
+        _logger.LogDebug("Subscribing to changes for {Count} dependencies", uniqueDependencies.Count);
         using var call = await _store.SubscribeManyAsync(uniqueDependencies, cancellationToken);
         try
         {
             await foreach (var response in call.ReadAllAsync(cancellationToken))
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break; // Explicitly break if cancellation is requested
                 await HandleChangeAsync(response.Name, cancellationToken);
+            }
         }
         catch (RpcException e)
         {
