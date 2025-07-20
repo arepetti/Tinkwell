@@ -30,15 +30,15 @@ class TwCli:
                 text=True, # Decode stdout/stderr as text
                 check=False, # Do not raise an exception for non-zero exit codes
                 timeout=30, # Add a timeout to prevent hanging tests
-                input=input_data, # Pass input data to stdin
-                env=env # Pass the modified environment
+                input=input_data,
+                env=env
             )
-            if result.returncode != 0:
+            if result.returncode != 0 or len(result.stderr) > 0:
                 print(f"{COLOR_DARK_GRAY}Command: {' '.join(command)}{COLOR_RESET}")
                 print(f"{COLOR_DARK_GRAY}Exit code: {result.returncode}{COLOR_RESET}")
-                print(f"{COLOR_DARK_GRAY}stdout (length {len(result.stdout)}):\n{result.stdout}{COLOR_RESET}") # Removed .strip()
+                print(f"{COLOR_DARK_GRAY}stdout (length {len(result.stdout)}):\n{result.stdout}{COLOR_RESET}")
                 if result.stderr:
-                    print(f"{COLOR_DARK_GRAY}stderr (length {len(result.stderr)}):\n{COLOR_RED}{result.stderr}{COLOR_RESET}") # Removed .strip()
+                    print(f"{COLOR_DARK_GRAY}stderr (length {len(result.stderr)}):\n{COLOR_RED}{result.stderr}{COLOR_RESET}")
             return {
                 "stdout": result.stdout,
                 "stderr": result.stderr,
@@ -82,9 +82,10 @@ class TwCli:
         """
         self.run_command("supervisor", "send", "shutdown", "-y", "--stdout-format=tooling")
 
-    def create_cert(self, common_name, export_name, export_path, export_pem, password):
+    def create_cert(self, common_name, export_name, export_path, export_pem, password, sans=None):
         """
         Calls 'tw certs create' to generate a new self-signed certificate.
+        'sans' should be a list of strings, e.g., ["DNS:localhost", "IP:127.0.0.1"].
         """
         command_args = ["certs", "create"]
         if common_name:
@@ -98,4 +99,9 @@ class TwCli:
         if password:
             command_args.append(f"--unsafe-password={password}")
         
+        # Add SANs if provided
+        if sans:
+            for san_entry in sans:
+                command_args.extend(["--san", san_entry])
+
         return self.run_command(*command_args)

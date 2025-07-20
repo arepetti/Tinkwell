@@ -9,7 +9,7 @@ def generate_report(results, start_time):
     failed_count = 0
     total_count = len(results)
 
-    print(f"{COLOR_YELLOW}\n--- Test Results ---{COLOR_RESET}")
+    print(f"{COLOR_YELLOW}\nTEST RESULTS{COLOR_RESET}")
     for test, result_data in results.items():
         status = result_data["status"]
         message = result_data["message"]
@@ -24,8 +24,7 @@ def generate_report(results, start_time):
             overall_success = False
             failed_count += 1
 
-    print(f"\n{COLOR_YELLOW}--- Summary ---{COLOR_RESET}")
-    print(f"Tests: {COLOR_GREEN}{passed_count} passed{COLOR_RESET}, {COLOR_RED}{failed_count} failed{COLOR_RESET}, {total_count} total")
+    print(f"\nTests: {COLOR_GREEN}{passed_count} passed{COLOR_RESET}, {COLOR_RED}{failed_count} failed{COLOR_RESET}, {total_count} total")
     print(f"Time: {calculate_elapsed_time(start_time, time.time())}")
 
     if overall_success:

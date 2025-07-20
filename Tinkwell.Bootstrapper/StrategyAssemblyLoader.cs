@@ -205,6 +205,15 @@ public static class StrategyAssemblyLoader
     }
 
     /// <summary>
+    /// Gets the directory path of the application.
+    /// </summary>
+    /// <returns>
+    /// The directory where the application is installed.
+    /// </returns>
+    public static string GetAppPath()
+        => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
+
+    /// <summary>
     /// Determines the string comparer to use when working with file system entries
     /// in the specified path.
     /// </summary>

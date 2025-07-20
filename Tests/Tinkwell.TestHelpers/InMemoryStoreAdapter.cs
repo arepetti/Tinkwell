@@ -1,5 +1,6 @@
 
 using Google.Protobuf.WellKnownTypes;
+using System.Collections.Concurrent;
 using System.Threading.Channels;
 using Tinkwell.Measures;
 using Tinkwell.Measures.Storage;
@@ -10,7 +11,7 @@ namespace Tinkwell.TestHelpers;
 
 public class InMemoryStoreAdapter : IStore
 {
-    public InMemoryStoreAdapter(IStorage storage)
+    public InMemoryStoreAdapter(TestInMemoryStorage storage)
     {
         _storage = storage;
         _storage.ValueChanged += OnValueChanged;

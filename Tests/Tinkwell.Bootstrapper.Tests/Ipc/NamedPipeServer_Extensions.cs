@@ -9,6 +9,7 @@ namespace Tinkwell.Bootstrapper.Tests.Ipc;
 public class NamedPipeServer_Extensions
 {
     [Fact]
+    //[Trait("Category", "CI-Disabled")]
     public void SendCommandToSupervisorAndDisconnect_SendsAndReceivesMessage()
     {
         var pipeName = Guid.NewGuid().ToString();
@@ -38,11 +39,12 @@ public class NamedPipeServer_Extensions
     }
 
     [Fact]
+    //[Trait("Category", "CI-Disabled")]
     public async Task SendCommandToSupervisorAndDisconnectAsync_SendsAndReceivesMessage()
     {
         var pipeName = Guid.NewGuid().ToString();
         var server = new NamedPipeServer();
-        var client = new NamedPipeClient();
+        using var client = new NamedPipeClient();
         var message = "test command";
 
         var config = new ConfigurationBuilder()
@@ -67,11 +69,12 @@ public class NamedPipeServer_Extensions
     }
 
     [Fact]
+    //[Trait("Category", "CI-Disabled")]
     public async Task SendCommandToSupervisorAndDisconnectAsync_WithGenericType_SendsAndReceivesMessage()
     {
         var pipeName = Guid.NewGuid().ToString();
         var server = new NamedPipeServer();
-        var client = new NamedPipeClient();
+        using var client = new NamedPipeClient();
         var message = new { A = 1, B = "test" };
         var messageJson = JsonSerializer.Serialize(message);
 

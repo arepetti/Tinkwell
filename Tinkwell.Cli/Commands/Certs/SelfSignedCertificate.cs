@@ -5,7 +5,7 @@ namespace Tinkwell.Cli.Commands.Certs;
 
 public static class SelfSignedCertificate
 {
-    public record CreateOptions(string CommonName, int ValidityYears, string Password);
+    public record CreateOptions(string CommonName, int ValidityYears, string Password, string[]? SubjectAlternativeNames = null);
 
     public static X509Certificate2 Create(CreateOptions options)
     {
@@ -31,6 +31,30 @@ public static class SelfSignedCertificate
         request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(
             request.PublicKey,
             critical: false));
+
+        // Add Subject Alternative Names (SANs)
+        if (options.SubjectAlternativeNames != null && options.SubjectAlternativeNames.Any())
+        {
+            var sanBuilder = new SubjectAlternativeNameBuilder();
+            foreach (var san in options.SubjectAlternativeNames)
+            {
+                if (san.StartsWith("DNS:", StringComparison.OrdinalIgnoreCase))
+                    sanBuilder.AddDnsName(san.Substring(4));
+                else if (san.StartsWith("IP:", StringComparison.OrdinalIgnoreCase))
+                {
+                    string ipAddressString = san.Substring(3);
+                    if (ipAddressString.Equals("::1", StringComparison.OrdinalIgnoreCase))
+                        sanBuilder.AddIpAddress(System.Net.IPAddress.IPv6Loopback); // Use IPv6Loopback for ::1
+                    else
+                        sanBuilder.AddIpAddress(System.Net.IPAddress.Parse(ipAddressString));
+                }
+                else if (san.StartsWith("URI:", StringComparison.OrdinalIgnoreCase))
+                    sanBuilder.AddUri(new Uri(san.Substring(4)));
+                else
+                    sanBuilder.AddDnsName(san); // Default to DNS if no prefix is specified
+            }
+            request.CertificateExtensions.Add(sanBuilder.Build());
+        }
 
         var now = DateTimeOffset.UtcNow;
         var rawCert = request.CreateSelfSigned(now.AddDays(-1), now.AddYears(options.ValidityYears));

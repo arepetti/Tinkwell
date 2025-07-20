@@ -11,7 +11,7 @@ public class AsyncExtensionsTests
     }
 }
 
-file static class AsyncEnumerablelper
+file static class AsyncEnumerableHelper
 {
     public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> source)
     {

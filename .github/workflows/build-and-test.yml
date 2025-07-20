@@ -1,0 +1,50 @@
+name: Build and Test
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches: [ "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore Tinkwell.sln
+
+    - name: Build solution
+      run: dotnet build Tinkwell.sln --configuration Release --no-restore
+
+    - name: Run unit tests
+      run: dotnet test Tinkwell.sln --no-build --configuration Release --verbosity normal --filter Category!=CI-Disabled
+
+    - name: Create directory for integration test artifacts
+      run: mkdir ./app
+
+    - name: Publish Application
+      run: |
+        for proj in $(find . -name "*.csproj" | grep -v -i "Tests/"); do
+          echo "Publishing $proj..."
+          dotnet publish "$proj" -c Release -o "./app"
+        done
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13.5'
+
+    - name: Check open TCP ports
+      run: |
+        sudo lsof -iTCP -sTCP:LISTEN
+
+    - name: Run integration tests
+      run: python Tests/Integration/run_tests.py --app-path ./app --verbose

@@ -21,6 +21,11 @@ public sealed class CancellableLongRunningTask
     /// <param fileName="cancellationToken">An optional cancellation token to observe while waiting for the task to start.</param>
     /// <returns>A completed <see cref="Task"/> representing the start operation.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the worker task is already running.</exception>
+    /// <remarks>
+    /// The provided <paramref name="task"/> delegate <strong>must</strong> observe the <see cref="CancellationToken"/>
+    /// passed to it to ensure proper and timely cancellation. Failure to do so may result in the task
+    /// hanging indefinitely during disposal.
+    /// </remarks>
     public Task StartAsync(Action<CancellationToken> task, CancellationToken cancellationToken = default)
     {
         if (IsRunning)
@@ -36,7 +41,7 @@ public sealed class CancellableLongRunningTask
             catch (OperationCanceledException)
             {
             }
-        }, TaskCreationOptions.LongRunning);
+        }, _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         return Task.CompletedTask;
     }
 
@@ -47,22 +52,27 @@ public sealed class CancellableLongRunningTask
     /// <param fileName="cancellationToken">An optional cancellation token to observe while waiting for the task to start.</param>
     /// <returns>A completed <see cref="Task"/> representing the start operation.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the worker task is already running.</exception>
+    /// <remarks>
+    /// The provided <paramref name="task"/> delegate <strong>must</strong> observe the <see cref="CancellationToken"/>
+    /// passed to it to ensure proper and timely cancellation. Failure to do so may result in the task
+    /// hanging indefinitely during disposal.
+    /// </remarks>
     public Task StartAsync(Func<CancellationToken, Task> task, CancellationToken cancellationToken = default)
     {
         if (IsRunning)
             throw new InvalidOperationException("Worker task is already running.");
 
         _cts = new CancellationTokenSource();
-        _worker = Task.Factory.StartNew(async () =>
+        _worker = Task.Run(async () => // Use Task.Run for async delegates
         {
             try
             {
-                await task(_cts.Token);
+                await task(_cts.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
             }
-        }, TaskCreationOptions.LongRunning);
+        }, _cts.Token); // Pass CancellationToken to Task.Run
         return Task.CompletedTask;
     }
 
@@ -76,8 +86,26 @@ public sealed class CancellableLongRunningTask
         if (IsRunning)
         {
             _cts!.Cancel();
-            await _worker.WaitAsync(cancellationToken);
-            _worker = null;
+            try
+            {
+                // Wait for the worker to complete, with a timeout.
+                // If the worker doesn't respond to cancellation, this prevents an indefinite hang.
+                await _worker.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // This exception is expected if the external cancellationToken is cancelled
+                // or if the worker task itself was cancelled.
+            }
+            catch (TimeoutException)
+            {
+                // The worker did not stop within the timeout. Log or handle as appropriate.
+                // For now, we'll just let it go, but this indicates a potential issue in the worker's cancellation handling.
+            }
+            finally
+            {
+                _worker = null;
+            }
         }
     }
 

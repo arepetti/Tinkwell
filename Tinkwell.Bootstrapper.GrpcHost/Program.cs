@@ -1,3 +1,5 @@
+using System.Net;
+
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.GrpcHost;
@@ -17,16 +19,24 @@ var (isMasterDiscovery, masterAddress, localAddress) = await builder.ClaimRoleAs
 builder.WebHost.ConfigureKestrel(options =>
 {
     var certificate = builder.ResolveCertificate();
-    options.ListenLocalhost(port, configure =>
+
+    // Dynamically resolve host IP addresses
+    var hostName = Dns.GetHostName();
+    var ipAddresses = Dns.GetHostEntry(hostName).AddressList;
+
+    foreach (var ipAddress in ipAddresses)
     {
-        configure.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
-        configure.UseHttps(certificate.Path, certificate.Password);
-    });
-    options.ListenAnyIP(port, configure =>
-    {
-        configure.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
-        configure.UseHttps(certificate.Path, certificate.Password);
-    });
+        // Only listen on IPv4 and IPv6 addresses
+        if (ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ||
+            ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+        {
+            options.Listen(ipAddress, port, configure =>
+            {
+                configure.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+                configure.UseHttps(certificate.Path, certificate.Password);
+            });
+        }
+    }
 });
 
 builder.Services

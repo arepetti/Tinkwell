@@ -48,11 +48,12 @@ public sealed class NamedPipeServer : INamedPipeServer
 
         _abortTokenSource.Cancel();
 
+        var stopTasks = new List<Task>();
         foreach (var pipe in _pipes.ToArray())
         {
             try
             {
-                pipe.Stop();
+                stopTasks.Add(pipe.StopAsync());
             }
             catch (IOException)
             {
@@ -60,8 +61,20 @@ public sealed class NamedPipeServer : INamedPipeServer
             }
         }
 
-        _pipes.Clear();
+        // Synchronously wait for all stop tasks to complete.
+        // This is necessary because Close() is a synchronous method.
+        try
+        {
+            Task.WhenAll(stopTasks).Wait(TimeSpan.FromSeconds(5));
+        }
+        catch (AggregateException ex)
+        {
+            // Log the exception, but don't rethrow, as Close() is synchronous.
+            // This indicates that some pipes did not stop gracefully.
+            Debug.WriteLine($"Error stopping pipes: {ex.Message}");
+        }
 
+        _pipes.Clear();
         _abortTokenSource.Dispose();
         _abortTokenSource = null;
     }
