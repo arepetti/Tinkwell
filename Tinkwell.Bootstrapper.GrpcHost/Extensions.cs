@@ -33,23 +33,14 @@ static class Extensions
 
     public static (string Path, string Password) ResolveCertificate(this IHostApplicationBuilder builder)
     {
-        var certPathEnv = Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePath) ?? "";
         var password = Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePass) ?? "";
-
-        var resolvedPath = HostingInformation.GetFullPath(certPathEnv);
-
-        // Diagnostic logging: Print the resolved certificate path
-        builder.Logging.AddConsole(); // Ensure console logging is enabled
-        builder.Logging.Services.AddSingleton<ILoggerProvider>(new ConsoleLoggerProvider()); // Add ConsoleLoggerProvider
-        builder.Logging.Services.AddSingleton<ILoggerFactory>(new LoggerFactory()); // Add LoggerFactory
-        builder.Logging.Services.AddSingleton<ILogger<object>>(new Logger<object>(new LoggerFactory())); // Add a logger instance
-        builder.Logging.Services.BuildServiceProvider().GetRequiredService<ILogger<object>>().LogInformation($"Resolved certificate path: {resolvedPath}");
+        var resolvedPath = HostingInformation.GetFullPath(
+            Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePath) ?? "");
 
         if (!File.Exists(resolvedPath))
-        {
             throw new FileNotFoundException($"Certificate file not found at: {resolvedPath}");
-        }
 
+        Console.WriteLine(">>>> Certificate file path: {0}", resolvedPath);
         return (resolvedPath, password);
     }
 
