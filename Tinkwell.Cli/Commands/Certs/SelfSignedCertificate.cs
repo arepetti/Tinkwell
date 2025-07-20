@@ -5,7 +5,7 @@ namespace Tinkwell.Cli.Commands.Certs;
 
 public static class SelfSignedCertificate
 {
-    public record CreateOptions(string CommonName, int ValidityYears, string Password, List<string> SubjectAlternativeNames = null);
+    public record CreateOptions(string CommonName, int ValidityYears, string Password, List<string>? SubjectAlternativeNames = null);
 
     public static X509Certificate2 Create(CreateOptions options)
     {
@@ -39,22 +39,13 @@ public static class SelfSignedCertificate
             foreach (var san in options.SubjectAlternativeNames)
             {
                 if (san.StartsWith("DNS:", StringComparison.OrdinalIgnoreCase))
-                {
                     sanBuilder.AddDnsName(san.Substring(4));
-                }
                 else if (san.StartsWith("IP:", StringComparison.OrdinalIgnoreCase))
-                {
                     sanBuilder.AddIpAddress(System.Net.IPAddress.Parse(san.Substring(3)));
-                }
                 else if (san.StartsWith("URI:", StringComparison.OrdinalIgnoreCase))
-                {
                     sanBuilder.AddUri(new Uri(san.Substring(4)));
-                }
                 else
-                {
-                    // Default to DNS if no prefix is specified, or handle as an error
-                    sanBuilder.AddDnsName(san);
-                }
+                    sanBuilder.AddDnsName(san); // Default to DNS if no prefix is specified
             }
             request.CertificateExtensions.Add(sanBuilder.Build());
         }

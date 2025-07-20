@@ -33,7 +33,7 @@ class TwCli:
                 input=input_data, # Pass input data to stdin
                 env=env # Pass the modified environment
             )
-            if result.returncode != 0:
+            if result.returncode != 0 or True:
                 print(f"{COLOR_DARK_GRAY}Command: {' '.join(command)}{COLOR_RESET}")
                 print(f"{COLOR_DARK_GRAY}Exit code: {result.returncode}{COLOR_RESET}")
                 print(f"{COLOR_DARK_GRAY}stdout (length {len(result.stdout)}):\n{result.stdout}{COLOR_RESET}") # Removed .strip()
