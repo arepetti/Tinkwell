@@ -1,6 +1,6 @@
 namespace Tinkwell.Bootstrapper.Tests;
 
-public abstract class AsyncExtensionsTests
+public class AsyncExtensionsTests
 {
     [Fact]
     public async Task ConsumeAllAsync_ConsumesAllItems()
@@ -11,7 +11,7 @@ public abstract class AsyncExtensionsTests
     }
 }
 
-file static class AsyncEnumerablelper
+file static class AsyncEnumerableHelper
 {
     public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> source)
     {

@@ -1,6 +1,6 @@
 namespace Tinkwell.Bootstrapper.Tests;
 
-public abstract class CancellableLongRunningTaskTests : IAsyncLifetime
+public class CancellableLongRunningTaskTests : IAsyncLifetime
 {
     private CancellableLongRunningTask _task = default!;
     private TaskCompletionSource _tcs = default!;
