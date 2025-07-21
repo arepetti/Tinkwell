@@ -6,6 +6,9 @@ on:
 
 jobs:
   build-and-pack:
+    if: |
+      !endsWith(github.event.release.tag_name, '-alpha') &&
+      !endsWith(github.event.release.tag_name, '-beta')
     runs-on: ubuntu-latest
 
     steps:
