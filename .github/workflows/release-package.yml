@@ -82,7 +82,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Source/Directory.Build.Props
           git commit -m "chore: bump version to ${{ steps.bump.outputs.newVersion }}"
-          git push
+          git push origin HEAD --set-upstream
           
       - name: Create Pull Request
         id: cpr
