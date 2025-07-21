@@ -55,16 +55,22 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-      - name: Bump patch version in csproj
+      - name: Bump version
         id: bump
-        uses: Triggemann/net-project-version-updater@v1
+        uses: vers-one/dotnet-project-version-updater@v1.7
         with:
-          project-path: 'Source/Directory.Build.props'
-          part: 'patch'
-          commit-message: 'chore: bump version to {{newVersion}} [skip ci]'
-          author-name: 'github-actions[bot]'
-          author-email: 'github-actions[bot]@users.noreply.github.com'
+          file: 'Directory.Build.props'
+          version: bump-patch
+          tags: props.Version, props.AssemblyVersion, props.FileVersion, props.InformationalVersion
 
+      - name: Commit and push version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Directory.Build.props
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.newVersion }}"
+          git push
+          
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v5
