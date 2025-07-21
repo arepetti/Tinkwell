@@ -17,21 +17,26 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore Source/Tinkwell.sln
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13.5'
 
       - name: Build solution
-        run: dotnet build Source/Tinkwell.sln --configuration Release --no-restore
-
-      - name: Create output directory
-        run: mkdir ./app
+        run: |
+          dotnet restore Source/Tinkwell.sln
+          dotnet build Source/Tinkwell.sln --configuration Release --no-restore
 
       - name: Publish application
         run: |
+          mkdir ./app
           for proj in $(find ./Source -name "*.csproj" | grep -v -i "Tests/"); do
             echo "Publishing $proj..."
             dotnet publish "$proj" -c Release -o "./app"
           done
+
+      - name: Run smoke tests
+        run: python Source/Tests/Integration/run_tests.py --app-path ./app --trait smoke --verbose
 
       - name: Archive published output
         run: |

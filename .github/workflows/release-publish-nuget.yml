@@ -20,16 +20,12 @@ jobs:
       with:
         dotnet-version: '9.0.x'
 
-    - name: Restore dependencies
+    - name: Build library and tests
       run: |
         dotnet restore ./Source/Tinkwell.Bootstrapper/Tinkwell.Bootstrapper.csproj
-        dotnet restore ./Source/Tests/Tinkwell.Bootstrapper.Tests/Tinkwell.Bootstrapper.Tests.csproj
-
-    - name: Build library
-      run: dotnet build ./Source/Tinkwell.Bootstrapper/Tinkwell.Bootstrapper.csproj --configuration Release --no-restore
-
-    - name: Build tests
-      run: dotnet build ./Source/Tests/Tinkwell.Bootstrapper.Tests/Tinkwell.Bootstrapper.Tests.csproj --configuration Release --no-restore
+        dotnet restore ./Source/Tests/Tinkwell.Bootstrapper.Tests/Tinkwell.Bootstrapper.Tests.csproj 
+        dotnet build ./Source/Tinkwell.Bootstrapper/Tinkwell.Bootstrapper.csproj --configuration Release --no-restore
+        dotnet build ./Source/Tests/Tinkwell.Bootstrapper.Tests/Tinkwell.Bootstrapper.Tests.csproj --configuration Release --no-restore
 
     - name: Run tests
       run: dotnet test ./Source/Tests/Tinkwell.Bootstrapper.Tests/Tinkwell.Bootstrapper.Tests.csproj --no-build --configuration Release --verbosity normal --filter Category!=CI-Disabled
