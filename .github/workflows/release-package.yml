@@ -72,7 +72,7 @@ jobs:
         uses: vers-one/dotnet-project-version-updater@v1.7
         with:
           file: 'Source/Directory.Build.Props'
-          version: bump-patch
+          version: bump-revision
           tags: props.Version, props.AssemblyVersion, props.FileVersion, props.InformationalVersion
 
       - name: Commit and push version bump
