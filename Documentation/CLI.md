@@ -617,6 +617,7 @@ Manage project templates.
 ```console
 tw templates create [--no-examples]
 tw templates list [--path=<path>] [--all] [--explain]
+tw templates update
 tw templates inspect [template id]
 tw templates use [template id] [--output=<path>] [--input=<file path>] [--set=<key=value>] [--unattended] [--dry-run] [--trace=<file path>] [--path=<path>]
 ```
@@ -638,6 +639,11 @@ Add `--no-examples` (`-n`) to avoid adding some example sections in the generate
 tw templates list [--path=<path>] [--explain]
 ```
 Lists all available templates found in the specified `--path` (or default template path).
+
+```console
+tw templates update
+```
+Remote templates are downloaded the first time you use `tw templates` but if they have been updated you can use this command to download the newest version.
 
 ```console
 tw templates inspect [template id]
