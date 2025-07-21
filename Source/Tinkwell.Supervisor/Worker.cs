@@ -2,6 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Runtime.InteropServices;
+using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.Hosting;
@@ -26,6 +28,14 @@ sealed class Worker : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        _logger.LogDebug("Application version: {Version}", HostingInformation.ApplicationVersion);
+        _logger.LogDebug("OS: {OS} ({Architecture}). Process: {Process}, Runtime: {Runtime}",
+            RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture,
+            RuntimeInformation.ProcessArchitecture, RuntimeInformation.FrameworkDescription);
+        _logger.LogDebug("Working directory: {Path}", HostingInformation.WorkingDirectory);
+        _logger.LogDebug("Current directory: {Path}", Environment.CurrentDirectory);
+        _logger.LogDebug("Executables directory: {Path}", StrategyAssemblyLoader.GetAppPath());
+
         if (!File.Exists(_ensambleFilePath))
         {
             await PanicAsync($"Ensamble file not found: '{_ensambleFilePath}'.");

@@ -3,7 +3,7 @@ using Spectre.Console.Cli;
 
 namespace Tinkwell.Cli.Commands.Actions;
 
-[CommandFor("actions")]
+[CommandFor("actions", alias: "executor")]
 [Description("Inspect the actions configuration file.")]
 public sealed class ActionsCommand : Command<ActionsCommand.Settings>
 {

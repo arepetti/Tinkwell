@@ -41,7 +41,7 @@ sealed class RegisterServicesActivity : IActivity
             (host, registrar) => registrar.ConfigureServices(host),
             cancellationToken);
 
-        _logger.LogInformation("{Name} loaded {Count} runner(s): {Runners}",
+        _logger.LogDebug("{Name} loaded {Count} runner(s): {Runners}",
             Environment.GetEnvironmentVariable(WellKnownNames.RunnerNameEnvironmentVariable),
             _services?.Count(),
             string.Join(',', _services!.Select(x => Trim(x.Name))));

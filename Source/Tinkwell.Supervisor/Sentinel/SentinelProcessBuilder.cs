@@ -15,9 +15,6 @@ sealed class SentinelProcessBuilder : IChildProcessBuilder
     {
         _configuration = configuration;
         _logger = logger;
-        _logger.LogInformation("Working directory: {Path}", HostingInformation.WorkingDirectory);
-        _logger.LogInformation("Current directory: {Path}", Environment.CurrentDirectory);
-        _logger.LogInformation("Executables directory: {Path}", StrategyAssemblyLoader.GetAppPath());
     }
 
     public IChildProcess Create(RunnerDefinition definition)

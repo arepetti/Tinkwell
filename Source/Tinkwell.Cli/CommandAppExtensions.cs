@@ -24,9 +24,12 @@ static class CommandAppExtensions
                     branch.SetDescription(branchCommand.Description);
                     foreach (var subCommand in allCommands.Where(x => x.Parent == branchCommand.Type))
                     {
-                        branch
+                        var configurator = branch
                             .AddCommand(subCommand.Name, subCommand.Type)
                             .WithDescription(subCommand.Description);
+
+                        if (!string.IsNullOrWhiteSpace(subCommand.Alias))
+                            configurator.WithAlias(subCommand.Alias);
                     }
                 });
             }
@@ -35,7 +38,7 @@ static class CommandAppExtensions
         return app;
     }
 
-    private static IEnumerable<(Type Type, Type? Parent, string Name, string Description)> FindAllCommands()
+    private static IEnumerable<(Type Type, Type? Parent, string Name, string Description, string? Alias)> FindAllCommands()
     {
         // Some commands might have dependencies that cause errors at run-time, we load this platform-specific
         // assemblies only if we know that they're going to work.
@@ -55,14 +58,14 @@ static class CommandAppExtensions
         return inThisAssembly.Concat(extraCommands).ToArray();
     }
 
-    private static IEnumerable<(Type Type, Type? Parent, string Name, string Description)> FindAllCommands(Assembly assembly)
+    private static IEnumerable<(Type Type, Type? Parent, string Name, string Description, string? Alias)> FindAllCommands(Assembly assembly)
     {
         var types = assembly.GetTypes().Where(IsCommand);
         foreach (var type in types)
         {
             var attribute = type.GetCustomAttribute<CommandForAttribute>()!;
             var description = type.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "";
-            yield return (type, attribute.Parent, attribute.Name, description);
+            yield return (type, attribute.Parent, attribute.Name, description, attribute.Alias);
         }
     }
 

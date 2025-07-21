@@ -40,7 +40,7 @@ sealed class RegisterDllsActivity : IActivity
                 registrar.ConfigureServices(host);
         }
 
-        _logger.LogInformation("{Name} loaded {Count} runner(s): {Runners}",
+        _logger.LogDebug("{Name} loaded {Count} runner(s): {Runners}",
             Environment.GetEnvironmentVariable(WellKnownNames.RunnerNameEnvironmentVariable),
             _dlls?.Count(),
             string.Join(',', _dlls!.Select(x => Trim(x.Name))));
