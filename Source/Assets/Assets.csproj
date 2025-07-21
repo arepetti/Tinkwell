@@ -21,25 +21,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Templates\csharp_agent_firmlet\Implementation.cs" />
-	  <Compile Remove="Templates\csharp_agent_firmlet\Options.cs" />
-	  <Compile Remove="Templates\csharp_agent_firmlet\Registrar.cs" />
-	  <Compile Remove="Templates\csharp_agent_firmlet\Worker.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="Templates\csharp_agent_firmlet\Implementation.cs">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Include="Templates\csharp_agent_firmlet\Options.cs">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Include="Templates\csharp_agent_firmlet\Registrar.cs">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Include="Templates\csharp_agent_firmlet\Worker.cs">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
+	  <Compile Remove="Templates\**" />
+	  <EmbeddedResource Remove="Templates\**" />
+	  <None Remove="Templates\**" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -56,27 +40,6 @@
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	  <None Update="config\measures.twm">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Templates\csharp_agent_firmlet\ProjectName.xml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Templates\csharp_agent_firmlet\template.json">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Templates\ensamble_configuration\actions.twa">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Templates\ensamble_configuration\mqtt-mapping.twmap">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Templates\ensamble_configuration\ensamble.tw">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Templates\ensamble_configuration\measures.twm">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Templates\ensamble_configuration\template.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>

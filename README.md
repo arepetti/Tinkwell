@@ -6,6 +6,9 @@ Tinkwell offers a compelling alternative for building resilient, modular applica
 
 For more insights into the vision behind Tinkwell, read [Tinkwell: Firmware-less IoT and Lab Automation](https://dev.to/adriano-repetti/tinkwell-firmware-less-iot-and-lab-automation-2gef).
 
+This repository is the foundation of the Tinkwell ecosystem. It provides essential building blocks and abstractions that power other components. Additional features will be released over time as separate repositories. Be sure to check out:
+- [Tinkwell DX](https://github.com/arepetti/Tinkwell-DX): Developer tools, utilities, and resources to enhance your workflow.
+
 ## The Distributed Challenge
 
 Traditional monolithic applications often struggle with the dynamic nature of edge deployments, where connectivity can be intermittent and resources constrained. The complexities of managing diverse processes, ensuring data integrity, and reacting to real-time events demand a different approach. For a deeper dive into these architectural pressures, explore [IoT Architectures Under Pressure](https://dev.to/adriano-repetti/iot-architectures-under-pressure-why-implementation-isnt-as-simple-as-it-seems-part-1-3inn).
