@@ -33,7 +33,6 @@ Imagine a scenario where sensor data streams in via MQTT, needs to be stored, an
 First, we compose our MQTT client bridge in `ensamble.tw`:
 
 ```tinkwell
-// ensamble.tw
 compose service mqtt_bridge "Tinkwell.Bridge.MqttClient.dll" {
     topic_filter: "sensor/+"
 }
@@ -42,7 +41,6 @@ compose service mqtt_bridge "Tinkwell.Bridge.MqttClient.dll" {
 Next, we define our measures and a signal in `measures.twm`. The MQTT bridge will automatically update `temperature_sensor_1` when data arrives on `sensor/temperature_sensor_1`.
 
 ```tinkwell
-// measures.twm
 measure temperature_sensor_1 {
     type: "Temperature"
     unit: "DegreeCelsius"
@@ -56,12 +54,11 @@ measure temperature_sensor_1 {
 Finally, we define an action in `actions.twa` to log the alert:
 
 ```tinkwell
-// actions.twa
 when event high_temperature {
     then {
         mqtt_send {
             topic: "home/ac/living_room/set"
-            payload: "{ \"power\": \"ON\" }"
+            payload: "make_json('power', 'ON')"
         }
     }
 }
