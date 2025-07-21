@@ -36,7 +36,7 @@ static class EnsamblePreprocessor
                 .Replace("{{ properties }}", properties)
                 .Replace("{{ host.grpc }}", WellKnownNames.DefaultGrpcHostAssembly)
                 .Replace("{{ host.dll }}", WellKnownNames.DefaultDllHostAssembly)
-                .Replace("{{ firmlet.health_check }}", WellKnownNames.DefaaultHealthCheckService)
+                .Replace("{{ firmlet.health_check }}", WellKnownNames.DefaultHealthCheckService)
                 .Replace("{{ address.supervisor }}", WellKnownNames.SupervisorCommandServerPipeName);
         }
         catch (FileNotFoundException e)

@@ -14,19 +14,19 @@ public sealed class NamedPipeServer : INamedPipeServer
     /// </summary>
     public static readonly int DefaultMaxConcurrentConnections = 4;
 
-    /// <inheritsdocs />
+    /// <inheritdoc />
     public int MaxConcurrentConnections { get; set; } = DefaultMaxConcurrentConnections;
 
-    /// <inheritsdocs />
+    /// <inheritdoc />
     public event EventHandler? Connected;
 
-    /// <inheritsdocs />
+    /// <inheritdoc />
     public event EventHandler? Disconnected;
 
-    /// <inheritsdocs />
+    /// <inheritdoc />
     public ProcessPipeDataDelegate? ProcessAsync {  get; set; }
 
-    /// <inheritsdocs />
+    /// <inheritdoc />
     public void Open(string pipeName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(pipeName);
@@ -40,7 +40,7 @@ public sealed class NamedPipeServer : INamedPipeServer
         CreatePipe();
     }
 
-    /// <inheritsdocs />
+    /// <inheritdoc />
     public void Close()
     {
         if (!IsOpen)

@@ -3,8 +3,14 @@ using System.Text.Json.Serialization;
 
 namespace Tinkwell;
 
+/// <summary>
+/// Special converter for <see cref="JsonSerializer"/> to workaround its default behaviour:
+/// when deserializing a dictionary <c>(Dictionary{string, object}</c> as <c>object</c> it simply
+/// returns the raw <c>JsonElement</c>. This converter changes that and returns a dictionary as expected.
+/// </summary>
 public sealed class ObjectJsonConverter : JsonConverter<object>
 {
+    /// <inheritedocs />
     public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         return reader.TokenType switch
@@ -20,6 +26,7 @@ public sealed class ObjectJsonConverter : JsonConverter<object>
         };
     }
 
+    /// <inheritedocs />
     public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         => JsonSerializer.Serialize(writer, value, value?.GetType() ?? typeof(object), options);
 
