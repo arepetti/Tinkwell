@@ -28,7 +28,9 @@
         <Folder Include="NuGet\" />
     </ItemGroup>
     <ItemGroup>
-        <None Include="NuGet/README.md" Pack="true" PackagePath="" />
+        <None Include="NuGet/README.md" Pack="true" PackagePath="">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
