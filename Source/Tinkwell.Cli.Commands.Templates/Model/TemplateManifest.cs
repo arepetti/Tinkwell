@@ -1,7 +1,11 @@
 using Spectre.Console;
+using System;
+using System.IO.Compression;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Tinkwell.Bootstrapper;
 
 namespace Tinkwell.Cli.Commands.Templates.Manifest;
@@ -9,36 +13,68 @@ namespace Tinkwell.Cli.Commands.Templates.Manifest;
 sealed class TemplateManifest
 {
     public static readonly string FileName = "template.json";
+    public static readonly string PublicRepositoryUrl = "https://github.com/arepetti/tinkwell-dx";
+    public static readonly string PublicRepositoryContentUrl = "https://raw.githubusercontent.com/arepetti/Tinkwell-DX/refs/heads/master/Templates";
+
+    public static async Task DownloadRemoteTemplatesAsync()
+    {
+        try
+        {
+            AnsiConsole.MarkupLineInterpolated($"Fetching templates from [blue]{PublicRepositoryUrl}[/]...");
+            using var httpClient = new HttpClient();
+
+            var targetDirectory = TemplatesFromRegistry;
+            string templateListLocalPath = Path.Combine(targetDirectory, "registry.ini");
+            await DownloadFileFromRepository(httpClient, "registry.ini", templateListLocalPath);
+
+            foreach (var entry in await File.ReadAllLinesAsync(templateListLocalPath))
+            {
+                // Download the specified file
+                string fileName = entry.Split('=')[1].Trim();
+                string localFileName = Path.Combine(targetDirectory, fileName);
+                await DownloadFileFromRepository(httpClient, fileName, localFileName);
+
+                // If downloaded before then remove the old template
+                string templateDirectoryName = Path.Combine(targetDirectory, Path.GetFileNameWithoutExtension(fileName));
+                if (Directory.Exists(templateDirectoryName))
+                    Directory.Delete(templateDirectoryName, true);
+
+                // Extract the zip
+                ZipFile.ExtractToDirectory(localFileName, targetDirectory);
+                File.Delete(localFileName);
+            }
+
+            File.Delete(templateListLocalPath);
+        }
+        catch (Exception e)
+        {
+            AnsiConsole.MarkupLineInterpolated($"[red]Error downloading templates from remote registry: {e.Message}[/]");
+        }
+    }
 
     public static IEnumerable<string> GetSearchPaths(string path)
     {
         return [
-            BuildPath(Environment.SpecialFolder.ApplicationData),
+            TemplatesFromRegistry,
             BuildPath(Environment.SpecialFolder.LocalApplicationData),
             BuildPath(Environment.SpecialFolder.UserProfile),
             Path.Combine(StrategyAssemblyLoader.GetEntryAssemblyDirectoryName(), "Templates"),
             string.IsNullOrWhiteSpace(path) ? "" : Path.GetFullPath(path),
         ];
-
-        string BuildPath(Environment.SpecialFolder folder)
-            => Path.Combine(Environment.GetFolderPath(folder), "Tinkwell", "Templates");
     }
 
-    public static IEnumerable<TemplateManifest> FindAll(string path, bool includeAll = false)
+    public static async Task<IEnumerable<TemplateManifest>> FindAllAsync(string path, bool includeAll = false)
     {
-        var templatesPaths = GetSearchPaths(path)
-            .Where(x => !string.IsNullOrWhiteSpace(x) && Directory.Exists(x))
-            .Distinct()
-            .ToArray();
+        Directory.CreateDirectory(TemplatesFromRegistry);
+        if (!Directory.EnumerateDirectories(TemplatesFromRegistry).Any())
+            await DownloadRemoteTemplatesAsync();
 
-        return templatesPaths
-            .SelectMany(x => FindAllInFolder(x, includeAll))
-            .OrderBy(x => x.Id);
+        return FindAllImpl(path, includeAll);
     }
 
     public static TemplateManifest LoadFromId(string templatesDirectoryPath, string templateId)
     {
-        var manifest = FindAll(templatesDirectoryPath, true)
+        var manifest = FindAllImpl(templatesDirectoryPath, true)
             .FirstOrDefault(x => string.Equals(x.Id, templateId, StringComparison.Ordinal)); ;
 
         if (manifest is null)
@@ -104,6 +140,12 @@ sealed class TemplateManifest
     [JsonPropertyName("files")]
     public List<TemplateFile> Files { get; set; } = new();
 
+    private static string TemplatesFromRegistry
+        => BuildPath(Environment.SpecialFolder.ApplicationData);
+
+    private static string BuildPath(Environment.SpecialFolder folder)
+        => Path.Combine(Environment.GetFolderPath(folder), "Tinkwell", "Templates");
+
     private static TemplateManifest? Load(string  path)
     {
         var manifest = JsonSerializer.Deserialize<TemplateManifest>(File.ReadAllText(path, Encoding.UTF8));
@@ -111,6 +153,18 @@ sealed class TemplateManifest
             manifest.FullPath = path;
 
         return manifest;
+    }
+
+    private static IEnumerable<TemplateManifest> FindAllImpl(string path, bool includeAll)
+    {
+        var templatesPaths = GetSearchPaths(path)
+            .Where(x => !string.IsNullOrWhiteSpace(x) && Directory.Exists(x))
+            .Distinct()
+            .ToArray();
+
+        return templatesPaths
+            .SelectMany(x => FindAllInFolder(x, includeAll))
+            .OrderBy(x => x.Id);
     }
 
     private static IEnumerable<TemplateManifest> FindAllInFolder(string path, bool includeAll)
@@ -138,5 +192,19 @@ sealed class TemplateManifest
                 yield return manifest;
             }
         }
+    }
+
+    private static async Task DownloadFileFromRepository(HttpClient client, string remoteFileName, string localFilePath)
+    {
+        var url = $"{PublicRepositoryContentUrl}/{remoteFileName}";
+        AnsiConsole.MarkupLineInterpolated($"Downloading [blue]{url}[/]...");
+        using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+
+        response.EnsureSuccessStatusCode();
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+        using var fileStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+
+        await stream.CopyToAsync(fileStream);
     }
 }

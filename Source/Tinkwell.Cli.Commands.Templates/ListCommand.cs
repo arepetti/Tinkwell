@@ -7,7 +7,7 @@ namespace Tinkwell.Cli.Commands.Templates;
 
 [CommandFor("list", parent: typeof(TemplatesCommand))]
 [Description("List all the available templates.")]
-public sealed class ListCommand : Command<ListCommand.Settings>
+public sealed class ListCommand : AsyncCommand<ListCommand.Settings>
 {
     public sealed class Settings : TemplatesCommand.Settings
     {
@@ -20,7 +20,7 @@ public sealed class ListCommand : Command<ListCommand.Settings>
         public bool Explain { get; set; }
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
         if (settings.Explain)
         {
@@ -41,7 +41,7 @@ public sealed class ListCommand : Command<ListCommand.Settings>
         var table = new SimpleTable();
         table.AddColumns("Id", "Name", "Version", "Author");
 
-        foreach (var manifest in TemplateManifest.FindAll(settings.TemplatesDirectoryPath, settings.All))
+        foreach (var manifest in await TemplateManifest.FindAllAsync(settings.TemplatesDirectoryPath, settings.All))
         {
             table.AddUnescapedRow(
                 $"[cyan]{manifest.Id.EscapeMarkup()}[/]",

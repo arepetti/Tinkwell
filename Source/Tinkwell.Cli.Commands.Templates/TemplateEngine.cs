@@ -22,7 +22,7 @@ sealed class TemplateEngine
         // Select the template if not provided
         var templateId = _settings.TemplateId;
         if (string.IsNullOrEmpty(templateId))
-            templateId = PromptToSelectTemplate(_settings.TemplatesDirectoryPath);
+            templateId = await PromptToSelectTemplateAsync(_settings.TemplatesDirectoryPath);
 
         // Use the template to generate the output
         await ExecuteTemplateAsync(templateId);
@@ -36,10 +36,10 @@ sealed class TemplateEngine
         return 0;
     }
 
-    public static string PromptToSelectTemplate(string additionalTemplatesDirectoryPath)
+    public static async Task<string> PromptToSelectTemplateAsync(string additionalTemplatesDirectoryPath)
     {
         // We give the user a nice list reading the manifest for all the available templates
-        var templates = TemplateManifest.FindAll(additionalTemplatesDirectoryPath);
+        var templates = await TemplateManifest.FindAllAsync(additionalTemplatesDirectoryPath);
         var prompt = new SelectionPrompt<string>()
             .Title("Select a template")
             .PageSize(10)

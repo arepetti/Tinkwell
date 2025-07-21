@@ -7,7 +7,7 @@ namespace Tinkwell.Cli.Commands.Templates;
 
 [CommandFor("inspect", parent: typeof(TemplatesCommand))]
 [Description("Inspect the specified template.")]
-public sealed class InspectCommand : Command<InspectCommand.Settings>
+public sealed class InspectCommand : AsyncCommand<InspectCommand.Settings>
 {
     public sealed class Settings : TemplatesCommand.Settings
     {
@@ -16,11 +16,11 @@ public sealed class InspectCommand : Command<InspectCommand.Settings>
         public string TemplateId { get; set; } = "";
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
         string templateId = settings.TemplateId;
         if (string.IsNullOrWhiteSpace(templateId))
-            templateId = TemplateEngine.PromptToSelectTemplate(settings.TemplatesDirectoryPath);
+            templateId = await TemplateEngine.PromptToSelectTemplateAsync(settings.TemplatesDirectoryPath);
 
         var template = TemplateManifest.LoadFromId(settings.TemplatesDirectoryPath, templateId);
 
