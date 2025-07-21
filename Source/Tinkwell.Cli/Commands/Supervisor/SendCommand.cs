@@ -79,8 +79,16 @@ sealed class SendCommand : AsyncCommand<SendCommand.Settings>
         }
         finally
         {
-            if (client.IsConnected)
-                await client.SendCommandAsync("exit");
+            try
+            {
+                if (client.IsConnected)
+                    await client.SendCommandAsync("exit");
+            }
+            catch
+            {
+                // Ignore this, the Supervisor might have closed the pipe
+                // already (for example because of a shutdown command).
+            }
         }
 
         return exitCode;

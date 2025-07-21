@@ -3,7 +3,7 @@ using Spectre.Console.Cli;
 
 namespace Tinkwell.Cli.Commands.Contracts;
 
-[CommandFor("contracts")]
+[CommandFor("contracts", alias: "services")]
 [Description("Query registered services.")]
 sealed class ContractsCommand : Command<ContractsCommand.Settings>
 {

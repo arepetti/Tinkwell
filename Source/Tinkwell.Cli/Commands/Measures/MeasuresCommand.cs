@@ -3,7 +3,7 @@ using Spectre.Console.Cli;
 
 namespace Tinkwell.Cli.Commands.Measures;
 
-[CommandFor("measures")]
+[CommandFor("measures", alias: "reducer")]
 [Description("Manage and inspect measures and conditions.")]
 sealed class MeasuresCommand : Command<MeasuresCommand.Settings>
 {
