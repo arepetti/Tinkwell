@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
 using Tinkwell.Bootstrapper.Ipc;
@@ -11,6 +12,20 @@ namespace Tinkwell.Bootstrapper.Hosting;
 /// </summary>
 public static class HostingInformation
 {
+    /// <summary>
+    /// Gets the application version number.
+    /// </summary>
+    public static string ApplicationVersion
+    {
+        get
+        {
+            var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()!;
+            return assembly!.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
+                ?? assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                ?? "0.0.0.0";
+        }
+    }
+
     /// <summary>
     /// Gets the default directory (at application level) where firmlets can store data.
     /// </summary>
