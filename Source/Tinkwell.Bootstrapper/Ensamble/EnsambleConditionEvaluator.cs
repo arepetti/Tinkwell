@@ -75,7 +75,7 @@ public sealed class EnsambleConditionEvaluator : IEnsambleConditionEvaluator
     private bool IsDevelopmentEnvironment()
     {
         // Forced by configuration option or environment variable.
-        // If this is present the we honor whatever value there is.
+        // If this is present then we honor whatever value there is.
         var environment = _configuration?.GetValue<string>("Ensamble:Environment")
             ?? Environment.GetEnvironmentVariable(WellKnownNames.EnvironmentEnvironmentVariable);
 

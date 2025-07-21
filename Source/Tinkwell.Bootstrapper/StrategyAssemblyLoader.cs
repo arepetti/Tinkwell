@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 namespace Tinkwell.Bootstrapper;
 
 /// <summary>
-/// Loads strategy assemblies based on a specified root namespac and task name.
+/// Loads strategy assemblies based on a specified root namespace and task name.
 /// </summary>
 public static class StrategyAssemblyLoader
 {
@@ -217,7 +217,7 @@ public static class StrategyAssemblyLoader
     /// Determines the string comparer to use when working with file system entries
     /// in the specified path.
     /// </summary>
-    /// <param name="path"></param>
+    /// <param name="path">Path to an existing directory or file.</param>
     /// <returns>A <c>StringComparison</c>.</returns>
     /// <remarks>
     /// This function always uses an <strong>ordinal</strong> string comparer, case-sensitive or not

@@ -7,21 +7,21 @@ namespace Tinkwell.Services.Proto.Proxies;
 /// </summary>
 public sealed class StoreProxy(ServiceLocator locator) : IStore
 {
-    /// <inheritdocs />
+    /// <inheritdoc />
     public async Task RegisterManyAsync(StoreRegisterManyRequest request, CancellationToken cancellationToken)
     {
         var client = await GetClient();
         await client.RegisterManyAsync(request, cancellationToken: cancellationToken);
     }
 
-    /// <inheritdocs />
+    /// <inheritdoc />
     public async Task<StoreValueList> ReadManyAsync(IEnumerable<string> names, CancellationToken cancellationToken)
     {
         var client = await GetClient();
         return await client.ReadManyAsync(new() { Names = { names } }, cancellationToken: cancellationToken);
     }
 
-    /// <inheritdocs />
+    /// <inheritdoc />
     public async Task WriteQuantityAsync(string name, double value, CancellationToken cancellationToken)
     {
         var request = new StoreUpdateRequest
@@ -34,7 +34,7 @@ public sealed class StoreProxy(ServiceLocator locator) : IStore
         await client.UpdateAsync(request, cancellationToken: cancellationToken);
     }
 
-    /// <inheritdocs />
+    /// <inheritdoc />
     public async Task WriteQuantityAsync(string name, string value, CancellationToken cancellationToken)
     {
         var request = new StoreSetMeasureValueRequest
@@ -48,7 +48,7 @@ public sealed class StoreProxy(ServiceLocator locator) : IStore
         await client.SetMeasureValueAsync(request, cancellationToken: cancellationToken);
     }
 
-    /// <inheritdocs />
+    /// <inheritdoc />
     public async Task WriteStringAsync(string name, string value, CancellationToken cancellationToken)
     {
         var request = new StoreUpdateRequest
@@ -61,7 +61,7 @@ public sealed class StoreProxy(ServiceLocator locator) : IStore
         await client.UpdateAsync(request, cancellationToken: cancellationToken);
     }
 
-    /// <inheritdocs />
+    /// <inheritdoc />
     public async ValueTask<IStreamingResponse<StoreValueChange>> SubscribeManyAsync(IEnumerable<string> names, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(names, nameof(names));
@@ -74,7 +74,7 @@ public sealed class StoreProxy(ServiceLocator locator) : IStore
             client.SubscribeMany(request, cancellationToken: cancellationToken));
     }
 
-    /// <inheritdocs />
+    /// <inheritdoc />
     public ValueTask DisposeAsync()
     {
         if (_store is not null)

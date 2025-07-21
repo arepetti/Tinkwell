@@ -6,14 +6,14 @@
 
 public sealed class EventsGatewayProxy(ServiceLocator locator) : IEventsGateway
 {
-    /// <inheritdocs />
+    /// <inheritdoc />
     public async Task PublishAsync(PublishEventsRequest request, CancellationToken cancellationToken)
     {
         var client = await GetClient();
         await client.PublishAsync(request, cancellationToken: cancellationToken);
     }
 
-    /// <inheritdocs />
+    /// <inheritdoc />
     public async ValueTask<IStreamingResponse<SubscribeEventsResponse>> SubscribeManyAsync(IEnumerable<SubscribeToMatchingManyEventsRequest.Types.Match> matches, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(matches, nameof(matches));
@@ -26,7 +26,7 @@ public sealed class EventsGatewayProxy(ServiceLocator locator) : IEventsGateway
             client.SubscribeToMatchingMany(request, cancellationToken: cancellationToken));
     }
 
-    /// <inheritdocs />
+    /// <inheritdoc />
     public ValueTask DisposeAsync()
     {
         if (_gateway is not null)

@@ -43,6 +43,7 @@ public static class WellKnownNames
     public static readonly string SupervisorPidEnvironmentVariable = "TINKWELL_SUPERVISOR_PID";
 
     /// <summary>
+    /// <strong>Internal</strong>. Use <c>HostingInformation</c> instead.
     /// An optional environment variable that contains the <em>environment</em> for this
     /// installation. It could be <c>"Development"</c> or <c>"Release"</c>.
     /// <c>TINKWELL_ENVIRONMENT</c>.
@@ -56,7 +57,7 @@ public static class WellKnownNames
     /// <c>TINKWELL_WORKING_DIR_PATH</c>.
     /// </summary>
     /// <remarks>
-    /// Do not use this variable directly, obtain the value from
+    /// <strong>Internal</strong>: do not use this variable directly, obtain the value from
     /// <see cref="Hosting.HostingInformation.WorkingDirectory"/>.
     /// </remarks>
     public static readonly string WorkingDirectoryEnvironmentVariable = "TINKWELL_WORKING_DIR_PATH";
@@ -68,7 +69,7 @@ public static class WellKnownNames
     /// <c>TINKWELL_APP_DATA_PATH</c>.
     /// </summary>
     /// <remarks>
-    /// Do not use this variable directly, obtain the value from
+    /// <strong>Internal</strong>: do not use this variable directly, obtain the value from
     /// <see cref="Hosting.HostingInformation.ApplicationDataDirectory"/>.
     /// </remarks>
     public static readonly string AppDataEnvironmentVariable = "TINKWELL_APP_DATA_PATH";
@@ -80,13 +81,13 @@ public static class WellKnownNames
     /// <c>TINKWELL_USER_DATA_PATH</c>.
     /// </summary>
     /// <remarks>
-    /// Do not use this variable directly, obtain the value from
+    /// <strong>Internal</strong>: do not use this variable directly, obtain the value from
     /// <see cref="Hosting.HostingInformation.UserDataDirectory"/>.
     /// </remarks>
     public static readonly string UserDataEnvironmentVariable = "TINKWELL_USER_DATA_PATH";
 
     /// <summary>
-    /// <strong>Internal</strong>. If possible try to use <c>ServiceLocator</c>.
+    /// <strong>Caution</strong>. If possible try to use <c>ServiceLocator</c>.
     /// <para>
     /// The environment variable for the client certificate for gRPC HTTPS calls.
     /// </para>
@@ -95,7 +96,7 @@ public static class WellKnownNames
     public static readonly string ClientCertificatePath = "TINKWELL_CLIENT_CERT_PATH";
 
     /// <summary>
-    /// <strong>Internal</strong>. If possible try to use an existing host.
+    /// <strong>Caution</strong>. If possible try to use an existing host.
     /// <para>
     /// The environment variable for the web server certificate path.
     /// </para>
@@ -104,7 +105,7 @@ public static class WellKnownNames
     public static readonly string WebServerCertificatePath = "TINKWELL_CERT_PATH";
 
     /// <summary>
-    /// <strong>Internal</strong>. If possible try to use an existing host.
+    /// <strong>Caution</strong>. If possible try to use an existing host.
     /// <para>
     /// The environment variable for the web server certificate password.
     /// </para>
@@ -113,7 +114,7 @@ public static class WellKnownNames
     public static readonly string WebServerCertificatePass = "TINKWELL_CERT_PASS";
 
     /// <summary>
-    /// <strong>Internal, do not use.</strong>.
+    /// <strong>Internal, do not use</strong>.
     /// <para>
     /// The default assembly name for the gRPC host.
     /// </para>
@@ -122,7 +123,7 @@ public static class WellKnownNames
     public static readonly string DefaultGrpcHostAssembly = "Tinkwell.Bootstrapper.GrpcHost";
 
     /// <summary>
-    /// <strong>Internal, do not use.</strong>.
+    /// <strong>Internal, do not use</strong>.
     /// <para>
     /// The default assembly name for the DLL host.
     /// </para>
@@ -131,13 +132,13 @@ public static class WellKnownNames
     public static readonly string DefaultDllHostAssembly = "Tinkwell.Bootstrapper.DllHost";
 
     /// <summary>
-    /// <strong>Internal, do not use.</strong>.
+    /// <strong>Internal, do not use</strong>.
     /// <para>
     /// The default health check service DLL name.
     /// </para>
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public static readonly string DefaaultHealthCheckService = "Tinkwell.HealthCheck.dll";
+    public static readonly string DefaultHealthCheckService = "Tinkwell.HealthCheck.dll";
 
     /// <summary>
     /// The event topic name for signals.

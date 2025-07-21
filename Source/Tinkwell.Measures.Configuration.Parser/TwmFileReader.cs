@@ -7,7 +7,7 @@ namespace Tinkwell.Measures.Configuration.Parser;
 /// </summary>
 public sealed class TwmFileReader : IConfigFileReader<ITwmFile>
 {
-    /// <inheritdocs />
+    /// <inheritdoc />
     public async Task<ITwmFile> ReadAsync(string path, FileReaderOptions options, CancellationToken cancellationToken)
     {
         var file = new TwmFile();
