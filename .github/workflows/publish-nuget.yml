@@ -1,0 +1,44 @@
+name: Publish Tinkwell.Bootstrapper to NuGet
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-pack:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore dependencies
+      run: |
+        dotnet restore ./Source/Tinkwell.Bootstrapper/Tinkwell.Bootstrapper.csproj
+        dotnet restore ./Source/Tests/Tinkwell.Bootstrapper.Tests/Tinkwell.Bootstrapper.Tests.csproj
+
+    - name: Build library
+      run: dotnet build ./Source/Tinkwell.Bootstrapper/Tinkwell.Bootstrapper.csproj --configuration Release --no-restore
+
+    - name: Build tests
+      run: dotnet build ./Source/Tests/Tinkwell.Bootstrapper.Tests/Tinkwell.Bootstrapper.Tests.csproj --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test ./Source/Tests/Tinkwell.Bootstrapper.Tests/Tinkwell.Bootstrapper.Tests.csproj --no-build --configuration Release --verbosity normal --filter Category!=CI-Disabled
+
+    - name: Pack library
+      run: dotnet pack ./Source/Tinkwell.Bootstrapper/Tinkwell.Bootstrapper.csproj --configuration Release --no-build --output ./nupkgs
+
+    - name: Upload NuGet package as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Tinkwell.Bootstrapper-nuget
+        path: ./nupkgs/*.nupkg
+
+    - name: Push to NuGet
+      run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

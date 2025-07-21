@@ -1,20 +1,41 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-	<PropertyGroup>
-		<OutputPath>$(SolutionDir)build\</OutputPath>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-	</PropertyGroup>
-	<ItemGroup>
-	  <PackageReference Include="Fluid.Core" Version="2.24.0" />
-	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.6" />
-	  <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.6" />
-	  <PackageReference Include="NCalcSync" Version="5.4.2" />
-	  <PackageReference Include="Superpower" Version="3.1.0" />
-	</ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <PropertyGroup>
+        <OutputPath>$(SolutionDir)build\</OutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>Tinkwell.Bootstrapper</PackageId>
+        <Authors>Adriano Repetti</Authors>
+        <Description>Integration with Tinkwell.</Description>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/arepetti/Tinkwell</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/arepetti/Tinkwell</RepositoryUrl>
+        <Keyword>Tinkwell</Keyword>
+        <Keyword>Firmware-less</Keyword>
+        <Keyword>Firmwareless</Keyword>
+        <Keyword>Runner</Keyword>
+        <PackageReadmeFile>NuGet/README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Folder Include="NuGet\" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="NuGet/README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Fluid.Core" Version="2.24.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.6" />
+        <PackageReference Include="NCalcSync" Version="5.4.2" />
+        <PackageReference Include="Superpower" Version="3.1.0" />
+    </ItemGroup>
 </Project>
