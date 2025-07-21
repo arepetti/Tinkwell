@@ -38,11 +38,13 @@ jobs:
           cd app
           zip -r ../tinkwell-${{ github.event.release.tag_name }}.zip .
 
-      - name: Upload ZIP artifact
-        uses: actions/upload-artifact@v4
+      - name: Attach ZIP artifact to Release
+        uses: actions/upload-release-asset@v1
         with:
-          name: tinkwell-${{ github.event.release.tag_name }}.zip
-          path: tinkwell-${{ github.event.release.tag_name }}.zip
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: tinkwell-${{ github.event.release.tag_name }}.zip
+          asset_name: tinkwell-${{ github.event.release.tag_name }}.zip
+          asset_content_type: application/zip          
 
   bump-version:
     needs: build-publish-zip
@@ -67,7 +69,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Source/Directory.Build.props
+          git add Source/Directory.Build.Props
           git commit -m "chore: bump version to ${{ steps.bump.outputs.newVersion }}"
           git push
           
