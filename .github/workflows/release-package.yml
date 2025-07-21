@@ -26,7 +26,7 @@ jobs:
       - name: Create output directory
         run: mkdir ./app
 
-      - name: Publish Application
+      - name: Publish application
         run: |
           for proj in $(find ./Source -name "*.csproj" | grep -v -i "Tests/"); do
             echo "Publishing $proj..."
@@ -40,6 +40,8 @@ jobs:
 
       - name: Attach ZIP artifact to Release
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: tinkwell-${{ github.event.release.tag_name }}.zip
