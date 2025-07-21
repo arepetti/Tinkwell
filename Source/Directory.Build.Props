@@ -1,0 +1,13 @@
+<Project>
+    <PropertyGroup>
+        <Product>Tinkwell</Product>
+        <Company>Adriano Repetti</Company>
+        <Authors>Adriano Repetti</Authors>
+        <Description>Foundation runtime for edge-based IoT applications</Description>
+        <Copyright>(c) Adriano Repetti 2025</Copyright>
+
+        <InformationalVersion>1.0.0.0</InformationalVersion>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <FileVersion>1.0.0.0</FileVersion>
+    </PropertyGroup>
+</Project>
