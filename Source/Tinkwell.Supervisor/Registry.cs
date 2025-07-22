@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Tinkwell.Bootstrapper;
 using Tinkwell.Bootstrapper.Ensamble;
+using Tinkwell.Bootstrapper.Ipc;
 using Tinkwell.Supervisor.Commands;
 
 namespace Tinkwell.Supervisor;
@@ -14,15 +15,19 @@ sealed class Registry(ILogger<Registry> logger, IConfigFileReader<IEnsambleFile>
 
     public async Task StartAsync(ICommandServer commandServer, string configurationPath, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting registry with configuration: {ConfigurationPath}", configurationPath);
+        _logger.LogInformation("Starting registry with {ConfigurationPath}", configurationPath);
         _logger.LogTrace("OS: {OsDescription} ({OsArchitecture}), Process: {ProcessArchitecture}",
             RuntimeInformation.OSDescription,
             RuntimeInformation.OSArchitecture,
             RuntimeInformation.ProcessArchitecture);
 
         _logger.LogTrace("Loading ensamble definitions from {ConfigurationPath}", configurationPath);
+        _commandServer = commandServer;
         var file = await _reader.ReadAsync(configurationPath, cancellationToken);
-        _items = [.. file.Runners.Select(_processBuilder.Create)];
+        _items = [.. file.Runners.Select(runner => {
+            _processBuilder.DiscoveryServiceAddress = commandServer.QueryRole(WellKnownNames.DiscoveryServiceRoleName);
+            return _processBuilder.Create(runner);
+        })];
 
         if (cancellationToken.IsCancellationRequested)
             return;
@@ -40,7 +45,7 @@ sealed class Registry(ILogger<Registry> logger, IConfigFileReader<IEnsambleFile>
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Stopping registry");
+        _logger.LogDebug("Stopping registry");
         ForEach(nameof(IChildProcess.Stop), item => item.Stop());
 
         return Task.CompletedTask;
@@ -68,6 +73,7 @@ sealed class Registry(ILogger<Registry> logger, IConfigFileReader<IEnsambleFile>
         if (FindByName(definition.Name) is not null)
             throw new BootstrapperException($"A runner with the name '{definition.Name}' already exists.");
 
+        _processBuilder.DiscoveryServiceAddress = _commandServer?.QueryRole(WellKnownNames.DiscoveryServiceRoleName);
         var process = _processBuilder.Create(definition);
         _items.Add(process);
 
@@ -81,6 +87,7 @@ sealed class Registry(ILogger<Registry> logger, IConfigFileReader<IEnsambleFile>
     private readonly IConfigFileReader<IEnsambleFile> _reader = reader;
     private readonly IChildProcessBuilder _processBuilder = processBuilder;
     private List<IChildProcess> _items = [];
+    private ICommandServer? _commandServer;
 
     void ForEach(string actionName, Action<IChildProcess> action)
     {

@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+option csharp_namespace = "Tinkwell.Services";
+
+package Tinkwell;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+// Optional service to watch for system health.
+service Watchdog {
+    // List all the services and their current health status.
+    rpc List (WatchdogListRequest) returns (WatchdogListReply) {
+        option (google.api.http) = {
+            post: "/v1/watchdog/list"
+            body: "*"
+        };
+    }
+    // Assess the status of the system.
+    rpc Assess (WatchdogAssessRequest) returns (WatchdogAssessReply) {
+        option (google.api.http) = {
+            post: "/v1/watchdog/assess"
+            body: "*"
+        };
+    }
+}
+
+// Represents the quality of the health status measurement
+enum WatchdogMeasureQuality {
+    // Poor quality: not reliable measure or cannot measure.
+    POOR = 0;
+
+    // Acceptable quality: the overall status can be determined reliably.
+    ACCEPTABLE = 1;
+
+    // Good quality: all the required measures are reported reliably by the runner itself
+    // (or can be determined by the Watchdog if the runner crashed).
+    GOOD = 2;
+}
+
+// Represents the status of a service.
+enum WatchdogServiceStatus {
+    // Unknown status because it has not been inspected yet
+    UNDEFINED = 0;
+
+    // Unknown because the runner cannot report its status
+    UNKNOWN = 1;
+
+    // The runner is working normally
+    SERVING = 2;
+
+    // The runner is working but its performance are degraded
+    DEGRADED = 3;
+
+    // The runner is not working or it's crashed
+    CRASHED = 4;
+}
+
+// Represents the health status at a given moment in time.
+message RunnerHealthStatus {    
+    // Represents the resources used by a runner.
+    message Resources {
+        // CPU utilization in %.
+        float cpu_utilization = 1;
+
+        // Memory usage in MB.
+        float memory_usage = 2;
+
+        // Peak memory usage in MB.
+        float peak_memory_usage = 3;
+
+        // Number of threads.
+        uint32 thread_count = 4;
+
+        // Number of handles.
+        uint32 handle_count = 5;
+    }
+
+    // The full name of the runner.
+    string name = 1;
+
+    // The timestamp when the status has been acquired.
+    google.protobuf.Timestamp timestamp = 2;
+
+    // Quality of this measurement.
+    WatchdogMeasureQuality quality = 3;
+
+    // The last known status of the runner.
+    WatchdogServiceStatus status = 4;
+
+    // Resources used by the runner.
+    Resources resources = 5;
+}
+
+// Request message for Watchdog.list().
+message WatchdogListRequest {
+    // Optional query to filter the runners. If specified then only runner whose name contain
+    // the specified text are returned (comparison is case insensitive).
+    optional string query = 1;
+}
+
+// Response message for Watchdog.list().
+message WatchdogListReply {
+    // List of runners.
+    repeated RunnerHealthStatus runners = 1;
+}
+
+// Request for Watchdog.Assess().
+message WatchdogAssessRequest {
+}
+
+// Reply for Watchdog.Assess().
+message WatchdogAssessReply {
+    // The timestamp when the status has been acquired.
+    google.protobuf.Timestamp timestamp = 1;
+
+    // Quality of this measurement for `status`.
+    WatchdogMeasureQuality status_quality = 2;
+
+    // Assessed status of the system.
+    WatchdogServiceStatus status = 3;
+    
+    // Quality of this measurement for `anomaly`.
+    WatchdogMeasureQuality anomaly_quality = 4;
+
+    // Indicates whether the current status is an anomaly.
+    bool anomaly = 5;
+}

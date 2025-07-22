@@ -91,24 +91,21 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
     public async Task<GrpcService<Services.EventsGateway.EventsGatewayClient>> FindEventsGatewayAsync(CancellationToken cancellationToken = default)
         => await FindServiceAsync(Services.EventsGateway.Descriptor.FullName, c => new Services.EventsGateway.EventsGatewayClient(c), cancellationToken);
 
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        DisposeAsync(disposing: true).GetAwaiter().GetResult();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <inheritdoc />
-    public ValueTask DisposeAsync()
-        => DisposeAsync(true);
-
-    private readonly IConfiguration _configuration;
-    private readonly INamedPipeClient _pipeClient;
-    private GrpcService<Services.Discovery.DiscoveryClient>? _discovery;
-    private bool _disposed;
-    private static X509Certificate2? _clientCertificate;
-
-    private GrpcChannel CreateChannel(string address)
+    /// <summary>
+    /// Creates a channel for the specified address.
+    /// </summary>
+    /// <param name="address">Address for which you want to create a <c>GrpcChannel</c>.</param>
+    /// <returns>
+    /// A channel you can use to communicate with the specified address. Note that the channel is not cached,
+    /// use this function only if you handle caching yourself otherwise use one of the other <c>Find*()</c>
+    /// methods to reuse channels for the same address. Channels must be disposed when not used anymore.
+    /// </returns>
+    /// <remarks>
+    /// Always use this function to create a chananel to communicate with a Tinkwell gRPC service,
+    /// <strong>do not create a channel</strong> using <c>GrpcChannel.ForAddress()</c> because it might not
+    /// be correctly configured to use self-signed certificates used for testing and local development.
+    /// </remarks>
+    public GrpcChannel CreateChannel(string address)
     {
         if (_clientCertificate is null)
         {
@@ -125,9 +122,24 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
         handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
 
         return GrpcChannel.ForAddress(address, new GrpcChannelOptions { HttpHandler = handler });
-
     }
 
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        DisposeAsync(disposing: true).GetAwaiter().GetResult();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc />
+    public ValueTask DisposeAsync()
+        => DisposeAsync(true);
+
+    private readonly IConfiguration _configuration;
+    private readonly INamedPipeClient _pipeClient;
+    private GrpcService<Services.Discovery.DiscoveryClient>? _discovery;
+    private bool _disposed;
+    private static X509Certificate2? _clientCertificate;
     private async ValueTask DisposeAsync(bool disposing)
     {
         if (_disposed)

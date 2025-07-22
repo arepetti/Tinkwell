@@ -229,6 +229,13 @@ public static class HostingInformation
 
     private static async Task<string?> QueryDiscoveryAddressAsync(IConfiguration configuration, INamedPipeClient client)
     {
+        // If the discovery service has been initialized before this runner then its address is available
+        // as environment variable, it's faster so let's use it.
+        var env = Environment.GetEnvironmentVariable(WellKnownNames.DiscoveryServiceAddressEnvironmentVariable);
+        if (!string.IsNullOrWhiteSpace(env))
+            return env;
+
+        // We came online before the discovery service, we need to ask the supervisor for its address
         var address = await client.SendCommandToSupervisorAndDisconnectAsync(
             configuration, $"roles query \"{WellKnownNames.DiscoveryServiceRoleName}\"");
 

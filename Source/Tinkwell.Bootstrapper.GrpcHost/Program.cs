@@ -45,11 +45,23 @@ builder.Services
     .AddSingleton<IRegistry, Registry>()
     .AddTransient<IEnsambleConditionEvaluator, EnsambleConditionEvaluator>()
     .AddTransient<IActivity, RegisterServicesActivity>()
-    .AddGrpc();
+    .AddCors(options =>
+    {
+        options.AddPolicy("AllowPosts", policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .WithMethods("POST")
+                  .AllowAnyHeader();
+        });
+    })
+    .AddGrpc()
+    .AddJsonTranscoding();
 
 await builder.DelegateConfigureServicesAsync();
 
 var app = builder.Build();
+app.UseCors("AllowPosts");
+
 var registry = app.Services.GetRequiredService<IRegistry>();
 registry.MasterAddress = masterAddress;
 registry.LocalAddress = localAddress;

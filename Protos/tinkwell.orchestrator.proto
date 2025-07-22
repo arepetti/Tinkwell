@@ -4,19 +4,41 @@ option csharp_namespace = "Tinkwell.Services";
 
 package Tinkwell;
 
+import "google/api/annotations.proto";
+
 // Optional service to manage runners.
 service Orchestrator {
   // List all the runners currently active in the system.
-    rpc List (OrchestratorListRequest) returns (OrchestratorListReply);
+    rpc List (OrchestratorListRequest) returns (OrchestratorListReply) {
+        option (google.api.http) = {
+            post: "/v1/orchestrator/list"
+            body: "*"
+        };
+    }
 
     // Start a runner which has been stopped with a call to Stop().
-    rpc Start (StartStopRunnerRequest) returns (StartStopRunnerResponse);
+    rpc Start (StartStopRunnerRequest) returns (StartStopRunnerResponse) {
+        option (google.api.http) = {
+            post: "/v1/orchestrator/start"
+            body: "*"
+        };
+    }
 
     // Stop an existing runner.
-    rpc Stop (StartStopRunnerRequest) returns (StartStopRunnerResponse);
+    rpc Stop (StartStopRunnerRequest) returns (StartStopRunnerResponse) {
+        option (google.api.http) = {
+            post: "/v1/orchestrator/stop"
+            body: "*"
+        };
+    }
 
     // Restart an existing runner (equivalent to calling Stop() followed by Start()).
-    rpc Restart (StartStopRunnerRequest) returns (StartStopRunnerResponse);
+    rpc Restart (StartStopRunnerRequest) returns (StartStopRunnerResponse) {
+        option (google.api.http) = {
+            post: "/v1/orchestrator/restart"
+            body: "*"
+        };
+    }
 
     // Add a new runner in the target system.
     rpc Add (AddRunnerRequest) returns (AddRunnerResponse);

@@ -22,7 +22,7 @@ sealed class Worker(ILogger<Worker> logger) : BackgroundService, IBroker
     {
         return _worker.StartAsync((cancellationToken) =>
         {
-            _logger.LogInformation("Watchdog started successfully.");
+            _logger.LogDebug("Events Gateway started successfully.");
             foreach (var data in _queue.GetConsumingEnumerable(cancellationToken))
                 Enqueued?.Invoke(this, new EnqueuedEventArgs(data));
         }, stoppingToken);

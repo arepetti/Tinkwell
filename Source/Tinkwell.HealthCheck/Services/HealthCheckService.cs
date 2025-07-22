@@ -4,7 +4,7 @@ using Tinkwell.Services;
 
 namespace Tinkwell.HealthCheck.Services;
 
-public sealed class HealthCheckService : Tinkwell.Services.HealthCheck.HealthCheckBase
+sealed class HealthCheckService : Tinkwell.Services.HealthCheck.HealthCheckBase
 {
     public HealthCheckService(IRegistry registry, MonitoringOptions options)
     {

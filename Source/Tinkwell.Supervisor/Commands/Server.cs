@@ -85,6 +85,14 @@ sealed class Server : ICommandServer
         return Task.CompletedTask;
     }
 
+    public string? QueryRole(string roleName)
+    {
+        if (_roles.TryGetValue(e.Role!, out string? masterAddress))
+            return masterAddress;
+
+        return null;
+    }
+
     private readonly ILogger<Server> _logger;
     private readonly IRegistry _registry;
     private readonly INamedPipeServer _pipeServer;
