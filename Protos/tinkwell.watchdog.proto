@@ -16,6 +16,7 @@ service Watchdog {
             body: "*"
         };
     }
+
     // Assess the status of the system.
     rpc Assess (WatchdogAssessRequest) returns (WatchdogAssessReply) {
         option (google.api.http) = {

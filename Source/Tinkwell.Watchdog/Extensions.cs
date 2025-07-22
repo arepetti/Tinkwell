@@ -15,24 +15,4 @@ static class Extensions
             _ => ServiceStatus.Unknown
         };
     }
-
-    public static void UpdateOrAdd(this ConcurrentDictionary<string, Snapshot> snapshots, string runnerName, ServiceStatus status)
-    {
-        if (snapshots.TryGetValue(runnerName, out var snapshot))
-        {
-            snapshot.Status = status;
-            if (snapshot.Quality >= SnapshotQuality.Poor)
-                snapshot.Quality = SnapshotQuality.Good;
-        }
-        else
-        {
-            snapshots.TryAdd(runnerName, new()
-            {
-                Runner = new Runner(runnerName, 0, RunnerRole.Firmlet),
-                Timestamp = DateTime.UtcNow,
-                Quality = SnapshotQuality.Poor,
-                Status = status
-            });
-        }
-    }
 }

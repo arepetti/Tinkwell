@@ -19,7 +19,10 @@ sealed class Watchdog(
     ServiceLocator locator) : IWatchdog
 {
     public Snapshot[] GetSnapshots()
-        => _snapshots.Values.ToArray();
+        => _healthData.GetSnapshots();
+
+    public bool? IsLatestSampleAnAnomaly
+        => _healthData.IsLatestSampleAnAnomaly;
 
     public async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -27,7 +30,7 @@ sealed class Watchdog(
         {
             _discovery = await _locator.FindDiscoveryAsync(stoppingToken);
             await FetchRunnerListAsync(stoppingToken);
-            _logger.LogDebug("Watchdog started successfully, now watching for changes");
+            _logger.LogInformation("Watchdog started successfully");
 
             using var timer = new PeriodicTimer(_options.Interval);
             while (await timer.WaitForNextTickAsync(stoppingToken))
@@ -35,6 +38,7 @@ sealed class Watchdog(
                 if (stoppingToken.IsCancellationRequested)
                     break;
 
+                _healthData.BeginUpdate();
                 try
                 {
                     if (_dirty)
@@ -42,10 +46,16 @@ sealed class Watchdog(
 
                     await ProfileAsync(stoppingToken);
                     await CollectHealthDataAsync(stoppingToken);
+
+                    _dirty = _healthData.GetSnapshots().Any(x => x.Quality <= SnapshotQuality.Undetermined);
                 }
                 catch (Exception e) when (e is not OperationCanceledException)
                 {
                     _logger.LogError(e, "An unexpected error occurred while collecting health data. The worker will try again on the next run.");
+                }
+                finally
+                {
+                    _healthData.EndUpdate();
                 }
             }
         }
@@ -78,7 +88,7 @@ sealed class Watchdog(
     private readonly ConcurrentDictionary<string, GrpcChannel> _channelCache = new();
     private Discovery.DiscoveryClient? _discovery;
     private bool _dirty = true;
-    private readonly ConcurrentDictionary<string, Snapshot> _snapshots = new();
+    private readonly HealthData _healthData = new();
 
     private async Task CollectHealthDataAsync(CancellationToken cancellationToken)
     {
@@ -94,7 +104,7 @@ sealed class Watchdog(
             {
                 var healthCheckService = new HealthCheck.HealthCheckClient(GetOrCreateChannel(host));
                 var healthResponse = await healthCheckService.CheckAsync(new(), cancellationToken: cancellationToken);
-                _snapshots.UpdateOrAdd(healthResponse.Name, healthResponse.Status.Translate());
+                _healthData.UpdateOrAdd(healthResponse.Name, healthResponse.Status.Translate());
             }
             catch (RpcException exception)
             {
@@ -104,7 +114,7 @@ sealed class Watchdog(
                 {
                     var runnerName = await ResolveRunnerNameFromAddressAsync(host, cancellationToken);
                     if (!string.IsNullOrWhiteSpace(runnerName))
-                        _snapshots.UpdateOrAdd(runnerName, ServiceStatus.Crashed);
+                        _healthData.UpdateOrAdd(runnerName, ServiceStatus.Crashed);
                 }
             }
         }
@@ -160,12 +170,7 @@ sealed class Watchdog(
                     return new Runner(name, pid, isSupervisor ? RunnerRole.Supervisor : RunnerRole.Firmlet);
                 });
 
-            foreach (var runner in runners)
-            {
-                var snapshot = new Snapshot { Runner = runner };
-                if (!_snapshots.TryAdd(runner.Name, snapshot))
-                    _snapshots[runner.Name] = snapshot;
-            }
+            _healthData.AddRange(runners);
 
             if (runners.Any())
                 _dirty = false;
@@ -181,7 +186,7 @@ sealed class Watchdog(
     {
         try
         {
-            await Profiler.ProfileAsync(_snapshots.Values.ToArray(), cancellationToken);
+            await Profiler.ProfileAsync(_healthData.GetSnapshots(), cancellationToken);
         }
         catch (Exception e)
         {

@@ -56,5 +56,27 @@ sealed class WatchdogService : Tinkwell.Services.Watchdog.WatchdogBase
         return Task.FromResult(response);
     }
 
+    public override Task<WatchdogAssessReply> Assess(WatchdogAssessRequest request, ServerCallContext context)
+    {
+        WatchdogServiceStatus status = WatchdogServiceStatus.Unknown;
+        WatchdogMeasureQuality statusQuality = WatchdogMeasureQuality.Poor;
+
+        var snapshots = _watchdog.GetSnapshots();
+        if (snapshots.Length > 0)
+        {
+            status = (WatchdogServiceStatus)snapshots.Min(x => (int)x.Status);
+            statusQuality = (WatchdogMeasureQuality)snapshots.Min(x => (int)x.Quality);
+        }
+
+        return Task.FromResult(new WatchdogAssessReply()
+        {
+            Timestamp = Timestamp.FromDateTime(DateTime.UtcNow),
+            Status = status,
+            StatusQuality = statusQuality,
+            Anomaly = _watchdog.IsLatestSampleAnAnomaly ?? false,
+            AnomalyQuality = _watchdog.IsLatestSampleAnAnomaly is null ? WatchdogMeasureQuality.Poor : WatchdogMeasureQuality.Acceptable,
+        });
+    }
+
     private readonly IWatchdog _watchdog;
 }

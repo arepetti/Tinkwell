@@ -31,7 +31,7 @@ sealed class Executor : IAsyncDisposable
 
         await _dispatchWorker.StartAsync(DispatchIntentsAsync);
         await _listeningWorker.StartAsync(SubscribeToEventsAsync);
-        _logger.LogDebug("Reactor started successfully, now watching for changes");
+        _logger.LogInformation("Reactor started successfully");
     }
 
     public async ValueTask DisposeAsync()

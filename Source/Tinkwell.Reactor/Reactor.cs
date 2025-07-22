@@ -48,7 +48,7 @@ sealed class Reactor : IAsyncDisposable
             await CheckAllConditionsAsync(cancellationToken);
 
         await _worker.StartAsync(SubscribeToChangesAsync);
-        _logger.LogDebug("Reactor started successfully, now watching for changes");
+        _logger.LogInformation("Reactor started successfully");
     }
 
     public async ValueTask DisposeAsync()

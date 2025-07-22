@@ -87,7 +87,7 @@ sealed class Server : ICommandServer
 
     public string? QueryRole(string roleName)
     {
-        if (_roles.TryGetValue(e.Role!, out string? masterAddress))
+        if (_roles.TryGetValue(roleName, out string? masterAddress))
             return masterAddress;
 
         return null;

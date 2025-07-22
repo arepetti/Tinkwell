@@ -60,7 +60,7 @@ sealed class Reducer : IAsyncDisposable
         else
         {
             await _worker.StartAsync(SubscribeToChangesAsync, cancellationToken);
-            _logger.LogDebug("Reducer started successfully, now watching for changes");
+            _logger.LogInformation("Reducer started successfully");
         }
     }
 
