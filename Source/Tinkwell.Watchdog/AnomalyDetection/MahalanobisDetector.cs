@@ -3,8 +3,20 @@ using MathNet.Numerics.LinearAlgebra;
 
 namespace Tinkwell.Watchdog.AnomalyDetection;
 
+// https://insa.nic.in/writereaddata/UpLoadedFiles/PINSA/Vol02_1936_1_Art05.pdf
 sealed class MahalanobisDetector
 {
+    // In plain English:
+    //   * Mahalanobis distance measures how far a point is from the mean, scaled by covariance
+    //   * Squared distances follow a chi-squared distribution under normality
+    //   * You can interpret the threshold as: only 5% of normal points should exceed this distance
+    // A few assumptions (to verify):
+    //   * Data is multivariate normal
+    //   * Not (too many) outliers during training
+    //   * Data is not gaussian (well, shouldn't be)
+    public double Threshold { get; set; }
+        = ChiSquared.InvCDF(4, 0.95);
+
     public bool Train(IEnumerable<Sample> samples)
     {
         var matrix = Matrix<double>.Build.Dense(samples.Count(), 4, (i, j) =>
@@ -32,11 +44,10 @@ sealed class MahalanobisDetector
     }
 
     public bool IsAnomalous(Sample sample)
-        => ComputeDistance(sample) > _threshold;
+        => ComputeDistance(sample) > Threshold;
 
     private Vector<double>? _mean;
     private Matrix<double>? _covarianceInverse;
-    private double _threshold = ChiSquared.InvCDF(4, 0.95); // 95%
 
     private double ComputeDistance(Sample sample)
     {

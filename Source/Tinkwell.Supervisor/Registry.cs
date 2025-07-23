@@ -15,7 +15,7 @@ sealed class Registry(ILogger<Registry> logger, IConfigFileReader<IEnsambleFile>
 
     public async Task StartAsync(ICommandServer commandServer, string configurationPath, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting registry with {ConfigurationPath}", configurationPath);
+        _logger.LogInformation("Using {ConfigurationPath}", configurationPath);
         _logger.LogTrace("OS: {OsDescription} ({OsArchitecture}), Process: {ProcessArchitecture}",
             RuntimeInformation.OSDescription,
             RuntimeInformation.OSArchitecture,

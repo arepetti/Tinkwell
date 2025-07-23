@@ -1,5 +1,4 @@
 using System.Net;
-
 using Tinkwell.Bootstrapper.Ensamble;
 using Tinkwell.Bootstrapper.Expressions;
 using Tinkwell.Bootstrapper.GrpcHost;
@@ -9,6 +8,12 @@ using Tinkwell.Bootstrapper.Ipc.Extensions;
 using Tinkwell.Bootstrapper.Rpc.ServerHost.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.AddSimpleConsole(options =>
+{
+    options.SingleLine = true;
+    options.TimestampFormat = "HH:mm:ss ";
+    options.IncludeScopes = false;
+});
 
 // We need to respect the order Port then Role.
 // The supervisor has to have a full address for us before we can claim a role.
@@ -68,7 +73,7 @@ registry.LocalAddress = localAddress;
 
 // We have only one discovery service (the master) when running multiple gRPC hosts.
 // You can still view what's registered in each host with a GET of "/" for the exposed server
-// (but it's intended for debugging, not to be consume by other apps/services).
+// (but it's intended for debugging, not to be consumed by other apps/services).
 if (isMasterDiscovery)
 {
     app.MapGrpcService<DiscoveryService>();

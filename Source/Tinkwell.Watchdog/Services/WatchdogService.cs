@@ -62,10 +62,11 @@ sealed class WatchdogService : Tinkwell.Services.Watchdog.WatchdogBase
         WatchdogMeasureQuality statusQuality = WatchdogMeasureQuality.Poor;
 
         var snapshots = _watchdog.GetSnapshots();
-        if (snapshots.Length > 0)
+        var valued = snapshots.Where(x => x.Status > ServiceStatus.Unknown);
+        if (valued.Any())
         {
-            status = (WatchdogServiceStatus)snapshots.Min(x => (int)x.Status);
-            statusQuality = (WatchdogMeasureQuality)snapshots.Min(x => (int)x.Quality);
+            status = (WatchdogServiceStatus)valued.Min(x => (int)x.Status);
+            statusQuality = (WatchdogMeasureQuality)valued.Min(x => (int)x.Quality);
         }
 
         return Task.FromResult(new WatchdogAssessReply()

@@ -32,31 +32,15 @@ sealed class Watchdog(
             await FetchRunnerListAsync(stoppingToken);
             _logger.LogInformation("Watchdog started successfully");
 
+            await Update(stoppingToken);
+
             using var timer = new PeriodicTimer(_options.Interval);
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
                 if (stoppingToken.IsCancellationRequested)
                     break;
 
-                _healthData.BeginUpdate();
-                try
-                {
-                    if (_dirty)
-                        await FetchRunnerListAsync(stoppingToken);
-
-                    await ProfileAsync(stoppingToken);
-                    await CollectHealthDataAsync(stoppingToken);
-
-                    _dirty = _healthData.GetSnapshots().Any(x => x.Quality <= SnapshotQuality.Undetermined);
-                }
-                catch (Exception e) when (e is not OperationCanceledException)
-                {
-                    _logger.LogError(e, "An unexpected error occurred while collecting health data. The worker will try again on the next run.");
-                }
-                finally
-                {
-                    _healthData.EndUpdate();
-                }
+                await Update(stoppingToken);
             }
         }
         catch (OperationCanceledException)
@@ -89,6 +73,29 @@ sealed class Watchdog(
     private Discovery.DiscoveryClient? _discovery;
     private bool _dirty = true;
     private readonly HealthData _healthData = new();
+
+    private async Task Update(CancellationToken cancellationToken)
+    {
+        _healthData.BeginUpdate();
+        try
+        {
+            if (_dirty)
+                await FetchRunnerListAsync(cancellationToken);
+
+            await ProfileAsync(cancellationToken);
+            await CollectHealthDataAsync(cancellationToken);
+
+            _dirty = _healthData.GetSnapshots().Any(x => x.Quality <= SnapshotQuality.Undetermined);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            _logger.LogError(e, "An unexpected error occurred while collecting health data. The worker will try again on the next run.");
+        }
+        finally
+        {
+            _healthData.EndUpdate();
+        }
+    }
 
     private async Task CollectHealthDataAsync(CancellationToken cancellationToken)
     {
@@ -168,7 +175,9 @@ sealed class Watchdog(
                     string name = isSupervisor ? "Supervisor*" : parts[0];
                     int.TryParse(parts[1], CultureInfo.InvariantCulture, out var pid);
                     return new Runner(name, pid, isSupervisor ? RunnerRole.Supervisor : RunnerRole.Firmlet);
-                });
+                })
+                .OrderBy(x => x.Role)
+                .ThenBy(x => x.Name);
 
             _healthData.AddRange(runners);
 
