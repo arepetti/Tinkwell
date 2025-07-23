@@ -23,7 +23,9 @@ runner measures "Tinkwell.Bootstrapper.DllHost" {
 	}
 }
 
-compose agent watchdog "Tinkwell.Watchdog.dll"
-
 compose agent mqtt_server "Tinkwell.Bridge.MqttServer.dll" {}
 compose service mqtt_client "Tinkwell.Bridge.MqttClient.dll" {}
+
+runner watchdog "Tinkwell.Bootstrapper.GrpcHost" {
+	service runner health "Tinkwell.Watchdog.dll" {}
+}

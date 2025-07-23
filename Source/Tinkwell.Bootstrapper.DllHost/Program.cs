@@ -9,7 +9,12 @@ var builder = Host.CreateDefaultBuilder(args)
    .ConfigureLogging(logging =>
    {
        logging.ClearProviders();
-       logging.AddConsole();
+       logging.AddSimpleConsole(options =>
+       {
+           options.SingleLine = true;
+           options.TimestampFormat = "HH:mm:ss ";
+           options.IncludeScopes = false;
+       });
    });
 
 await builder.DelegateConfigureServicesAsync(args);

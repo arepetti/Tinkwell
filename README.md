@@ -8,6 +8,7 @@ For more insights into the vision behind Tinkwell, read [Tinkwell: Firmware-less
 
 This repository is the foundation of the Tinkwell ecosystem. It provides essential building blocks and abstractions that power other components. Additional features will be released over time as separate repositories. Be sure to check out:
 - [Tinkwell DX](https://github.com/arepetti/Tinkwell-DX): Developer tools, utilities, and resources to enhance your workflow.
+- [Tinkwell Pulse](https://github.com/arepetti/Tinkwell-Pulse): Web application to monitor a Tinkwell installation.
 
 ## The Distributed Challenge
 

@@ -16,6 +16,7 @@ sealed class SentinelProcessBuilder : IChildProcessBuilder
         _configuration = configuration;
         _logger = logger;
     }
+    public string? DiscoveryServiceAddress { get; set; }
 
     public IChildProcess Create(RunnerDefinition definition)
     {
@@ -25,6 +26,9 @@ sealed class SentinelProcessBuilder : IChildProcessBuilder
 
         psi.EnvironmentVariables[WellKnownNames.RunnerNameEnvironmentVariable] = definition.Name;
         psi.EnvironmentVariables[WellKnownNames.SupervisorPidEnvironmentVariable] = Environment.ProcessId.ToString();
+
+        if (!string.IsNullOrWhiteSpace(DiscoveryServiceAddress))
+            psi.EnvironmentVariables[WellKnownNames.DiscoveryServiceAddressEnvironmentVariable] = DiscoveryServiceAddress;
 
         bool keepAlive = _configuration.GetValue("Supervisor:KeepAlive", true);
         if (keepAlive && definition.ShouldKeepAlive())

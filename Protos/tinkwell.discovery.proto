@@ -4,13 +4,20 @@ option csharp_namespace = "Tinkwell.Services";
 
 package Tinkwell;
 
+import "google/api/annotations.proto";
+
 // This service provides the basic methods needed to find the other registered services in the system.
 service Discovery {
     // Lists all the registered services matching the specified search query.
     rpc List (DiscoveryListRequest) returns (DiscoveryListReply);
 
     // Finds the service with the specified name.
-    rpc Find (DiscoveryFindRequest) returns (DiscoveryFindReply);
+    rpc Find (DiscoveryFindRequest) returns (DiscoveryFindReply) {
+        option (google.api.http) = {
+            post: "/v1/discovery/find"
+            body: "*"
+        };
+    }
 
     // Finds the service with the specified family name. Note that this differs
     // from a simple Find() because it searches using only the family name and it could return

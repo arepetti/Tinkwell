@@ -2,6 +2,7 @@ syntax = "proto3";
 
 option csharp_namespace = "Tinkwell.Services";
 
+import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
 package Tinkwell;
@@ -11,18 +12,39 @@ service EventsGateway {
     // Publish an event to the message broker.
     // Returns a correlation_id that can be used to track the event (if a correlation ID has been
     // provided then it's the same one).
-    rpc Publish(PublishEventsRequest) returns (PublishEventsResponse);
+    rpc Publish(PublishEventsRequest) returns (PublishEventsResponse) {
+        option (google.api.http) = {
+            post: "/v1/events/publish"
+            body: "*"
+        };
+    }
+
     // Subscribe to the event specified in the request.
-    rpc SubscribeTo(SubscribeToEventsRequest) returns (stream SubscribeEventsResponse);
+    rpc SubscribeTo(SubscribeToEventsRequest) returns (stream SubscribeEventsResponse) {
+        option (google.api.http) = {
+            post: "/v1/events/subscribe-topic"
+            body: "*"
+        };
+    }
+
     // Subscribe to all the events matching the criteria specified in the request.
-    rpc SubscribeToMatching(SubscribeToMatchingEventsRequest) returns (stream SubscribeEventsResponse);
+    rpc SubscribeToMatching(SubscribeToMatchingEventsRequest) returns (stream SubscribeEventsResponse) {
+        option (google.api.http) = {
+            post: "/v1/events/subscribe-matching"
+            body: "*"
+        };
+    }
+
+
     // Subscribe to all the events matching a set of criterias specified in the request.
     // Callers can assign an ID to each match to determine which match caused the notification
     rpc SubscribeToMatchingMany(SubscribeToMatchingManyEventsRequest) returns (stream SubscribeEventsResponse);
 }
 
-// Verbs for SVO events, describing what has happened.
+// Verbs for SVO events.
 enum Verb {
+    // Describing what has happened...
+
     // A new resource or entity was created
     CREATED       = 0;
     // A resource or entity was retrieved/read

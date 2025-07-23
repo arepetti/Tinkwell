@@ -4,6 +4,7 @@ option csharp_namespace = "Tinkwell.Services";
 
 package Tinkwell;
 
+import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
@@ -36,7 +37,12 @@ service Store {
     // * NotFound: cannot find a measure with the specified name.
     // * OutOfRange: the specified value is outside the allowed range for the measure.
     // * FailedPrecondition: trying to update a constant measure.
-    rpc Update(StoreUpdateRequest) returns (google.protobuf.Empty);
+    rpc Update(StoreUpdateRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/v1/store/update"
+            body: "*"
+        };
+    }
 
     // Updates the values of multiple existing measures in a single call.
     // Might return the following errors (and all the standard ones):
@@ -52,21 +58,36 @@ service Store {
     // * NotFound: cannot find a measure with the specified name.
     // * OutOfRange: the specified value is outside the allowed range for the measure.
     // * FailedPrecondition: trying to update a constant measure.
-    rpc SetMeasureValue(StoreSetMeasureValueRequest) returns (google.protobuf.Empty);
+    rpc SetMeasureValue(StoreSetMeasureValueRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/v1/store/set"
+            body: "*"
+        };
+    }
 
     // Finds a single measure by its unique name.
     rpc Find(StoreFindRequest) returns (StoreMeasure);
 
     // Finds all measures, optionally filtered by a list of names.
     // If the names list is empty, all measures are returned.
-    rpc FindAll(StoreFindAllRequest) returns (stream StoreMeasure);
+    rpc FindAll(StoreFindAllRequest) returns (stream StoreMeasure) {
+        option (google.api.http) = {
+            post: "/v1/store/find"
+            body: "*"
+        };
+    }
 
     // Finds all measure definitions, optionally filtered by a list of names.
     // If the names list is empty, all definitions are returned.
     rpc FindAllDefinitions(StoreFindAllDefinitionsRequest) returns (stream StoreDefinition);
 
     // Searches for measures matching the specified criteria.
-    rpc Search(SearchRequest) returns (stream SearchResponse);
+    rpc Search(SearchRequest) returns (stream SearchResponse) {
+        option (google.api.http) = {
+            post: "/v1/store/search"
+            body: "*"
+        };
+    }
 
     // Read the current value of a set of measures.
     // It's lighter thand FindAll() but this function does NOT return a stream,
@@ -80,7 +101,12 @@ service Store {
     rpc SubscribeMany(SubscribeManyRequest) returns (stream StoreValueChange);
 
     // Subscribes to value changes for all measures matching a name pattern.
-    rpc SubscribeManyMatching(SubscribeManyMatchingRequest) returns (stream StoreValueChange);
+    rpc SubscribeManyMatching(SubscribeManyMatchingRequest) returns (stream StoreValueChange) {
+        option (google.api.http) = {
+            post: "/v1/store/subscribe"
+            body: "*"
+        };
+    }
 }
 
 // Represents the full state of a measure, including its definition, metadata, and current value.

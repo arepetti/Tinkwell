@@ -18,15 +18,22 @@
 		<Protobuf Include="..\..\Protos\tinkwell.orchestrator.proto" Link="Protos\tinkwell.orchestrator.proto" />
 		<Protobuf Include="..\..\Protos\tinkwell.store.proto" Link="Protos\tinkwell.store.proto" />
 		<Protobuf Include="..\..\Protos\tinkwell.mqtt_client.proto" Link="Protos\tinkwell.mqtt_client.proto" />
+		<Protobuf Include="..\..\Protos\tinkwell.watchdog.proto">
+		  <Link>Protos\tinkwell.watchdog.proto</Link>
+		</Protobuf>
 	</ItemGroup>
+    <PropertyGroup>
+        <IncludeHttpRuleProtos>true</IncludeHttpRuleProtos>
+    </PropertyGroup>
 
-	<ItemGroup>
+    <ItemGroup>
 		<PackageReference Include="Google.Protobuf" Version="3.31.1" />
 		<PackageReference Include="Grpc.Net.Client" Version="2.64.0" />
 		<PackageReference Include="Grpc.Tools" Version="2.72.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="9.0.7" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.6" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
 	</ItemGroup>

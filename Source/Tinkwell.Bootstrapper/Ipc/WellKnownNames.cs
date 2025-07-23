@@ -43,6 +43,14 @@ public static class WellKnownNames
     public static readonly string SupervisorPidEnvironmentVariable = "TINKWELL_SUPERVISOR_PID";
 
     /// <summary>
+    /// <strong>Internal</strong>. Use <c>ServiceLocator</c> instead.
+    /// <para>
+    /// The host address for the Discovery Service.
+    /// </para>
+    /// </summary>
+    public static readonly string DiscoveryServiceAddressEnvironmentVariable = "TINKWELL_DISCOVERY_SERVICE_ADDRESS";
+
+    /// <summary>
     /// <strong>Internal</strong>. Use <c>HostingInformation</c> instead.
     /// An optional environment variable that contains the <em>environment</em> for this
     /// installation. It could be <c>"Development"</c> or <c>"Release"</c>.

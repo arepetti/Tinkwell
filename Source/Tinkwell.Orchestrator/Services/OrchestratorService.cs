@@ -16,7 +16,12 @@ public sealed class OrchestratorService : Tinkwell.Services.Orchestrator.Orchest
 
     public override async Task<OrchestratorListReply> List(OrchestratorListRequest request, ServerCallContext context)
     {
-        var response = await SendCommandAsync($"runners list \"{request.Query}\"");
+        // The server pipe is a bit dumb, it interprets the double quotes as "parameter present but empty"
+        string command = "runners list";
+        if (!string.IsNullOrWhiteSpace(request.Query))
+            command = $"runners list \"{request.Query}\"";
+
+        var response = await SendCommandAsync(command);
         var result = new OrchestratorListReply();
         result.Runners.AddRange(response?.Split(',').Select(x => new OrchestratorListReply.Types.Runner { Name = x }));
         return result;

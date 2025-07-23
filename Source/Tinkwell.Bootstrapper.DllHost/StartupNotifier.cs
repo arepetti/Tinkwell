@@ -25,7 +25,7 @@ sealed class StartupNotifier : IHostedService
         _logger.LogDebug("Starting DllHost '{HostName}'.", HostingInformation.RunnerName);
         _lifetime.ApplicationStarted.Register(() =>
         {
-            _logger.LogInformation("DllHost '{HostName}' started successfully", HostingInformation.RunnerName);
+            _logger.LogInformation("'{HostName}' started successfully", HostingInformation.RunnerName);
 
             string command = $"signal \"{HostingInformation.RunnerName}\"";
             _pipeClient.SendCommandToSupervisorAndDisconnect(_configuration, command);
@@ -36,7 +36,7 @@ sealed class StartupNotifier : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("DllHost '{HostName}' stopped successfully", HostingInformation.RunnerName);
+        _logger.LogInformation("'{HostName}' stopped successfully", HostingInformation.RunnerName);
         return Task.CompletedTask;
     }
 
