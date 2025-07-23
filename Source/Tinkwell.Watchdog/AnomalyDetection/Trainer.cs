@@ -2,9 +2,6 @@
 
 sealed class Trainer
 {
-    private const int MiniumNumberOfSamplesForTraining = 40;
-    private const int MaximumNumberOfSamplesForTraining = MiniumNumberOfSamplesForTraining * 2;
-
     public bool? Enqueue(Snapshot[] snapshots)
     {
         var goodSamples = snapshots.Where(x => x.Quality >= SnapshotQuality.Acceptable);
@@ -35,6 +32,9 @@ sealed class Trainer
 
         return null;
     }
+
+    private const int MiniumNumberOfSamplesForTraining = 40;
+    private const int MaximumNumberOfSamplesForTraining = MiniumNumberOfSamplesForTraining * 2;
 
     private readonly MahalanobisDetector _detector = new();
     private readonly List<Sample> _samples = new();
