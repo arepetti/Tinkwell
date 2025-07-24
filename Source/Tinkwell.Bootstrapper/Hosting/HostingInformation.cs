@@ -114,6 +114,12 @@ public static class HostingInformation
 
         return Path.Combine(WorkingDirectory, path);
     }
+    
+    /// <summary>
+    /// Indicates whether this application is running under the supervisor.
+    /// </summary>
+    public static bool IsSupervised
+        => !string.IsNullOrWhiteSpace(RunnerName);
 
     /// <summary>
     /// Gets the name of the current runner from environment variables.

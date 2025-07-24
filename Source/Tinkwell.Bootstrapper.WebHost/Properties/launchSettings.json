@@ -1,0 +1,24 @@
+{
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "externalUrlConfiguration": true
+    },
+    "https": {
+      "commandName": "Project",
+      "workingDirectory": "..\\Build",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "TINKWELL_CERT_PATH": "config\\certs\\ADRIANO-LP-tinkwell-devcert.pfx",
+        "TINKWELL_CERT_PASS": "1234"
+      },
+      "dotnetRunMessages": true,
+      "externalUrlConfiguration": true
+    }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json"
+}
