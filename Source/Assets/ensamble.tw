@@ -23,8 +23,12 @@ runner measures "Tinkwell.Bootstrapper.DllHost" {
 	}
 }
 
-compose agent mqtt_server "Tinkwell.Bridge.MqttServer.dll" {}
-compose service mqtt_client "Tinkwell.Bridge.MqttClient.dll" {}
+// runner www "Tinkwell.Bootstrapper.WebHost" {
+// 	properties {
+// 		root_path: ""
+// 		port_number: "4999"
+// 	}
+// }
 
 runner watchdog "Tinkwell.Bootstrapper.GrpcHost" {
 	service runner health "Tinkwell.Watchdog.dll" {}

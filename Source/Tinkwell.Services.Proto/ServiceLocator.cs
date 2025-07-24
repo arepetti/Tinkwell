@@ -60,12 +60,26 @@ public sealed class ServiceLocator : IAsyncDisposable, IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
+        var address = await FindServiceAddressAsync(name, cancellationToken);
+        var channel = CreateChannel(address);
+
+        return new GrpcService<T>(channel, factory(channel));
+    }
+
+    /// <summary>
+    /// Fnd the address of a gRPC service by its name.
+    /// </summary>
+    /// <param name="name">Full name (or family name or alias) of the service to locate.</param>
+    /// <param name="cancellationToken">A token that can be used to request cancellation of the operation.</param>
+    /// <returns>Host address of the service with the specified name.</returns>
+    public async Task<string> FindServiceAddressAsync(string name, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
         var discovery = await FindDiscoveryAsync(cancellationToken);
         var request = new Services.DiscoveryFindRequest { Name = name };
         var addressInfo = await discovery.FindAsync(request, cancellationToken: cancellationToken);
-        var channel = CreateChannel(addressInfo.Host);
-
-        return new GrpcService<T>(channel, factory(channel));
+        return addressInfo.Host;
     }
 
     /// <summary>

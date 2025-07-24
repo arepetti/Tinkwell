@@ -33,11 +33,13 @@ static class Extensions
 
     public static (string Path, string Password) ResolveCertificate(this IHostApplicationBuilder builder)
     {
+        var path = Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePath) ?? "";
         var password = Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePass) ?? "";
-        var resolvedPath = HostingInformation.GetFullPath(
-            Environment.GetEnvironmentVariable(WellKnownNames.WebServerCertificatePath) ?? "");
 
-        return (resolvedPath, password);
+        if (string.IsNullOrWhiteSpace(path))
+            return ("", "");
+
+        return (HostingInformation.GetFullPath(path), password);
     }
 
     public static Task DelegateConfigureServicesAsync(this IHostApplicationBuilder builder)
