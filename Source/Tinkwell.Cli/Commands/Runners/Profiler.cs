@@ -83,7 +83,7 @@ sealed class Profiler
 
         public DateTime StartupTime { get; set; }
 
-        public double Cpu{ get; set; }
+        public double Cpu { get; set; }
 
         public double Memory { get; set; }
         

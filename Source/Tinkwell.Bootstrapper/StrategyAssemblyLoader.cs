@@ -28,7 +28,7 @@ public static class StrategyAssemblyLoader
     /// For example, <c>Agent</c>. Can be an empty string to match all tasks.
     /// </param>
     /// <param name="path">
-    /// The directory path to search for assemblies. For example, <c>bin/Debug/net9.0</c>.
+    /// The directory path to search for assemblies. For example, <c>bin/Debug/net10.0</c>.
     /// </param>
     /// <param name="options">
     /// The search option, such as <see cref="SearchOption.TopDirectoryOnly"/> or
@@ -121,7 +121,7 @@ public static class StrategyAssemblyLoader
     /// For example, <c>Agent</c>. Can be an empty string to match all tasks.
     /// </param>
     /// <param name="path">
-    /// The directory path to search for assemblies. For example, <c>bin/Debug/net9.0</c>.
+    /// The directory path to search for assemblies. For example, <c>bin/Debug/net10.0</c>.
     /// </param>
     /// <param name="options">
     /// The search option, such as <see cref="SearchOption.TopDirectoryOnly"/> or

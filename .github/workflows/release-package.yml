@@ -91,7 +91,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'Bump version to ${{ steps.bump.outputs.newVersion }}'
-          branch: example-patches
+          branch: bump-version-${{ steps.bump.outputs.newVersion }}
           delete-branch: true
           title: '[skip ci] Bump version to ${{ steps.bump.outputs.newVersion }}'
           body: |

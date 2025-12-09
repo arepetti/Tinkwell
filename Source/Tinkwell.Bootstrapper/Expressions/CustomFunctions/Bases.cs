@@ -71,7 +71,7 @@ abstract class UnaryFunction<T> : NCalcCustomFunction
         if (args.Parameters.Length != 1)
             throw new ArgumentException($"Function {Name}() requires exactly one argument, received {args.Parameters.Length}.");
 
-        var value = args.EvaluateParameters()[0];
+        var value = args.EvaluateParameters(CancellationToken.None)[0];
         return Call(ChangeType<T>(value));
     }
 
@@ -85,7 +85,7 @@ abstract class BinaryFunction<T1, T2> : NCalcCustomFunction
         if (args.Parameters.Length != 2)
             throw new ArgumentException($"Function {Name}() requires exactly two arguments, received {args.Parameters.Length}.");
 
-        var values = args.EvaluateParameters();
+        var values = args.EvaluateParameters(CancellationToken.None);
         return Call(ChangeType<T1>(values[0]), ChangeType<T2>(values[1]));
     }
 
@@ -99,7 +99,7 @@ abstract class TernaryFunction<T1, T2, T3> : NCalcCustomFunction
         if (args.Parameters.Length != 3)
             throw new ArgumentException($"Function {Name}() requires exactly three arguments, received {args.Parameters.Length}.");
 
-        var values = args.EvaluateParameters();
+        var values = args.EvaluateParameters(CancellationToken.None);
         return Call(ChangeType<T1>(values[0]), ChangeType<T2>(values[1]), ChangeType<T3>(values[2]));
     }
 
