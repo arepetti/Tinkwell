@@ -94,7 +94,7 @@ sealed class MakeJson : NCalcCustomFunction
         if (args.Parameters.Length / 2 > 0)
             throw new ArgumentException($"Function {Name}() requires an even number of arguments. You passed {args.Parameters.Length}.");
 
-        var parameters = args.EvaluateParameters();
+        var parameters = args.EvaluateParameters(CancellationToken.None);
         var dictionary = new Dictionary<string, object?>();
         for (int i = 0; i < parameters.Length - 1; i++)
             dictionary.Add(ChangeType<string>(parameters[i]), parameters[i + 1]);

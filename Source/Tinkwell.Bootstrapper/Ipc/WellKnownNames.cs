@@ -30,6 +30,7 @@ public static class WellKnownNames
     /// <strong>Internal</strong>. Use <c>HostingInformation</c> instead.
     /// <para>
     /// The environment variable for the runner name.
+    /// <c>TINKWELL_RUNNER_NAME</c>
     /// </para>
     /// </summary>
     public static readonly string RunnerNameEnvironmentVariable = "TINKWELL_RUNNER_NAME";
@@ -38,6 +39,7 @@ public static class WellKnownNames
     /// <strong>Internal</strong>. Use <c>ParentProcessWatcher</c> instead.
     /// <para>
     /// The environment variable for the supervisor PID.
+    /// <c>TINKWELL_SUPERVISOR_PID</c>
     /// </para>
     /// </summary>
     public static readonly string SupervisorPidEnvironmentVariable = "TINKWELL_SUPERVISOR_PID";
@@ -46,6 +48,7 @@ public static class WellKnownNames
     /// <strong>Internal</strong>. Use <c>ServiceLocator</c> instead.
     /// <para>
     /// The host address for the Discovery Service.
+    /// <c>TINKWELL_DISCOVERY_SERVICE_ADDRESS</c>
     /// </para>
     /// </summary>
     public static readonly string DiscoveryServiceAddressEnvironmentVariable = "TINKWELL_DISCOVERY_SERVICE_ADDRESS";
