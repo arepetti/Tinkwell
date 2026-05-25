@@ -1,0 +1,9 @@
+action alert when high-temp {
+    do mqtt-publish {
+        topic = "alerts"
+        on error publish "handler-failure" retry 2 delay 1000 {
+            source = "actions"
+            name = "mqtt-publish-failed"
+        }
+    }
+}

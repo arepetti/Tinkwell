@@ -1,0 +1,116 @@
+# Water quality analysis bench — I2C sensors on Raspberry Pi
+
+# ─── Runners ───────────────────────────────────────────────────────────
+
+runner services from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+    runlet events from "Tinkwell.Runlet.Events.dll";
+    runlet event-persistence from "Tinkwell.Runlet.EventPersistence.dll" {
+        db-path = "events.db"
+    }
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+    runlet signals  from "Tinkwell.Runlet.Signals.dll";
+    runlet actions from "Tinkwell.Runlet.Actions.dll";
+}
+
+runner background from "Tinkwell.Runner.Headless.dll" {
+    runlet i2c     from "Tinkwell.Runlet.I2c.dll";
+}
+
+# ─── Measures ──────────────────────────────────────────────────────────
+
+measure ph {
+    quantity = Dimensionless
+    unit = DecimalFraction
+    description = "Water pH from Atlas Scientific EZO-pH"
+}
+
+measure dissolved-oxygen {
+    quantity = Concentration
+    unit = MilligramPerLiter
+    description = "Dissolved oxygen from Atlas Scientific EZO-DO"
+}
+
+measure conductivity {
+    quantity = ElectricConductivity
+    unit = MicrosiemensPerCentimeter
+    description = "Electrical conductivity from Atlas Scientific EZO-EC"
+}
+
+# ─── Signals ───────────────────────────────────────────────────────────
+
+signal ph-out-of-range when (ph < 6.5 || ph > 8.5) until (ph >= 6.5 && ph <= 8.5) {
+    severity = critical
+    description = "pH outside 6.5–8.5 acceptable range"
+}
+
+signal low-dissolved-oxygen when ([dissolved-oxygen] < 4) until ([dissolved-oxygen] >= 4.5) {
+    severity = critical
+    description = "Dissolved oxygen below 4 mg/L"
+}
+
+signal high-conductivity when (conductivity > 1500) until (conductivity <= 1400) {
+    severity = warning
+    description = "Conductivity above 1500 µS/cm"
+}
+
+# ─── I2C — Atlas Scientific EZO sensors ───────────────────────────────
+
+# All three sensors on I2C bus 1 (Raspberry Pi default)
+# Default I2C addresses: EZO-pH=0x63, EZO-DO=0x61, EZO-EC=0x64
+i2c water-sensors {
+    bus = 1
+    poll-interval = "2 seconds"
+
+    device 0x63 {
+        read ph {
+            register = 0x00
+            length = 4
+            type = float32-be
+            measure = ph
+        }
+    }
+
+    device 0x61 {
+        read dissolved-oxygen {
+            register = 0x00
+            length = 4
+            type = float32-be
+            measure = dissolved-oxygen
+        }
+    }
+
+    device 0x64 {
+        read conductivity {
+            register = 0x00
+            length = 4
+            type = float32-be
+            scale = 0.001
+            measure = conductivity
+        }
+    }
+}
+
+# ─── Actions ───────────────────────────────────────────────────────────
+
+action log-alerts {
+    source = signals
+    verb = fired
+
+    do log {
+        message = (format("[WATER QUALITY] {Name}: {description} (value={Object})"))
+    }
+}
+
+action webhook-alert {
+    source = signals
+    verb = fired
+
+    do http-post {
+        url = "https://lims.example.com/api/water-quality"
+        body = (make_json("signal", Name, "severity", severity, "value", Object, "timestamp", Timestamp))
+        content-type = "application/json"
+    }
+}

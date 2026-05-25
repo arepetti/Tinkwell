@@ -1,0 +1,156 @@
+# =============================================================================
+# CNC Machine Health Monitoring
+#
+# Tracks spindle vibration, spindle temperature, and coolant temperature.
+# Fires signals when ISO 10816 vibration thresholds or temperature limits
+# are exceeded. Alerts are logged and recorded in the state store.
+# =============================================================================
+
+# --- Infrastructure ---
+
+runner main from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+    runlet events from "Tinkwell.Runlet.Events.dll";
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+    runlet signals from "Tinkwell.Runlet.Signals.dll";
+}
+
+runner background from "Tinkwell.Runner.Headless.dll" {
+    runlet actions from "Tinkwell.Runlet.Actions.dll";
+    runlet modbus from "Tinkwell.Runlet.Modbus.dll";
+}
+
+# =============================================================================
+# Measures
+# =============================================================================
+
+measure spindle-vibration {
+    quantity = Speed
+    unit = "MillimeterPerSecond"
+    description = "Spindle bearing RMS velocity"
+    minimum = 0
+    maximum = 30
+    precision = 2
+    category = vibration
+}
+
+measure spindle-temp {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Spindle motor temperature"
+    minimum = -10
+    maximum = 150
+    precision = 1
+    category = thermal
+}
+
+measure coolant-temp {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Coolant reservoir temperature"
+    minimum = -10
+    maximum = 80
+    precision = 1
+    category = thermal
+}
+
+# =============================================================================
+# Signals (ISO 10816 vibration zones + temperature limits)
+# =============================================================================
+
+# Zone B/C boundary for small machines — schedule inspection.
+signal vibration-warning when ([spindle-vibration] > 4.5) for "10 seconds" {
+    severity = warning
+    channel = maintenance
+}
+
+# Zone C/D boundary — stop machine immediately.
+signal vibration-critical when ([spindle-vibration] > 7.1) for "5 seconds" {
+    severity = critical
+    channel = maintenance
+}
+
+signal spindle-overtemp when ([spindle-temp] > 85) for "60 seconds" {
+    severity = critical
+    channel = maintenance
+}
+
+signal coolant-low-temp when ([coolant-temp] < 5) {
+    severity = warning
+    channel = maintenance
+}
+
+signal coolant-high-temp when ([coolant-temp] > 45) for "30 seconds" {
+    severity = warning
+    channel = maintenance
+}
+
+# =============================================================================
+# Modbus — direct sensor ingestion from Modbus RTU
+# =============================================================================
+# Adjust the port, slave ID, and register addresses to match your wiring.
+
+modbus cnc-sensors {
+    transport = rtu
+    port = "/dev/ttyUSB0"
+    baudrate = 9600
+
+    device 1 {
+        poll-interval = "1 second"
+
+        register spindle-vibration {
+            address = 0x0000
+            type = float32-be
+        }
+
+        register spindle-temp {
+            address = 0x0002
+            type = int16
+            scale = 0.1
+        }
+
+        register coolant-temp {
+            address = 0x0003
+            type = int16
+            scale = 0.1
+        }
+    }
+}
+
+# =============================================================================
+# Actions
+# =============================================================================
+
+action log-all-signals {
+    source = signals
+    verb = fired
+
+    do log {
+        message = (format("[{severity}] Signal {Name} fired (value: {Object})"))
+        level = warning
+    }
+}
+
+action record-alert {
+    source = signals
+    verb = fired
+
+    do update-entry {
+        bucket = alerts
+        key = "cnc/last-alert"
+        value = (format("{Name} at {Timestamp}"))
+    }
+}
+
+action record-changes {
+    verb = changed
+
+    do update-entry {
+        bucket = history
+        key = (format("{Name}.{CorrelationId}"))
+        value = (Object)
+        ttl = 86400
+    }
+}

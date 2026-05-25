@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>Standalone</TinkwellPackageGroup>
+    <Description>Minimal Modbus RTU and TCP client library: read/write holding and input registers with typed decoding.</Description>
+    <PackageTags>$(PackageTags);modbus rtu tcp industrial</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Modbus.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Ports" />
+  </ItemGroup>
+
+
+</Project>

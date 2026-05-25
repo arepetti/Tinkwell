@@ -1,0 +1,7 @@
+lwm2m defaults {
+    object "3303" {
+        resource "5700" {
+            measure = "temp"
+        }
+    }
+}

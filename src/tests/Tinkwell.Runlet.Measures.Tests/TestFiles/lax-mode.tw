@@ -1,0 +1,11 @@
+runner some-runner from "path.dll" {
+}
+
+measure temperature {
+    quantity = "Temperature"
+    unit = "DegreeCelsius"
+}
+
+config something {
+    key = "value"
+}

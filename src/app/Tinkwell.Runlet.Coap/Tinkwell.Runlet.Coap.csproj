@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <Using Include="Tinkwell.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Runlet.Coap.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Coap\Tinkwell.Coap.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Coap.Server\Tinkwell.Coap.Server.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Integration.Abstractions\Tinkwell.Integration.Abstractions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Runlet.Coap.Abstractions\Tinkwell.Runlet.Coap.Abstractions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Configuration.Parser\Tinkwell.Configuration.Parser.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Expressions\Tinkwell.Expressions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Runner.Abstractions\Tinkwell.Runner.Abstractions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Runner.Hosting\Tinkwell.Runner.Hosting.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Telemetry\Tinkwell.Telemetry.csproj" />
+  </ItemGroup>
+
+</Project>

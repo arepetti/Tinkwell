@@ -1,0 +1,45 @@
+# winget manifest for Tinkwell
+#
+# This is a reference template. To publish to winget, submit a PR to
+# https://github.com/microsoft/winget-pkgs with the manifest placed at:
+#   manifests/a/AdrianoRepetti/Tinkwell/{VERSION}/AdrianoRepetti.Tinkwell.yaml
+#
+# After each release, update {VERSION} and {SHA256_*} from the values
+# printed in the release-packages workflow summary.
+
+PackageIdentifier: AdrianoRepetti.Tinkwell
+PackageVersion: "{VERSION}"
+PackageName: Tinkwell
+Publisher: Adriano Repetti
+License: MIT
+LicenseUrl: https://github.com/arepetti/Tinkwell/blob/main/LICENSE
+ShortDescription: Declarative automation platform for hardware polling, signals, MQTT/CoAP, and more.
+PackageUrl: https://github.com/arepetti/Tinkwell
+Tags:
+  - automation
+  - iot
+  - mqtt
+  - coap
+  - i2c
+  - modbus
+  - signals
+  - cli
+Installers:
+  - Architecture: x64
+    InstallerType: zip
+    InstallerUrl: https://github.com/arepetti/Tinkwell/releases/download/v{VERSION}/tinkwell-{VERSION}-win-x64.zip
+    InstallerSha256: "{SHA256_X64}"
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: tw.exe
+        PortableCommandAlias: tw
+  - Architecture: arm64
+    InstallerType: zip
+    InstallerUrl: https://github.com/arepetti/Tinkwell/releases/download/v{VERSION}/tinkwell-{VERSION}-win-arm64.zip
+    InstallerSha256: "{SHA256_ARM64}"
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: tw.exe
+        PortableCommandAlias: tw
+ManifestType: singleton
+ManifestVersion: 1.6.0

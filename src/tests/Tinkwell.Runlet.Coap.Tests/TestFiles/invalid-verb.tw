@@ -1,0 +1,9 @@
+coap broken {
+    resource "/test" {
+        on patch {
+            bind measure from "M.dll" {
+                name = "x"
+            }
+        }
+    }
+}

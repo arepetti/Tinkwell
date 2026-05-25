@@ -1,0 +1,3 @@
+{"verb":"created","source":"runlet:measures","name":"temperature","timestamp":"2026-04-20T10:15:00Z"}
+{"verb":"updated","source":"runlet:measures","name":"temperature","timestamp":"2026-04-20T10:15:01Z","payload":{"value":21.3}}
+{"verb":"started","source":"coordinator","name":"runner-started","timestamp":"2026-04-20T10:15:02Z"}

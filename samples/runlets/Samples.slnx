@@ -1,0 +1,10 @@
+<Solution>
+
+  <Folder Name="/samples/">
+    <Project Path="Sample.GrpcKeyValue\Sample.GrpcKeyValue.csproj" />
+    <Project Path="Sample.GrpcMeasureReader\Sample.GrpcMeasureReader.csproj" />
+    <Project Path="Sample.HeadlessMeasureWatcher\Sample.HeadlessMeasureWatcher.csproj" />
+    <Project Path="Sample.AnomalyDetector\Sample.AnomalyDetector.csproj" />
+  </Folder>
+
+</Solution>

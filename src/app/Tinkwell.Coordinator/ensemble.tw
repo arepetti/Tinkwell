@@ -1,0 +1,627 @@
+runner store-host from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+}
+
+runner events-host from "Tinkwell.Runner.Grpc.dll" {
+    runlet events from "Tinkwell.Runlet.Events.dll";
+}
+
+runner measures-host from "Tinkwell.Runner.Grpc.dll" {
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+    runlet signals from "Tinkwell.Runlet.Signals.dll";
+}
+
+runner actions-host from "Tinkwell.Runner.Headless.dll" {
+    runlet actions from "Tinkwell.Runlet.Actions.dll";
+}
+
+runner integrations-host from "Tinkwell.Runner.Headless.dll" {
+#     runlet mqtt from "Tinkwell.Runlet.Mqtt.dll";
+    runlet coap from "Tinkwell.Runlet.Coap.dll";
+}
+
+coap server {
+    resource "/measures/+" {
+//        bind measure {
+//            name = (segment(path, -1))
+//        }
+    }
+}
+
+# =============================================================================
+# Tiny power plant simulation
+# =============================================================================
+# Models a small (~5 MW) steam-turbine genset with boiler, turbine, generator,
+# cooling and plant-level totals. The values below are sensible nameplate /
+# steady-state defaults; in a real deployment they would be driven by an
+# integration (Modbus, MQTT, CoAP, ...). The mix is deliberate:
+#
+#   * Plain numeric measures fed by sensors.
+#   * Constant measures for nameplate values that don't change.
+#   * Derived measures that aggregate (averages), combine (apparent power,
+#     power factor) or compute KPIs (thermal input, efficiency).
+#   * Inline signals on safety-critical measures plus one top-level signal
+#     for cross-measure conditions.
+
+# -----------------------------------------------------------------------------
+# Plant-wide constants
+# -----------------------------------------------------------------------------
+# Nameplate / engineering data that doesn't change at runtime. Marked const
+# so the registry rejects updates and Studio can render them differently.
+
+measure fuel-calorific-value {
+    quantity = Energy
+    unit = MegawattHour
+    description = "Lower heating value of the fuel (per tonne)"
+    category = plant
+    tags = "plant, fuel, nameplate, thermodynamics"
+    value = 12.5
+    const = true
+}
+
+measure generator-rated-power {
+    quantity = Power
+    unit = Megawatt
+    description = "Generator nameplate active power"
+    category = generator
+    tags = "generator, electrical, nameplate, rating"
+    value = 5
+    const = true
+}
+
+# -----------------------------------------------------------------------------
+# Boiler subsystem
+# -----------------------------------------------------------------------------
+
+measure boiler-fuel-flow {
+    quantity = MassFlow
+    unit = TonnePerHour
+    description = "Fuel mass flow into the boiler"
+    category = boiler
+    tags = "boiler, fuel, input, flow"
+    minimum = 0
+    maximum = 5
+    precision = 2
+    value = 1.34
+}
+
+measure boiler-pressure {
+    quantity = Pressure
+    unit = Bar
+    description = "Steam pressure at the boiler outlet header"
+    category = boiler
+    tags = "boiler, steam, pressure, safety"
+    minimum = 0
+    maximum = 80
+    precision = 1
+    value = 45
+}
+
+measure boiler-temperature {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Steam temperature at the boiler outlet"
+    category = boiler
+    tags = "boiler, steam, temperature"
+    minimum = 0
+    maximum = 600
+    precision = 1
+    value = 480
+}
+
+measure boiler-drum-level {
+    quantity = Ratio
+    unit = Percent
+    description = "Water level in the boiler steam drum"
+    category = boiler
+    tags = "boiler, level, water, safety"
+    minimum = 0
+    maximum = 100
+    precision = 1
+    value = 65
+
+    # Drum level outside the operating band is a safety event: too low
+    # means dry-fire risk, too high means carry-over to the turbine.
+    signal drum-level-low when (value < 30) for "5 seconds";
+    signal drum-level-high when (value > 90) for "5 seconds";
+}
+
+# -----------------------------------------------------------------------------
+# Turbine subsystem
+# -----------------------------------------------------------------------------
+
+measure turbine-inlet-pressure {
+    quantity = Pressure
+    unit = Bar
+    description = "Steam pressure at the turbine inlet"
+    category = turbine
+    tags = "turbine, steam, pressure, inlet"
+    minimum = 0
+    maximum = 80
+    precision = 1
+    value = 42
+}
+
+measure turbine-inlet-temperature {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Steam temperature at the turbine inlet"
+    category = turbine
+    tags = "turbine, steam, temperature, inlet"
+    minimum = 0
+    maximum = 600
+    precision = 1
+    value = 470
+}
+
+measure turbine-outlet-pressure {
+    quantity = Pressure
+    unit = Bar
+    description = "Exhaust pressure at the turbine outlet (condenser side)"
+    category = turbine
+    tags = "turbine, steam, pressure, outlet, condenser"
+    minimum = 0
+    maximum = 5
+    precision = 3
+    value = 0.08
+}
+
+measure turbine-outlet-temperature {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Exhaust temperature at the turbine outlet"
+    category = turbine
+    tags = "turbine, steam, temperature, outlet, condenser"
+    minimum = 0
+    maximum = 200
+    precision = 1
+    value = 42
+}
+
+measure turbine-steam-flow {
+    quantity = MassFlow
+    unit = TonnePerHour
+    description = "Steam mass flow through the turbine"
+    category = turbine
+    tags = "turbine, steam, flow"
+    minimum = 0
+    maximum = 25
+    precision = 1
+    value = 18.5
+}
+
+measure turbine-speed {
+    quantity = RotationalSpeed
+    unit = RevolutionPerMinute
+    description = "Turbine shaft speed"
+    category = turbine
+    tags = "turbine, mechanical, speed, safety"
+    minimum = 0
+    maximum = 3500
+    precision = 0
+    value = 3000
+
+    # 10% above synchronous speed is a hard mechanical limit.
+    signal overspeed when (value > 3300) for "2 seconds";
+}
+
+measure turbine-vibration {
+    quantity = Speed
+    unit = MillimeterPerSecond
+    description = "Turbine bearing RMS velocity (ISO 10816)"
+    category = turbine
+    tags = "turbine, mechanical, vibration, condition"
+    minimum = 0
+    maximum = 20
+    precision = 2
+    value = 2.4
+
+    # ISO 10816 zone C/D boundary for medium machines.
+    signal vibration-critical when (value > 7.1) for "10 seconds";
+}
+
+# Four bearing temperature sensors. Each is a plain measure; the average
+# is exposed as a derived measure for trending and alarms.
+
+measure turbine-bearing-temp-1 {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Turbine bearing 1 temperature (front, drive end)"
+    category = turbine
+    tags = "turbine, bearing, temperature, sensor"
+    minimum = -10
+    maximum = 200
+    precision = 1
+    value = 78
+}
+
+measure turbine-bearing-temp-2 {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Turbine bearing 2 temperature (front, non-drive end)"
+    category = turbine
+    tags = "turbine, bearing, temperature, sensor"
+    minimum = -10
+    maximum = 200
+    precision = 1
+    value = 81
+}
+
+measure turbine-bearing-temp-3 {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Turbine bearing 3 temperature (rear, drive end)"
+    category = turbine
+    tags = "turbine, bearing, temperature, sensor"
+    minimum = -10
+    maximum = 200
+    precision = 1
+    value = 76
+}
+
+measure turbine-bearing-temp-4 {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Turbine bearing 4 temperature (rear, non-drive end)"
+    category = turbine
+    tags = "turbine, bearing, temperature, sensor"
+    minimum = -10
+    maximum = 200
+    precision = 1
+    value = 79
+}
+
+measure turbine-bearing-temp-avg {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Mean turbine bearing temperature (4 sensors)"
+    category = turbine
+    tags = "turbine, bearing, temperature, derived"
+    minimum = -10
+    maximum = 200
+    precision = 1
+    value = (([turbine-bearing-temp-1] + [turbine-bearing-temp-2] + [turbine-bearing-temp-3] + [turbine-bearing-temp-4]) / 4)
+
+    signal bearing-overheat when (value > 120) for "30 seconds";
+}
+
+# -----------------------------------------------------------------------------
+# Generator subsystem (3-phase, line-to-line)
+# -----------------------------------------------------------------------------
+
+measure generator-voltage-a {
+    quantity = ElectricPotential
+    unit = Kilovolt
+    description = "Generator phase A voltage (line-to-line)"
+    category = generator
+    tags = "generator, electrical, voltage, phase-a"
+    minimum = 0
+    maximum = 15
+    precision = 3
+    value = 11.02
+}
+
+measure generator-voltage-b {
+    quantity = ElectricPotential
+    unit = Kilovolt
+    description = "Generator phase B voltage (line-to-line)"
+    category = generator
+    tags = "generator, electrical, voltage, phase-b"
+    minimum = 0
+    maximum = 15
+    precision = 3
+    value = 10.98
+}
+
+measure generator-voltage-c {
+    quantity = ElectricPotential
+    unit = Kilovolt
+    description = "Generator phase C voltage (line-to-line)"
+    category = generator
+    tags = "generator, electrical, voltage, phase-c"
+    minimum = 0
+    maximum = 15
+    precision = 3
+    value = 11.01
+}
+
+measure generator-voltage-avg {
+    quantity = ElectricPotential
+    unit = Kilovolt
+    description = "Mean generator line-to-line voltage"
+    category = generator
+    tags = "generator, electrical, voltage, derived"
+    minimum = 0
+    maximum = 15
+    precision = 3
+    value = (([generator-voltage-a] + [generator-voltage-b] + [generator-voltage-c]) / 3)
+}
+
+measure generator-current-a {
+    quantity = ElectricCurrent
+    unit = Ampere
+    description = "Generator phase A current"
+    category = generator
+    tags = "generator, electrical, current, phase-a"
+    minimum = 0
+    maximum = 400
+    precision = 1
+    value = 261
+}
+
+measure generator-current-b {
+    quantity = ElectricCurrent
+    unit = Ampere
+    description = "Generator phase B current"
+    category = generator
+    tags = "generator, electrical, current, phase-b"
+    minimum = 0
+    maximum = 400
+    precision = 1
+    value = 263
+}
+
+measure generator-current-c {
+    quantity = ElectricCurrent
+    unit = Ampere
+    description = "Generator phase C current"
+    category = generator
+    tags = "generator, electrical, current, phase-c"
+    minimum = 0
+    maximum = 400
+    precision = 1
+    value = 260
+}
+
+measure generator-current-avg {
+    quantity = ElectricCurrent
+    unit = Ampere
+    description = "Mean generator current across phases"
+    category = generator
+    tags = "generator, electrical, current, derived"
+    minimum = 0
+    maximum = 400
+    precision = 1
+    value = (([generator-current-a] + [generator-current-b] + [generator-current-c]) / 3)
+}
+
+measure generator-frequency {
+    quantity = Frequency
+    unit = Hertz
+    description = "Grid frequency at the generator output"
+    category = generator
+    tags = "generator, electrical, frequency, grid, safety"
+    minimum = 0
+    maximum = 70
+    precision = 2
+    value = 50.02
+
+    # ENTSO-E 50 Hz operating band (±0.5 Hz before tripping).
+    signal frequency-low when (value < 49.5) for "2 seconds";
+    signal frequency-high when (value > 50.5) for "2 seconds";
+}
+
+measure generator-active-power {
+    quantity = Power
+    unit = Megawatt
+    description = "Active electrical power at the generator terminals"
+    category = generator
+    tags = "generator, electrical, power, active"
+    minimum = 0
+    maximum = 6
+    precision = 3
+    value = 4.85
+}
+
+measure generator-reactive-power {
+    quantity = ReactivePower
+    unit = MegavoltampereReactive
+    description = "Reactive power at the generator terminals"
+    category = generator
+    tags = "generator, electrical, power, reactive"
+    minimum = -3
+    maximum = 3
+    precision = 3
+    value = 1.5
+}
+
+measure generator-apparent-power {
+    quantity = ApparentPower
+    unit = Megavoltampere
+    description = "Apparent power (S = sqrt(P^2 + Q^2))"
+    category = generator
+    tags = "generator, electrical, power, apparent, derived"
+    minimum = 0
+    maximum = 6
+    precision = 3
+    value = (Sqrt(([generator-active-power] * [generator-active-power]) + ([generator-reactive-power] * [generator-reactive-power])))
+}
+
+measure generator-power-factor {
+    quantity = Ratio
+    unit = DecimalFraction
+    description = "Power factor (cos phi = P / S)"
+    category = generator
+    tags = "generator, electrical, power-factor, derived"
+    minimum = 0
+    maximum = 1
+    precision = 3
+    value = ([generator-active-power] / [generator-apparent-power])
+}
+
+measure generator-stator-temp {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Generator stator winding temperature (hottest RTD)"
+    category = generator
+    tags = "generator, thermal, stator, sensor"
+    minimum = -10
+    maximum = 180
+    precision = 1
+    value = 75
+}
+
+measure generator-rotor-temp {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Generator rotor winding temperature"
+    category = generator
+    tags = "generator, thermal, rotor, sensor"
+    minimum = -10
+    maximum = 200
+    precision = 1
+    value = 92
+}
+
+# -----------------------------------------------------------------------------
+# Cooling water subsystem
+# -----------------------------------------------------------------------------
+
+measure cooling-water-inlet-temp {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Cooling water temperature entering the condenser"
+    category = cooling
+    tags = "cooling, water, temperature, inlet, condenser"
+    minimum = 0
+    maximum = 60
+    precision = 1
+    value = 25
+}
+
+measure cooling-water-outlet-temp {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Cooling water temperature leaving the condenser"
+    category = cooling
+    tags = "cooling, water, temperature, outlet, condenser"
+    minimum = 0
+    maximum = 60
+    precision = 1
+    value = 35
+}
+
+measure cooling-water-flow {
+    quantity = VolumeFlow
+    unit = CubicMeterPerHour
+    description = "Cooling water volumetric flow"
+    category = cooling
+    tags = "cooling, water, flow"
+    minimum = 0
+    maximum = 600
+    precision = 0
+    value = 250
+}
+
+measure cooling-water-delta-t {
+    quantity = TemperatureDelta
+    unit = DegreeCelsius
+    description = "Cooling water temperature rise across the condenser"
+    category = cooling
+    tags = "cooling, water, temperature, derived"
+    minimum = 0
+    maximum = 30
+    precision = 1
+    value = ([cooling-water-outlet-temp] - [cooling-water-inlet-temp])
+}
+
+# -----------------------------------------------------------------------------
+# Plant-level totals & KPIs
+# -----------------------------------------------------------------------------
+
+measure ambient-temperature {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Outdoor ambient temperature near the plant intake"
+    category = plant
+    tags = "plant, environment, temperature, sensor"
+    minimum = -40
+    maximum = 60
+    precision = 1
+    value = 22
+}
+
+measure plant-runtime-hours {
+    quantity = Duration
+    unit = Hour
+    description = "Cumulative running time since last overhaul"
+    category = plant
+    tags = "plant, maintenance, runtime, counter"
+    minimum = 0
+    precision = 1
+    value = 1234
+}
+
+measure thermal-input-power {
+    quantity = Power
+    unit = Megawatt
+    description = "Thermal power released by the burnt fuel"
+    category = plant
+    tags = "plant, thermodynamics, fuel, derived"
+    minimum = 0
+    maximum = 30
+    precision = 2
+    value = ([boiler-fuel-flow] * [fuel-calorific-value])
+}
+
+measure plant-efficiency {
+    quantity = Ratio
+    unit = Percent
+    description = "Net electrical efficiency (active power / thermal input)"
+    category = plant
+    tags = "plant, kpi, efficiency, derived"
+    minimum = 0
+    maximum = 60
+    precision = 1
+    value = (([generator-active-power] / [thermal-input-power]) * 100)
+}
+
+measure plant-load-ratio {
+    quantity = Ratio
+    unit = Percent
+    description = "Generator load relative to nameplate rating"
+    category = plant
+    tags = "plant, kpi, load, derived"
+    minimum = 0
+    maximum = 110
+    precision = 1
+    value = (([generator-active-power] / [generator-rated-power]) * 100)
+}
+
+# =============================================================================
+# Top-level signals
+# =============================================================================
+# Inline signals cover single-measure conditions. Top-level signals are used
+# when the trigger spans multiple measures or when extra metadata is needed.
+
+signal generator-overload when ([generator-active-power] > 5.5) for "5 seconds" {
+    severity = warning
+    channel = ops
+}
+
+# =============================================================================
+# Actions
+# =============================================================================
+
+action log-all-signals {
+    source = signals
+    verb = fired
+
+    do log {
+        message = (format("[{severity}] Signal {Name} fired ({channel})"))
+        level = warning
+    }
+}
+
+action record-alert {
+    source = signals
+    verb = fired
+
+    do update-entry {
+        bucket = alerts
+        key = (format("plant/last-alert"))
+        value = (format("{Name} at {Timestamp}"))
+    }
+}

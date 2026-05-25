@@ -1,0 +1,24 @@
+measure temp-kebab {
+    quantity = "electric-potential"
+    unit = "volt"
+}
+
+measure temp-snake {
+    quantity = "electric_potential"
+    unit = "volt"
+}
+
+measure temp-spaces {
+    quantity = "Electric Potential"
+    unit = "Volt"
+}
+
+measure temp-mixed {
+    quantity = "electric potential"
+    unit = "volt"
+}
+
+measure temp-pascal {
+    quantity = "ElectricPotential"
+    unit = "Volt"
+}

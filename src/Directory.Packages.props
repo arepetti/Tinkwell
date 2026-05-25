@@ -1,0 +1,80 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <!-- gRPC / Protobuf -->
+  <ItemGroup>
+    <PackageVersion Include="Google.Protobuf" Version="3.31.1" />
+    <PackageVersion Include="Grpc.AspNetCore" Version="2.76.0" />
+    <PackageVersion Include="Grpc.Net.Client" Version="2.76.0" />
+    <PackageVersion Include="Grpc.Core.Api" Version="2.76.0" />
+    <PackageVersion Include="Grpc.Tools" Version="2.76.0" />
+  </ItemGroup>
+  <!-- Microsoft.Extensions -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.FileProviders.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.FileProviders.Physical" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.4" />
+  </ItemGroup>
+  <!-- Data -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+    <PackageVersion Include="Npgsql" Version="9.0.3" />
+  </ItemGroup>
+  <!-- Hardware -->
+  <ItemGroup>
+    <PackageVersion Include="System.IO.Ports" Version="10.0.5" />
+    <PackageVersion Include="System.Device.Gpio" Version="3.1.0" />
+  </ItemGroup>
+  <!-- Domain -->
+  <ItemGroup>
+    <PackageVersion Include="UnitsNet" Version="5.75.0" />
+    <PackageVersion Include="NCalcSync" Version="5.4.2" />
+    <PackageVersion Include="MQTTnet" Version="5.1.0.1559" />
+    <PackageVersion Include="MQTTnet.Server" Version="5.1.0.1559" />
+  </ItemGroup>
+  <!-- HTTP / Resilience -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.4.0" />
+  </ItemGroup>
+  <!-- UI / CLI -->
+  <ItemGroup>
+    <PackageVersion Include="Spectre.Console" Version="0.53.1" />
+    <PackageVersion Include="Spectre.Console.Cli" Version="0.53.1" />
+    <PackageVersion Include="Spectre.Console.Json" Version="0.53.1" />
+    <PackageVersion Include="NuGet.Versioning" Version="7.3.0" />
+  </ItemGroup>
+  <!-- Parser -->
+  <ItemGroup>
+    <PackageVersion Include="Parlot" Version="1.5.7" />
+    <PackageVersion Include="Fluid.Core" Version="2.31.0" />
+  </ItemGroup>
+  <!-- Telemetry -->
+  <ItemGroup>
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+  </ItemGroup>
+  <!-- Test -->
+  <ItemGroup>
+    <PackageVersion Include="FluentAssertions" Version="7.2.0" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageVersion Include="Xunit.SkippableFact" Version="1.5.23" />
+  </ItemGroup>
+  <!-- Build / NuGet hygiene -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+  </ItemGroup>
+</Project>

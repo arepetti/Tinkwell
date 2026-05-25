@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Cli.Sdk\Tinkwell.Cli.Sdk.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Package\Tinkwell.Package.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Core\Tinkwell.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NuGet.Versioning" />
+  </ItemGroup>
+
+</Project>

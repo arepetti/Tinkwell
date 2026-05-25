@@ -1,0 +1,4 @@
+measure humidity {
+    quantity = "RelativeHumidity"
+    unit = "Percent"
+}

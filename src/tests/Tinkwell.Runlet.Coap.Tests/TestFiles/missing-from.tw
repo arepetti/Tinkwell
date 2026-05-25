@@ -1,0 +1,9 @@
+coap broken {
+    resource "/test" {
+        on get {
+            bind measure {
+                name = "x"
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+mqtt sensors {
+    broker = "localhost"
+    subscribe "sensor/+" {
+        on message {
+            bind event from "Tinkwell.Integrations" {
+                source = "mqtt"
+                name = (segment(topic, -1))
+                on error resume next retry 3 delay 1000 backoff 2;
+            }
+        }
+    }
+}

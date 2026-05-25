@@ -1,0 +1,53 @@
+# =============================================================================
+# MQTT-to-CoAP Bridge
+#
+# Subscribes to MQTT topics and forwards messages as CoAP POST requests.
+# Useful when MQTT devices need to push data into a CoAP-based backend.
+# =============================================================================
+
+set mqtt_broker = "mqtt-broker.local"
+set coap_host = "coap-gateway.local"
+set coap_port = 5683
+
+# --- Infrastructure ---
+runner main from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+    runlet events from "Tinkwell.Runlet.Events.dll";
+}
+
+runner bridge from "Tinkwell.Runner.Headless.dll" {
+    runlet mqtt from "Tinkwell.Runlet.Mqtt.dll";
+}
+
+# --- Bridge ---
+# Each MQTT message on sensor/* is forwarded as a CoAP POST
+# to the equivalent path on the CoAP server.
+# Example: sensor/temperature → POST coap://coap-gateway.local/sensor/temperature
+mqtt sensors {
+    broker = $"{{mqtt_broker}}"
+
+    subscribe "sensor/+" {
+        on message {
+            bind coap {
+                path = (format("/sensor/{0}", segment(topic, -1)))
+                method = post
+                host = $"{{coap_host}}"
+                port = $"{{coap_port}}"
+            }
+        }
+    }
+
+    # JSON telemetry: extract the value and forward it.
+    subscribe "device/+/telemetry" {
+        on message {
+            bind coap {
+                path = (format("/device/{0}", segment(topic, 1)))
+                method = post
+                host = $"{{coap_host}}"
+                port = $"{{coap_port}}"
+            }
+        }
+    }
+}

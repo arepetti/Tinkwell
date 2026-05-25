@@ -1,0 +1,224 @@
+<Window
+    x:Class="Tinkwell.Studio.Views.ConnectionWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Connect to Tinkwell">
+
+    <!-- Backdrop is assigned in code-behind (Mica on Win11, Acrylic fallback)
+         to match MainWindow's chrome. The root grid stays transparent so the
+         material shows through. -->
+    <Grid x:Name="RootGrid" Background="Transparent" Padding="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header. -->
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+            <TextBlock Text="Connect to Tinkwell"
+                       Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock Text="Pick how Studio should reach the Tinkwell coordinator. The connection is validated with `tw ping` before the main window opens."
+                       Style="{StaticResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- Options. -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="12">
+
+                <!-- Option 1: local default. -->
+                <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{ThemeResource ControlCornerRadius}"
+                        Padding="12,10"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel Spacing="6">
+                        <RadioButton x:Name="LocalDefaultRadio"
+                                     GroupName="Transport"
+                                     IsChecked="{Binding IsLocalDefault, Mode=TwoWay}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Local coordinator (default pipe)"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Runs `tw ping` on this machine with the default pipe name."
+                                           FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+                </Border>
+
+                <!-- Option 2: local, custom pipe. -->
+                <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{ThemeResource ControlCornerRadius}"
+                        Padding="12,10"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel Spacing="6">
+                        <RadioButton x:Name="LocalCustomRadio"
+                                     GroupName="Transport"
+                                     IsChecked="{Binding IsLocalCustomPipe, Mode=TwoWay}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Local coordinator (custom pipe name)"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Use when the coordinator was started with a non-default `Coordinator__PipeServer__PipeName`."
+                                           FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </RadioButton>
+                        <StackPanel Margin="32,4,0,0" Spacing="4"
+                                    Visibility="{Binding IsLocalCustomPipe, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <TextBlock Text="Pipe name"
+                                       FontSize="12"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBox Text="{Binding LocalPipeName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     PlaceholderText="tinkwell-coordinator" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Option 3: remote machine. -->
+                <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{ThemeResource ControlCornerRadius}"
+                        Padding="12,10"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel Spacing="6">
+                        <RadioButton x:Name="RemoteRadio"
+                                     GroupName="Transport"
+                                     IsChecked="{Binding IsRemote, Mode=TwoWay}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Coordinator on another machine"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Connects to a named pipe exposed by a remote Windows host."
+                                           FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </RadioButton>
+                        <Grid Margin="32,4,0,0" ColumnSpacing="12" RowSpacing="6"
+                              Visibility="{Binding IsRemote, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Text="Machine name"
+                                       FontSize="12"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="0" Grid.Column="1"
+                                       Text="Pipe name"
+                                       FontSize="12"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBox Grid.Row="1" Grid.Column="0"
+                                     Text="{Binding RemoteMachine, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     PlaceholderText="server.lan" />
+                            <TextBox Grid.Row="1" Grid.Column="1"
+                                     Text="{Binding RemotePipeName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     PlaceholderText="tinkwell-coordinator" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Option 4: Docker. -->
+                <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{ThemeResource ControlCornerRadius}"
+                        Padding="12,10"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel Spacing="6">
+                        <RadioButton x:Name="DockerRadio"
+                                     GroupName="Transport"
+                                     IsChecked="{Binding IsDocker, Mode=TwoWay}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Coordinator inside a local Docker container"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Wraps each call in `docker [compose] exec &lt;container&gt; tw ...` so the CLI runs inside the container."
+                                           FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </RadioButton>
+                        <StackPanel Margin="32,4,0,0" Spacing="8"
+                                    Visibility="{Binding IsDocker, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Container name"
+                                           FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBox Text="{Binding DockerContainer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         PlaceholderText="tinkwell" />
+                            </StackPanel>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Command"
+                                           FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <StackPanel Orientation="Horizontal" Spacing="16">
+                                    <RadioButton GroupName="DockerKind"
+                                                 Content="docker exec"
+                                                 IsChecked="{Binding UseDockerCompose, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}" />
+                                    <RadioButton GroupName="DockerKind"
+                                                 Content="docker compose exec"
+                                                 IsChecked="{Binding UseDockerCompose, Mode=TwoWay}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Inline status / error. The InfoBar surfaces probe failures inline so
+             the user can fix and retry without leaving the dialog. -->
+        <muxc:InfoBar Grid.Row="2"
+                      Margin="0,16,0,0"
+                      IsClosable="False"
+                      IsOpen="{Binding HasError}"
+                      Severity="Error"
+                      Title="Cannot connect"
+                      Message="{Binding ErrorMessage}"
+                      Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+        <!-- Footer: progress + Connect + Quit. -->
+        <Grid Grid.Row="3" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ProgressRing Width="18" Height="18" IsActive="True"
+                              Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                <TextBlock Text="Pinging coordinator..."
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+            <Button Grid.Column="2"
+                    Content="Quit"
+                    Margin="0,0,8,0"
+                    Command="{Binding QuitCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+            <Button Grid.Column="3"
+                    Content="Connect"
+                    Style="{ThemeResource AccentButtonStyle}"
+                    Command="{Binding ConnectCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+        </Grid>
+    </Grid>
+</Window>

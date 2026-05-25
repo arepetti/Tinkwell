@@ -1,0 +1,7 @@
+protobuf-gateway same-name {
+    allow "*";
+}
+
+protobuf-gateway same-name {
+    allow "tinkwell.*";
+}

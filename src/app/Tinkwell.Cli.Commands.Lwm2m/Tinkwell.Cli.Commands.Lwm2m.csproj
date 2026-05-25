@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Cli.Sdk\Tinkwell.Cli.Sdk.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Coap\Tinkwell.Coap.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Lwm2m\Tinkwell.Lwm2m.csproj" />
+  </ItemGroup>
+
+</Project>

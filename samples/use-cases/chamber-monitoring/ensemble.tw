@@ -1,0 +1,167 @@
+# =============================================================================
+# Environmental Chamber Monitoring (Pharma / Biotech Stability Testing)
+#
+# Tracks temperature and humidity from an ICH stability chamber via LwM2M
+# (IPSO Objects 3303 and 3304). Fires signals on ICH condition deviations.
+# Maintains a full audit trail via event persistence for GMP compliance.
+# =============================================================================
+
+# --- Infrastructure ---
+
+runner main from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+    runlet events from "Tinkwell.Runlet.Events.dll";
+    runlet event-log from "Tinkwell.Runlet.EventPersistence.dll" {
+        db-path = "chamber-events.db"
+    }
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+    runlet signals from "Tinkwell.Runlet.Signals.dll";
+    runlet measure-events from "Tinkwell.Runlet.MeasureEvents.dll";
+}
+
+runner background from "Tinkwell.Runner.Headless.dll" {
+    runlet actions from "Tinkwell.Runlet.Actions.dll";
+    runlet lwm2m from "Tinkwell.Runlet.Lwm2m.dll";
+}
+
+# =============================================================================
+# LwM2M Server — listens for chamber registrations
+# =============================================================================
+# The chamber (or an ESP32 with sensors) registers as a LwM2M client.
+# Standard IPSO objects:
+#   3303 = Temperature Sensor (resource 5700 = Sensor Value)
+#   3304 = Humidity Sensor    (resource 5700 = Sensor Value)
+
+lwm2m chamber-server {
+    port = 5683
+
+    registration config {
+        default-lifetime = 86400
+        emit-events = true
+    }
+
+    object 3303 {
+        resource 5700 {
+            measure = "chamber-temperature"
+            observable = true
+        }
+    }
+
+    object 3304 {
+        resource 5700 {
+            measure = "chamber-humidity"
+            observable = true
+        }
+    }
+}
+
+# =============================================================================
+# Measures
+# =============================================================================
+
+measure chamber-temperature {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Stability chamber internal temperature"
+    minimum = 10
+    maximum = 50
+    precision = 1
+    category = environment
+}
+
+measure chamber-humidity {
+    quantity = RelativeHumidity
+    unit = Percent
+    description = "Stability chamber relative humidity"
+    minimum = 0
+    maximum = 100
+    precision = 1
+    category = environment
+}
+
+# =============================================================================
+# Signals — ICH Q1A(R2) long-term condition: 25°C ± 2°C / 60% RH ± 5% RH
+# =============================================================================
+# Duration filters (5 minutes) prevent false alarms from door-open transients.
+
+signal temp-high when ([chamber-temperature] > 27) for "5 minutes" {
+    severity = critical
+    channel = compliance
+}
+
+signal temp-low when ([chamber-temperature] < 23) for "5 minutes" {
+    severity = critical
+    channel = compliance
+}
+
+signal humidity-high when ([chamber-humidity] > 65) for "5 minutes" {
+    severity = critical
+    channel = compliance
+}
+
+signal humidity-low when ([chamber-humidity] < 55) for "5 minutes" {
+    severity = critical
+    channel = compliance
+}
+
+# Warning signals at narrower thresholds (no duration — immediate awareness)
+signal temp-drift when ([chamber-temperature] > 26 or [chamber-temperature] < 24) {
+    severity = warning
+    channel = compliance
+}
+
+signal humidity-drift when ([chamber-humidity] > 63 or [chamber-humidity] < 57) {
+    severity = warning
+    channel = compliance
+}
+
+# =============================================================================
+# Actions
+# =============================================================================
+
+action log-excursions {
+    source = signals
+    verb = fired
+
+    do log {
+        message = (format("[EXCURSION] {Name}: {Object} (severity={severity})"))
+        level = warning
+    }
+}
+
+action record-excursion {
+    source = signals
+    verb = fired
+
+    do update-entry {
+        bucket = compliance
+        key = (format("excursion/{Name}"))
+        value = (format("{Object} at {Timestamp}"))
+    }
+}
+
+# Post to an external LIMS or alerting webhook when a critical excursion occurs.
+# Replace the URL below with your actual endpoint.
+action webhook-excursion {
+    source = signals
+    verb = fired
+
+    do http-post {
+        url = "https://lims.example.com/api/excursions"
+        body = (make_json("chamber", "stability-1", "signal", Name, "value", Object, "severity", severity, "timestamp", Timestamp))
+        content-type = "application/json"
+    }
+}
+
+action record-all-changes {
+    verb = changed
+
+    do update-entry {
+        bucket = history
+        key = (format("{Name}.{CorrelationId}"))
+        value = (Object)
+        ttl = 604800
+    }
+}

@@ -1,0 +1,10 @@
+runner grpc-host from "Tinkwell.Runners.GrpcHost" {
+  port = 50051
+  firmlet discovery from "Tinkwell.Services.Discovery" {
+    multicast = true
+    ttl = 30
+  }
+  firmlet store from "Tinkwell.Services.Store" {
+    backend = sqlite
+  }
+}

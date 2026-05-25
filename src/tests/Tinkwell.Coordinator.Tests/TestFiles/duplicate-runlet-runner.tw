@@ -1,0 +1,3 @@
+runner main from "Tinkwell.Runner.Grpc.dll" {
+    runlet main from "Tinkwell.Runlet.Store.dll";
+}

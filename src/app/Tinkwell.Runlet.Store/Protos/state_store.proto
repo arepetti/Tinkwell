@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+package tinkwell.store.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Tinkwell.Runlet.Store.Grpc.V1";
+
+service StateStore {
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Set(SetRequest) returns (SetResponse);
+  rpc SetMany(SetManyRequest) returns (SetManyResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+  rpc List(ListRequest) returns (stream StoreEntry);
+  rpc Watch(WatchRequest) returns (stream WatchEvent);
+  rpc ConfigureBucket(ConfigureBucketRequest) returns (ConfigureBucketResponse);
+}
+
+// ---------------------------------------------------------------------------
+// Get — point lookup, bucket_id is required.
+// ---------------------------------------------------------------------------
+
+message GetRequest {
+  string bucket_id = 1;
+  string key_namespace = 2;
+  string key = 3;
+}
+
+message GetResponse {
+  string value = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+// ---------------------------------------------------------------------------
+// Set — create or update, bucket_id is required.
+// ---------------------------------------------------------------------------
+
+message SetRequest {
+  string bucket_id = 1;
+  string key_namespace = 2;
+  string key = 3;
+  string value = 4;
+  int32 ttl_seconds = 5;
+}
+
+message SetResponse {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+  google.protobuf.Timestamp expires_at = 3;
+}
+
+// ---------------------------------------------------------------------------
+// SetMany — batch create/update. SQLite applies all writes in one transaction
+// (atomic). Memory applies updates sequentially per key (not one atomic snapshot).
+// ---------------------------------------------------------------------------
+
+message SetManyRequest {
+  repeated SetRequest entries = 1;
+}
+
+message SetManyResponse {
+  repeated SetResponse results = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Delete — bucket_id is required.
+// ---------------------------------------------------------------------------
+
+message DeleteRequest {
+  string bucket_id = 1;
+  string key_namespace = 2;
+  string key = 3;
+}
+
+message DeleteResponse {
+  bool found = 1;
+}
+
+// ---------------------------------------------------------------------------
+// List — server-streaming. All filters optional; respects bucket visibility.
+// ---------------------------------------------------------------------------
+
+message ListRequest {
+  string bucket_id = 1;
+  string key_namespace = 2;
+  string prefix = 3;
+  bool include_hidden = 4;
+}
+
+message StoreEntry {
+  string bucket_id = 1;
+  string key_namespace = 2;
+  string key = 3;
+  string value = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  google.protobuf.Timestamp expires_at = 7;
+}
+
+// ---------------------------------------------------------------------------
+// Watch — server-streaming change notifications. Respects bucket visibility
+// unless include_hidden is set.
+// ---------------------------------------------------------------------------
+
+message WatchRequest {
+  string bucket_id = 1;
+  string key_namespace = 2;
+  string prefix = 3;
+  bool include_hidden = 4;
+}
+
+enum EventType {
+  EVENT_TYPE_SET = 0;
+  EVENT_TYPE_DELETE = 1;
+  EVENT_TYPE_EXPIRED = 2;
+}
+
+message WatchEvent {
+  EventType event_type = 1;
+  string bucket_id = 2;
+  string key_namespace = 3;
+  string key = 4;
+  string value = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+// ---------------------------------------------------------------------------
+// ConfigureBucket — set per-bucket options (visibility).
+// ---------------------------------------------------------------------------
+
+message ConfigureBucketRequest {
+  string bucket_id = 1;
+  // When omitted, the server treats the bucket as discoverable (matches IStoreBackend default).
+  optional bool discoverable = 2;
+}
+
+message ConfigureBucketResponse {}

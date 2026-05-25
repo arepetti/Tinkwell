@@ -1,0 +1,7 @@
+package tinkwell-ensemble {
+    type = "init-pack"
+    description = "Generate a starter ensemble.tw configuration with runners, runlets, and protocol bindings"
+    primary-output = "ensemble.tw"
+    questions = "questions.tw"
+    outputs = "outputs.tw"
+}

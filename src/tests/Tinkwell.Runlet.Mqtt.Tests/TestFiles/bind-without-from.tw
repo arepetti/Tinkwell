@@ -1,0 +1,12 @@
+mqtt sensors {
+    broker = "localhost"
+    subscribe "sensor/+" {
+        on message {
+            bind event {
+                source = "mqtt"
+                verb = changed
+                name = (segment(topic, -1))
+            }
+        }
+    }
+}

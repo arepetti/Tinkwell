@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Measures.Registry.Tests" />
+    <InternalsVisibleTo Include="Tinkwell.Integration.Tests" />
+    <InternalsVisibleTo Include="Tinkwell.Runlet.Measures.Tests" />
+    <InternalsVisibleTo Include="Tinkwell.Runlet.Signals" />
+    <InternalsVisibleTo Include="Tinkwell.Runlet.Signals.Tests" />
+    <InternalsVisibleTo Include="Tinkwell.Runlet.MeasureEvents" />
+    <InternalsVisibleTo Include="Tinkwell.Runlet.MeasureEvents.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Runner.Abstractions\Tinkwell.Runner.Abstractions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Runner.Hosting\Tinkwell.Runner.Hosting.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Configuration.Parser\Tinkwell.Configuration.Parser.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Expressions\Tinkwell.Expressions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Measures\Tinkwell.Measures.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.AspNetCore" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\measures.proto" GrpcServices="Server" />
+    <Protobuf Include="..\Tinkwell.Runlet.Store\Protos\state_store.proto"
+              GrpcServices="Client" Link="Protos\state_store.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+
+</Project>

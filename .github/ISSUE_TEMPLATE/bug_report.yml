@@ -1,0 +1,105 @@
+name: Bug report
+description: Report something that should work but doesn't.
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. A small reproducible
+        example (ideally a `.tw` snippet and the exact command that triggers
+        the problem) is the single most useful thing you can include.
+
+        Security vulnerabilities: **do not** file them here — please follow
+        [SECURITY.md](https://github.com/arepetti/Tinkwell/blob/main/SECURITY.md) instead.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One or two sentences describing what goes wrong.
+      placeholder: "tw foo bar crashes with NullReferenceException when ..."
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      description: Where, as far as you can tell, the bug lives.
+      options:
+        - "Runtime / coordinator / runner"
+        - "CLI (tw)"
+        - ".tw configuration / parser"
+        - "Tinkwell.Package (signing / verification)"
+        - "Plugin system (loading / resolution)"
+        - "Runlet: Modbus"
+        - "Runlet: I2C"
+        - "Runlet: TextQuery (SCPI)"
+        - "Runlet: MQTT"
+        - "Runlet: CoAP"
+        - "Runlet: LwM2M"
+        - "Runlet: Measures / Signals / Events / Actions / Store"
+        - "Documentation"
+        - "Build / CI"
+        - "Other / not sure"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Tinkwell version or commit
+      description: Output of `tw --version`, or the commit hash if you built from source.
+      placeholder: "0.1.0 (or: 1a2b3c4)"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS and .NET runtime
+      description: Operating system, architecture, and the .NET version reported by `dotnet --info`.
+      placeholder: "Windows 11 x64 / .NET 10.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: repro-config
+    attributes:
+      label: Minimal .tw repro
+      description: The smallest `.tw` configuration that shows the problem. Trim it as much as you can.
+      render: tw
+      placeholder: |
+        measure foo {
+            quantity = Speed
+            unit = "MeterPerSecond"
+        }
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands (e.g. `tw run config.tw`), in order.
+      placeholder: |
+        1. Save the config above as `repro.tw`.
+        2. Run `tw run repro.tw`.
+        3. Observe the error.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual behaviour
+      description: What you expected to happen, and what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / stack traces
+      description: Paste logs, stack traces, or screenshots. Please redact any sensitive values (tokens, addresses, etc.).
+      render: shell
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have searched existing issues and this is not a duplicate.
+          required: true
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/arepetti/Tinkwell/blob/main/CODE_OF_CONDUCT.md).
+          required: true

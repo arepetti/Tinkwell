@@ -1,0 +1,5 @@
+measure bad-nesting {
+    child inner {
+        key = "value"
+    }
+}

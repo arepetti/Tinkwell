@@ -1,0 +1,18 @@
+i2c sensors {
+    bus = 1
+    poll-interval = "500 ms"
+
+    device "0x48" {
+        read temperature {
+            register = "0x00"
+            type = "int16-be"
+            scale = 0.0625
+            measure = "ambient-temp"
+        }
+
+        read raw-byte {
+            register = "0x01"
+            type = "uint8"
+        }
+    }
+}

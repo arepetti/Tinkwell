@@ -1,0 +1,5 @@
+action expr-action when test-signal {
+    do log {
+        message = (format("Alert: {Name}"))
+    }
+}

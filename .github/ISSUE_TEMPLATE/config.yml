@@ -1,0 +1,25 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/arepetti/Tinkwell/security/advisories/new
+    about: |
+      Please do not open a public issue for security problems. Use GitHub's
+      private vulnerability reporting instead. See SECURITY.md for details.
+  - name: Report a Code of Conduct concern
+    url: https://github.com/arepetti/Tinkwell/security/advisories/new
+    about: |
+      Code of Conduct reports are handled through the same private channel
+      as security reports. Put "Code of Conduct" in the title so the report
+      is routed correctly. See CODE_OF_CONDUCT.md for the policy.
+  - name: Firmwareless hub, device SDK, or firmlet registry
+    url: https://github.com/arepetti/tinkwell-firmwareless
+    about: Issues about the firmwareless IoT platform live on the firmwareless repositories.
+  - name: Plugin registry (tinkwell-plugins)
+    url: https://github.com/arepetti/tinkwell-plugins-repository
+    about: Issues about the plugin registry reference implementation belong on its own repository.
+  - name: Tinkwell state machines
+    url: https://github.com/arepetti/tinkwell-statemachines
+    about: Issues about the declarative state-machine engine belong on its own repository.
+  - name: Developer experience (Tinkwell DX)
+    url: https://github.com/arepetti/tinkwell-dx
+    about: Editor support, syntax colorization, and developer tooling.

@@ -1,0 +1,5 @@
+include "child.tw"
+
+config parent-block {
+  parent-prop = 1
+}

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>SDK</TinkwellPackageGroup>
+    <Description>Middleware abstractions for the Tinkwell Protobuf Gateway runlet. External runlets implement IGatewayMiddleware against this library without depending on the gateway runlet itself.</Description>
+    <PackageTags>$(PackageTags);sdk abstractions grpc gateway</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Coap.Server\Tinkwell.Coap.Server.csproj" />
+  </ItemGroup>
+
+</Project>

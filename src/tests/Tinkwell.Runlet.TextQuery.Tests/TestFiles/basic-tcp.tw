@@ -1,0 +1,15 @@
+query instrument {
+    transport = "tcp"
+    host = "192.168.1.50"
+    port = 5025
+    poll-interval = "2 seconds"
+    line-terminator = "crlf"
+    read-timeout = 1500
+
+    read voltage {
+        send = "MEAS:VOLT:DC?"
+        pattern = "([+-]?[0-9.]+)"
+        scale = 1.0
+        measure = "board-voltage"
+    }
+}

@@ -1,0 +1,105 @@
+<Application
+    x:Class="Tinkwell.Studio.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Tinkwell.Studio.Converters"
+    xmlns:views="using:Tinkwell.Studio.Views">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- WinUI 3 Fluent controls + theme brushes. Every token below
+                     (CardBackgroundFillColorDefaultBrush, LayerFillColorDefaultBrush,
+                     TextFillColorSecondaryBrush, ControlStrokeColorDefaultBrush,
+                     AccentFillColorDefaultBrush, ControlCornerRadius, OverlayCornerRadius)
+                     is defined inside this dictionary. -->
+                    <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Shared converters instantiated once. Keeping them in app scope
+                 means every view can reference them via StaticResource without
+                 importing the namespace into each XAML file. -->
+            <conv:HexToBrushConverter x:Key="HexToBrushConverter" />
+            <conv:StatusToBrushConverter x:Key="StatusToBrushConverter" />
+            <conv:UrlToBrushConverter x:Key="UrlToBrushConverter" />
+            <conv:DetailForegroundConverter x:Key="DetailForegroundConverter" />
+            <conv:DetailFontFamilyConverter x:Key="DetailFontFamilyConverter" />
+            <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+            <conv:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <conv:CountToVisibilityConverter x:Key="CountToVisibilityConverter" />
+            <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+            <conv:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter" />
+            <conv:MeasureKindToGlyphConverter x:Key="MeasureKindToGlyphConverter" />
+            <conv:MeasureKindToLabelConverter x:Key="MeasureKindToLabelConverter" />
+            <!-- Per-category data templates: the shell's single ContentControl
+                 swaps one in whenever SelectedCategory changes. -->
+            <DataTemplate x:Key="HomeViewTemplate"><views:HomeView /></DataTemplate>
+            <DataTemplate x:Key="RunnersViewTemplate"><views:RunnersView /></DataTemplate>
+            <DataTemplate x:Key="ServicesViewTemplate"><views:ServicesView /></DataTemplate>
+            <DataTemplate x:Key="StoreViewTemplate"><views:StoreView /></DataTemplate>
+            <DataTemplate x:Key="MeasuresViewTemplate"><views:MeasuresView /></DataTemplate>
+            <DataTemplate x:Key="EventsViewTemplate"><views:EventsView /></DataTemplate>
+            <DataTemplate x:Key="MqttViewTemplate"><views:MqttView /></DataTemplate>
+            <DataTemplate x:Key="CoapViewTemplate"><views:CoapView /></DataTemplate>
+            <DataTemplate x:Key="EnsembleViewTemplate"><views:EnsembleView /></DataTemplate>
+            <DataTemplate x:Key="CommandLogViewTemplate"><views:CommandLogView /></DataTemplate>
+
+            <views:CategoryViewTemplateSelector
+                x:Key="CategoryViewTemplateSelector"
+                HomeTemplate="{StaticResource HomeViewTemplate}"
+                RunnersTemplate="{StaticResource RunnersViewTemplate}"
+                ServicesTemplate="{StaticResource ServicesViewTemplate}"
+                StoreTemplate="{StaticResource StoreViewTemplate}"
+                MeasuresTemplate="{StaticResource MeasuresViewTemplate}"
+                EventsTemplate="{StaticResource EventsViewTemplate}"
+                MqttTemplate="{StaticResource MqttViewTemplate}"
+                CoapTemplate="{StaticResource CoapViewTemplate}"
+                EnsembleTemplate="{StaticResource EnsembleViewTemplate}"
+                CommandLogTemplate="{StaticResource CommandLogViewTemplate}" />
+
+            <!-- Reusable card surface used throughout the views. Maps to Fluent's
+                 standard elevated-surface recipe: semi-opaque fill + 1px stroke +
+                 rounded corners. -->
+            <Style x:Key="DashboardCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="{ThemeResource OverlayCornerRadius}" />
+                <Setter Property="Padding" Value="16,12" />
+            </Style>
+
+            <!-- Icon-only toolbar buttons (refresh / close / add / ...). Equivalent
+                 to Avalonia's "Button.icon" class selector. -->
+            <Style x:Key="IconButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="8,6" />
+                <Setter Property="MinWidth" Value="0" />
+            </Style>
+
+            <!-- Detail drawer panel: Acrylic fill so it reads as a "layer above
+                 the main surface", matching Fluent's hierarchy recommendations. -->
+            <Style x:Key="DrawerPanelStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource LayerFillColorAltBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1,0,0,0" />
+                <Setter Property="Padding" Value="16" />
+            </Style>
+
+            <!-- Inline busy indicator used in toolbar/header strips. Sized small
+                 enough to sit comfortably next to icon buttons, with the secondary
+                 text foreground so it reads as a chrome affordance rather than
+                 primary content. Visibility is driven by the consumer (typically
+                 binding IsBusy via BoolToVisibilityConverter). -->
+            <Style x:Key="InlineBusyRingStyle" TargetType="ProgressRing">
+                <Setter Property="Width" Value="18" />
+                <Setter Property="Height" Value="18" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="IsActive" Value="True" />
+                <Setter Property="Foreground" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

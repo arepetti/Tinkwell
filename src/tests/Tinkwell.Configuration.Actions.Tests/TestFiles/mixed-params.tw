@@ -1,0 +1,6 @@
+action reset-pump when pump-overheat {
+    do update-measure from "Tinkwell.Actions" {
+        name = pump-state
+        value = restarting
+    }
+}

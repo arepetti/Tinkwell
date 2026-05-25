@@ -1,3 +1,0 @@
-import "./1.Runner.tw"
-
-runner another_runner "/path/to/another_runner" {}

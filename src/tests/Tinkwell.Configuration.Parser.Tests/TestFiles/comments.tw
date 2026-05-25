@@ -1,0 +1,7 @@
+# This is a hash comment
+// This is a double-slash comment
+
+config test {
+  key1 = "value1" // inline comment
+  key2 = "value2"
+}

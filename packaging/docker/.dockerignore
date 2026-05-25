@@ -1,0 +1,37 @@
+# Sent to the daemon when building from the repo root with
+# `-f packaging/docker/Dockerfile`. Keeps the context small so multi-arch
+# builds don't ship a hundred megabytes of artifacts/, docs, and IDE state.
+
+# Build output
+artifacts/
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+
+# Repos that aren't part of the main solution (firmwareless hub, MCP, etc.).
+# These have their own Dockerfiles and should not bleed into the main image.
+src/extras/
+
+# Things the runtime image never needs
+docs/
+samples/
+scripts/
+packaging/winget/
+packaging/deb/
+
+# VCS / metadata
+.git/
+.github/
+.agents/
+.cursor/
+.idea/
+
+# Reference text files
+*.md
+!packaging/docker/example/README.md
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp

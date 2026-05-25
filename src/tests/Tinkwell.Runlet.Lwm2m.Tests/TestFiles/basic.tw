@@ -1,0 +1,22 @@
+lwm2m my-server {
+    port = 5684
+
+    registration config {
+        default-lifetime = 3600
+        emit-events = true
+    }
+
+    object "3303" {
+        resource "5700" {
+            measure = "temperature"
+            observable = true
+        }
+    }
+
+    object "3304" {
+        resource "5700" {
+            measure = "humidity"
+            observable = false
+        }
+    }
+}

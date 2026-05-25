@@ -1,0 +1,11 @@
+action my-action {
+    do log {
+        message = "hello"
+    }
+}
+
+action my-action {
+    do log {
+        message = "world"
+    }
+}

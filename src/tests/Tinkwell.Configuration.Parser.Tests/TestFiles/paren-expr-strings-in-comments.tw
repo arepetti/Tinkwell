@@ -1,0 +1,4 @@
+# String with // inside a paren expression must not be mis-read as a line comment (ROBUST-1)
+config net {
+  gateway = ("http://host/path")
+}

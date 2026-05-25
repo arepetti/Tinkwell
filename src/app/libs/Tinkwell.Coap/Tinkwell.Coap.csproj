@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>Standalone</TinkwellPackageGroup>
+    <Description>Low-level CoAP protocol library: message parsing, serialization, option handling, and path matching per RFC 7252.</Description>
+    <PackageTags>$(PackageTags);coap constrained-application-protocol</PackageTags>
+  </PropertyGroup>
+
+</Project>

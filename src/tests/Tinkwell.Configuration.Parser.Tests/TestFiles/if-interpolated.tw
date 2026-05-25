@@ -1,0 +1,13 @@
+# if modifier with $"" — must resolve via Liquid then evaluate (BUG-1 regression)
+config kept if $"true" {
+  k = "a"
+}
+config removed if $"false" {
+  k = "b"
+}
+
+# Interpolation in condition with variables
+set n = 2
+config also-kept if $"({{ n }} > 0)" {
+  k = "c"
+}

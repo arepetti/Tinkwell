@@ -1,0 +1,11 @@
+config always {
+  key = "present"
+}
+
+config pruned if (false) {
+  key = "gone"
+}
+
+config also-present if (true) {
+  key = "here"
+}

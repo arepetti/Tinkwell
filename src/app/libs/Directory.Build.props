@@ -1,0 +1,37 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\'))" />
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <VersionPrefix>0.8.0</VersionPrefix>
+    <Authors>Adriano Repetti</Authors>
+    <Copyright>Copyright (c) 2025-2026 Adriano Repetti</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/arepetti/Tinkwell</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/arepetti/Tinkwell</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>tinkwell iot automation edge</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- NuGet debug hygiene: portable PDBs embedded in the package, Source Link enabled, and
+         deterministic builds when running in CI. Lets consumers step into our sources from their
+         IDE and produces reproducible binaries that audit/supply-chain pipelines can verify. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <DebugType>portable</DebugType>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true' OR '$(TF_BUILD)' == 'true' OR '$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <EnableSourceLink Condition="'$(ContinuousIntegrationBuild)' != 'true'">false</EnableSourceLink>
+    <EnableSourceControlManagerQueries Condition="'$(ContinuousIntegrationBuild)' != 'true'">false</EnableSourceControlManagerQueries>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Runlet.Lwm2m.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Coap\Tinkwell.Coap.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Lwm2m\Tinkwell.Lwm2m.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Encoding\Tinkwell.Encoding.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Integration.Abstractions\Tinkwell.Integration.Abstractions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Configuration.Parser\Tinkwell.Configuration.Parser.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Configuration.Abstractions\Tinkwell.Configuration.Abstractions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Expressions\Tinkwell.Expressions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Runner.Abstractions\Tinkwell.Runner.Abstractions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Runner.Hosting\Tinkwell.Runner.Hosting.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Telemetry\Tinkwell.Telemetry.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,104 @@
+<UserControl
+    x:Class="Tinkwell.Studio.Controls.Indicator"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- A small "avatar" chip: a colored circle with an optional Segoe Fluent
+         glyph in the middle. The shape is fixed size (smaller than a row's
+         text) so the column it lives in stays narrow; the tone is driven by
+         a VisualStateGroup so theme resources keep tracking light/dark
+         theme switches automatically. -->
+    <Grid x:Name="PART_Root">
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="ToneStates">
+
+                <VisualState x:Name="Default">
+                    <VisualState.Setters>
+                        <Setter Target="PART_Background.Background"
+                                Value="{ThemeResource ControlFillColorTertiaryBrush}" />
+                        <Setter Target="PART_Background.BorderBrush"
+                                Value="{ThemeResource ControlStrokeColorDefaultBrush}" />
+                        <Setter Target="PART_Glyph.Foreground"
+                                Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="Muted">
+                    <VisualState.Setters>
+                        <Setter Target="PART_Background.Background"
+                                Value="{ThemeResource ControlStrongFillColorDisabledBrush}" />
+                        <Setter Target="PART_Background.BorderBrush"
+                                Value="{ThemeResource ControlStrokeColorDefaultBrush}" />
+                        <Setter Target="PART_Glyph.Foreground"
+                                Value="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="Accent">
+                    <VisualState.Setters>
+                        <Setter Target="PART_Background.Background"
+                                Value="{ThemeResource AccentFillColorDefaultBrush}" />
+                        <Setter Target="PART_Background.BorderBrush"
+                                Value="{ThemeResource AccentControlElevationBorderBrush}" />
+                        <Setter Target="PART_Glyph.Foreground"
+                                Value="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="Success">
+                    <VisualState.Setters>
+                        <Setter Target="PART_Background.Background"
+                                Value="{ThemeResource SystemFillColorSuccessBrush}" />
+                        <Setter Target="PART_Background.BorderBrush"
+                                Value="{ThemeResource SystemFillColorSuccessBrush}" />
+                        <Setter Target="PART_Glyph.Foreground"
+                                Value="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="Warning">
+                    <VisualState.Setters>
+                        <Setter Target="PART_Background.Background"
+                                Value="{ThemeResource SystemFillColorCautionBrush}" />
+                        <Setter Target="PART_Background.BorderBrush"
+                                Value="{ThemeResource SystemFillColorCautionBrush}" />
+                        <Setter Target="PART_Glyph.Foreground"
+                                Value="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="Critical">
+                    <VisualState.Setters>
+                        <Setter Target="PART_Background.Background"
+                                Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                        <Setter Target="PART_Background.BorderBrush"
+                                Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                        <Setter Target="PART_Glyph.Foreground"
+                                Value="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <!-- CornerRadius is set to a value larger than the radius so WinUI
+             clamps it to a perfect circle regardless of Diameter. The thin
+             1px border keeps the chip readable on Mica even when the fill
+             color matches the surface (e.g. Default tone in Light theme). -->
+        <Border x:Name="PART_Background"
+                Width="{x:Bind Diameter, Mode=OneWay}"
+                Height="{x:Bind Diameter, Mode=OneWay}"
+                CornerRadius="100"
+                BorderThickness="1"
+                Background="{ThemeResource ControlFillColorTertiaryBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}">
+            <FontIcon x:Name="PART_Glyph"
+                      Glyph="{x:Bind Glyph, Mode=OneWay}"
+                      FontSize="{x:Bind GlyphSize, Mode=OneWay}"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </Border>
+    </Grid>
+</UserControl>

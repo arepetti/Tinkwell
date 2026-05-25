@@ -1,0 +1,2 @@
+config broken {
+  prop = 1

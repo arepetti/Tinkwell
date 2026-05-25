@@ -1,0 +1,6 @@
+measure power {
+    quantity = "Power"
+    unit = "Watt"
+    value = (voltage * current)
+    on error resume next retry 2 delay 500;
+}

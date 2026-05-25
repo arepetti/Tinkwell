@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>SDK</TinkwellPackageGroup>
+    <Description>Secure package format for Tinkwell: pack, unpack, verify, and re-sign zip packages with SHA-512 integrity chains and ECDSA signatures.</Description>
+    <PackageTags>$(PackageTags);package signing verification</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Package.Tests" />
+  </ItemGroup>
+
+
+</Project>

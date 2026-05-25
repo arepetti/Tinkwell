@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Cli.Sdk\Tinkwell.Cli.Sdk.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Coap\Tinkwell.Coap.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Coap.Server\Tinkwell.Coap.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\..\extras\firmwareless\device\tw-device-sdk\proto\tw_protocol.proto"
+              GrpcServices="None"
+              ProtoRoot="..\..\extras\firmwareless\device\tw-device-sdk\proto" />
+  </ItemGroup>
+
+</Project>

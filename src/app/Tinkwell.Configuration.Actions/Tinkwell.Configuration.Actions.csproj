@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Configuration.Actions.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Configuration.Parser\Tinkwell.Configuration.Parser.csproj" />
+  </ItemGroup>
+
+</Project>

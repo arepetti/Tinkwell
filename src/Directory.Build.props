@@ -1,0 +1,13 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <TreatWarningsAsErrors Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</TreatWarningsAsErrors>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <TinkwellArtifactsDir>$(MSBuildThisFileDirectory)..\artifacts\$(Configuration)\</TinkwellArtifactsDir>
+  </PropertyGroup>
+
+</Project>

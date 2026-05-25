@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>Standalone</TinkwellPackageGroup>
+    <Description>LwM2M core types: object/resource model, IPSO registry, path parsing, registration, and link-format handling.</Description>
+    <PackageTags>$(PackageTags);lwm2m lightweight-m2m oma</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Lwm2m.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Encoding\Tinkwell.Encoding.csproj" />
+  </ItemGroup>
+
+
+</Project>

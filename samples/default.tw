@@ -1,0 +1,122 @@
+# =============================================================================
+# Default Tinkwell Configuration
+#
+# A minimal working ensemble with store, events, measures, signals, and
+# actions split across separate runners for independent monitoring and restart.
+# =============================================================================
+
+# --- Runner 1: State Store ---
+# The store must start first — measures depend on it for persistence.
+runner store-host from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+}
+
+# --- Runner 2: Event Bus ---
+runner events-host from "Tinkwell.Runner.Grpc.dll" {
+    runlet events from "Tinkwell.Runlet.Events.dll";
+}
+
+# --- Runner 3: Measures + Signals ---
+# Signals must be in the same runner as measures (and declared after).
+runner measures-host from "Tinkwell.Runner.Grpc.dll" {
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+    runlet signals from "Tinkwell.Runlet.Signals.dll";
+    runlet measure-events from "Tinkwell.Runlet.MeasureEvents.dll";
+}
+
+# --- Runner 4: Actions ---
+runner actions-host from "Tinkwell.Runner.Headless.dll" {
+    runlet actions from "Tinkwell.Runlet.Actions.dll";
+}
+
+# =============================================================================
+# Measures
+# =============================================================================
+
+# Plain measures — values are set externally (e.g. via CoAP, MQTT, or API).
+measure temperature {
+    quantity = Temperature
+    unit = DegreeCelsius
+    minimum = -40
+    maximum = 125
+    precision = 1
+    description = "Ambient temperature sensor"
+    category = environment
+}
+
+measure humidity {
+    quantity = "Relative Humidity"
+    unit = Percent
+    minimum = 0
+    maximum = 100
+    precision = 1
+    category = environment
+}
+
+measure voltage {
+    quantity = "Electric Potential"
+    unit = Volt
+    minimum = 0
+    maximum = 500
+    precision = 2
+    category = electrical
+}
+
+measure current {
+    quantity = "Electric Current"
+    unit = Ampere
+    minimum = 0
+    maximum = 100
+    precision = 2
+    category = electrical
+}
+
+# Derived measures — automatically recalculated when dependencies change.
+measure power {
+    quantity = Power
+    unit = Watt
+    value = (voltage * current)
+    precision = 1
+    category = electrical
+}
+
+measure heat-index {
+    quantity = Temperature
+    unit = DegreeCelsius
+    value = (temperature + 0.33 * humidity - 4.0)
+    precision = 1
+    description = "Simplified heat index approximation"
+    category = environment
+}
+
+# =============================================================================
+# Signals
+# =============================================================================
+
+signal high-temperature when (temperature > 80) for "5 seconds" {
+    severity = warning
+}
+
+signal overheat when (temperature > 100) until (temperature < 90) {
+    severity = critical
+}
+
+signal high-power when (power > 5000) for 10 {
+    severity = warning
+}
+
+# =============================================================================
+# Actions
+# =============================================================================
+
+action log-all-signals {
+    source = signals
+    verb = fired
+
+    do log {
+        message = (format("[{severity}] Signal {Name} fired"))
+        level = warning
+    }
+}

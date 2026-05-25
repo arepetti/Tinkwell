@@ -1,7 +1,0 @@
-﻿[
-  {
-    Name: value1,
-    Value: 123,
-    IsNumeric: true
-  }
-]

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Runlet.Store.Tests" />
+    <InternalsVisibleTo Include="Tinkwell.Runlet.Store.Replication" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Runner.Abstractions\Tinkwell.Runner.Abstractions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Core\Tinkwell.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\state_store.proto" GrpcServices="Server" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+
+</Project>

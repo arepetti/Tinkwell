@@ -1,0 +1,9 @@
+measure sensor-a {
+    quantity = "Temperature"
+    unit = "DegreeCelsius"
+}
+
+measure sensor-a {
+    quantity = "Pressure"
+    unit = "Pascal"
+}

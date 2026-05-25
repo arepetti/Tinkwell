@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Runlet.MeasureHistory.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.AspNetCore" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Core\Tinkwell.Core.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Measures.History\Tinkwell.Measures.History.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Runner.Abstractions\Tinkwell.Runner.Abstractions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Runner.Hosting\Tinkwell.Runner.Hosting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\measure_history.proto" GrpcServices="Server" />
+    <Protobuf Include="..\Tinkwell.Runlet.Measures\Protos\measures.proto"
+              GrpcServices="Client" Link="Protos\measures.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,59 @@
+# =============================================================================
+# CoAP-to-MQTT Bridge
+#
+# Accepts CoAP POST requests from constrained devices and publishes the
+# payload to an MQTT broker. Also stores the value as a local measure.
+# =============================================================================
+
+set mqtt_broker = "mqtt-broker.local"
+set mqtt_port = 1883
+
+# --- Infrastructure ---
+runner main from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+    runlet events from "Tinkwell.Runlet.Events.dll";
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+}
+
+runner coap-host from "Tinkwell.Runner.Headless.dll" {
+    runlet coap from "Tinkwell.Runlet.Coap.dll";
+}
+
+# --- Measures ---
+measure temperature {
+    quantity = Temperature
+    unit = DegreeCelsius
+}
+
+measure humidity {
+    quantity = "Relative Humidity"
+    unit = Percent
+}
+
+# --- CoAP server ---
+# POST /sensor/temperature with body "23.5" will:
+# 1. Set the "temperature" measure to 23.5
+# 2. Publish "23.5" to MQTT topic "sensors/temperature"
+coap sensor-bridge {
+    resource "/sensor/+" {
+        on get {
+            bind measure {
+                name = (segment(path, -1))
+            }
+        }
+
+        on post {
+            bind measure {
+                name = (segment(path, -1))
+            }
+            bind mqtt {
+                topic = (format("sensors/{0}", segment(path, -1)))
+                broker = $"{{mqtt_broker}}"
+                port = $"{{mqtt_port}}"
+                qos = 1
+            }
+        }
+    }
+}

@@ -1,0 +1,71 @@
+name: Feature request
+description: Suggest a new capability or an enhancement to an existing one.
+title: "[feat] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please describe the *problem* you are trying to solve first, and the
+        proposed solution second. That makes it easier to evaluate the
+        request against Tinkwell's scope (see [GOVERNANCE.md](https://github.com/arepetti/Tinkwell/blob/main/GOVERNANCE.md)).
+
+        For changes to public APIs, the `.tw` grammar, or the
+        `Tinkwell.Package` format, it is fine to open this issue as a design
+        discussion before any code is written.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What are you trying to do, and why is the current behaviour insufficient?
+      placeholder: "When I try to ... I can't ... because ..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like Tinkwell to do? Concrete `.tw` syntax, CLI flags, or API shape is very welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you thought about, and why you prefer the proposed one. "None" is a valid answer.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      options:
+        - "Runtime / coordinator / runner"
+        - "CLI (tw)"
+        - ".tw configuration / parser"
+        - "Tinkwell.Package (signing / verification)"
+        - "Plugin system (loading / resolution)"
+        - "Runlet: Modbus"
+        - "Runlet: I2C"
+        - "Runlet: TextQuery (SCPI)"
+        - "Runlet: MQTT"
+        - "Runlet: CoAP"
+        - "Runlet: LwM2M"
+        - "Runlet: Measures / Signals / Events / Actions / Store"
+        - "Documentation"
+        - "Build / CI"
+        - "Other / not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Links, references, screenshots, prior art, related issues.
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have searched existing issues and this is not a duplicate.
+          required: true
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/arepetti/Tinkwell/blob/main/CODE_OF_CONDUCT.md).
+          required: true

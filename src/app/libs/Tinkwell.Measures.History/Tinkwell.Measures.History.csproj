@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>Standalone</TinkwellPackageGroup>
+    <Description>Abstractions for storing and querying historical measure values in Tinkwell.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Measures.History.Tests" />
+    <InternalsVisibleTo Include="Tinkwell.Measures.History.TimescaleDb" />
+    <InternalsVisibleTo Include="Tinkwell.Runlet.MeasureHistory" />
+    <InternalsVisibleTo Include="Tinkwell.Runlet.MeasureHistory.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package tinkwell.measure_history.v1;
+
+option csharp_namespace = "Tinkwell.Runlet.MeasureHistory.Grpc.V1";
+
+service MeasureHistory {
+  rpc Query(QueryRequest) returns (QueryResponse);
+  rpc GetDefinitions(GetDefinitionsRequest) returns (GetDefinitionsResponse);
+  rpc GetDataRange(GetDataRangeRequest) returns (GetDataRangeResponse);
+}
+
+message QueryRequest {
+  string name = 1;
+  optional int64 from_unix_ms = 2;
+  optional int64 to_unix_ms = 3;
+  optional int32 limit = 4;
+  optional string aggregation = 5;
+  optional int64 aggregation_interval_ms = 6;
+}
+
+message QueryResponse {
+  repeated HistoryPoint points = 1;
+  bool has_more = 2;
+}
+
+message HistoryPoint {
+  string name = 1;
+  int64 timestamp_unix_ms = 2;
+  optional double numeric_value = 3;
+  optional string string_value = 4;
+  bytes opaque_value = 5;
+  string unit = 6;
+}
+
+message GetDefinitionsRequest {}
+
+message GetDefinitionsResponse {
+  repeated HistoryDefinitionSnapshot definitions = 1;
+}
+
+message GetDataRangeRequest {
+  string name = 1;
+}
+
+message GetDataRangeResponse {
+  optional int64 earliest_unix_ms = 1;
+  optional int64 latest_unix_ms = 2;
+}
+
+message HistoryDefinitionSnapshot {
+  string name = 1;
+  string type = 2;
+  string quantity_type = 3;
+  string unit = 4;
+  optional double minimum = 5;
+  optional double maximum = 6;
+  optional int32 precision = 7;
+  string description = 8;
+  string category = 9;
+  repeated string tags = 10;
+}

@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package tinkwell.measures.v1;
+
+option csharp_namespace = "Tinkwell.Runlet.Measures.Grpc.V1";
+
+service Measures {
+  rpc Register(RegisterMeasureRequest) returns (RegisterMeasureResponse);
+  rpc Update(UpdateMeasureRequest) returns (UpdateMeasureResponse);
+  rpc Get(GetMeasureRequest) returns (GetMeasureResponse);
+  rpc List(ListMeasuresRequest) returns (ListMeasuresResponse);
+  rpc GetDefinition(GetDefinitionRequest) returns (GetDefinitionResponse);
+  rpc Watch(WatchMeasuresRequest) returns (stream MeasureEvent);
+}
+
+// ---------------------------------------------------------------------------
+// Register — create or update a measure definition with metadata.
+// ---------------------------------------------------------------------------
+
+message RegisterMeasureRequest {
+  MeasureDefinitionProto definition = 1;
+  MeasureMetadataProto metadata = 2;
+  MeasureValueProto initial_value = 3;
+}
+
+message RegisterMeasureResponse {}
+
+// ---------------------------------------------------------------------------
+// Update — set a measure's current value.
+// ---------------------------------------------------------------------------
+
+message UpdateMeasureRequest {
+  string name = 1;
+  MeasureValueProto value = 2;
+}
+
+message UpdateMeasureResponse {}
+
+// ---------------------------------------------------------------------------
+// Get — retrieve a single measure with its definition, metadata, and value.
+// ---------------------------------------------------------------------------
+
+message GetMeasureRequest {
+  string name = 1;
+}
+
+message GetMeasureResponse {
+  bool found = 1;
+  MeasureProto measure = 2;
+}
+
+// ---------------------------------------------------------------------------
+// List — retrieve all registered measures.
+// ---------------------------------------------------------------------------
+
+message ListMeasuresRequest {}
+
+message ListMeasuresResponse {
+  repeated MeasureProto measures = 1;
+}
+
+// ---------------------------------------------------------------------------
+// GetDefinition — retrieve only the definition for a measure.
+// ---------------------------------------------------------------------------
+
+message GetDefinitionRequest {
+  string name = 1;
+}
+
+message GetDefinitionResponse {
+  bool found = 1;
+  MeasureDefinitionProto definition = 2;
+}
+
+// ---------------------------------------------------------------------------
+// Watch — server-streaming value change notifications.
+// ---------------------------------------------------------------------------
+
+message WatchMeasuresRequest {}
+
+message MeasureEvent {
+  string name = 1;
+  MeasureValueProto old_value = 2;
+  MeasureValueProto new_value = 3;
+}
+
+// ---------------------------------------------------------------------------
+// Shared message types
+// ---------------------------------------------------------------------------
+
+message MeasureDefinitionProto {
+  string name = 1;
+  string type = 2;
+  string attributes = 3;
+  string quantity_type = 4;
+  string unit = 5;
+  optional double minimum = 6;
+  optional double maximum = 7;
+  optional int32 precision = 8;
+  optional int32 ttl_seconds = 9;
+}
+
+message MeasureMetadataProto {
+  string description = 1;
+  string category = 2;
+  repeated string tags = 3;
+}
+
+message MeasureValueProto {
+  string type = 1;
+  double numeric_value = 2;
+  string string_value = 3;
+  string unit = 4;
+}
+
+message MeasureProto {
+  MeasureDefinitionProto definition = 1;
+  MeasureMetadataProto metadata = 2;
+  MeasureValueProto value = 3;
+}

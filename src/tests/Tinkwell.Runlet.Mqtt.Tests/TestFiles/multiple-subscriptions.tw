@@ -1,0 +1,21 @@
+mqtt sensors {
+    broker = "localhost"
+
+    subscribe "sensor/+" {
+        on message {
+            bind event from "Tinkwell.Integrations" {
+                name = (segment(topic, -1))
+                object = (payload)
+            }
+        }
+    }
+
+    subscribe "alerts/#" {
+        on message {
+            bind event from "Tinkwell.Integrations" {
+                verb = fired
+                name = (format("alert.{segment(topic, -1)}"))
+            }
+        }
+    }
+}

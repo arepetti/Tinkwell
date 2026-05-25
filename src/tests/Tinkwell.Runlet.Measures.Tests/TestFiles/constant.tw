@@ -1,0 +1,10 @@
+measure firmware-version {
+    value = 42
+    const = true
+}
+
+measure pi {
+    value = 3.14159
+    precision = 5
+    const = true
+}

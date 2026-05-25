@@ -1,0 +1,7 @@
+outputs tinkwell-ensemble {
+    output ensemble {
+        path = "ensemble.tw"
+        render = "ensemble.liquid"
+        validator = tinkwell-ensemble
+    }
+}

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>SDK</TinkwellPackageGroup>
+    <Description>Middleware abstractions for the Tinkwell CoAP runlet. External runlets implement ICoapRequestMiddleware against this library without depending on the CoAP runlet itself.</Description>
+    <PackageTags>$(PackageTags);sdk abstractions coap</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Core\Tinkwell.Core.csproj" />
+    <ProjectReference Include="..\Tinkwell.Coap\Tinkwell.Coap.csproj" />
+  </ItemGroup>
+
+</Project>

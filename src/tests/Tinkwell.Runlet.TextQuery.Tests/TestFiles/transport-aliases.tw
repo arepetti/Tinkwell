@@ -1,0 +1,7 @@
+query tcp-src     { transport = "tcp" }
+query serial-src  { transport = "serial" }
+query rtu-src     { transport = "rtu" }
+query file-src    { transport = "file"   path = "/tmp/sensor.txt" }
+query command-src { transport = "command" command = "cat /tmp/x" }
+query cmd-src     { transport = "cmd" command = "echo 42" }
+query exec-src    { transport = "exec" command = "echo 42" }

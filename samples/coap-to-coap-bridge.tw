@@ -1,0 +1,63 @@
+# =============================================================================
+# CoAP-to-CoAP Bridge
+#
+# A CoAP gateway that accepts requests from devices, stores the measure
+# locally, and forwards the payload to a second CoAP server (e.g. a
+# backend or another gateway in a different network segment).
+# =============================================================================
+
+set upstream_host = "192.168.1.200"
+set upstream_port = 5683
+
+# --- Infrastructure ---
+runner main from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+    runlet events from "Tinkwell.Runlet.Events.dll";
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+}
+
+runner coap-host from "Tinkwell.Runner.Headless.dll" {
+    runlet coap from "Tinkwell.Runlet.Coap.dll";
+}
+
+# --- Measures (so we can read them back with GET) ---
+measure temperature {
+    quantity = Temperature
+    unit = DegreeCelsius
+}
+
+measure pressure {
+    quantity = Pressure
+    unit = Pascal
+}
+
+# --- CoAP gateway ---
+coap gateway {
+    port = 5683
+
+    resource "/sensor/+" {
+        # Devices can read the last known value.
+        on get {
+            bind measure {
+                name = (segment(path, -1))
+            }
+        }
+
+        # When a device POSTs a reading:
+        # 1. Save the value as a local measure.
+        # 2. Forward the same payload to the upstream server.
+        on post {
+            bind measure {
+                name = (segment(path, -1))
+            }
+            bind coap {
+                path = (path)
+                method = post
+                host = $"{{upstream_host}}"
+                port = $"{{upstream_port}}"
+            }
+        }
+    }
+}

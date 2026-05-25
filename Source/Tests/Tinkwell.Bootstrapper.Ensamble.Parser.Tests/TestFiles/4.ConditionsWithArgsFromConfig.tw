@@ -1,2 +1,0 @@
-runner yes "/path/to/app" if "[false_setting] == 'false'" {}
-runner no "/path/to/app" if "[false_setting] == 'true'" {}

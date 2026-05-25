@@ -1,0 +1,20 @@
+// This is an illustrative example of the .tw configuration syntax.
+// The runner paths and runlet DLLs referenced here are fictional and do
+// not correspond to real assemblies in this repository. See the
+// samples/use-cases/ directory for working configurations.
+
+runner background from "runners/Tinkwell.Runner.Headless" {
+    runlet health-check from "runlets/HealthCheck.dll" {
+        interval = 30
+    }
+
+    runlet metrics from "runlets/Metrics.dll";
+}
+
+runner web-api from "runners/Tinkwell.Runner.Web" {
+    port = 8080
+
+    runlet users from "runlets/Users.dll" {
+        max-connections = 100
+    }
+}

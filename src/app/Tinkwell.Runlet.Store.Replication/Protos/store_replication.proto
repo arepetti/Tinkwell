@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package tinkwell.store.replication.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Tinkwell.Runlet.Store.Replication.Grpc.V1";
+
+service StoreReplication {
+  rpc Replicate(ReplicateRequest) returns (stream ReplicationMessage);
+}
+
+message ReplicateRequest {}
+
+message ReplicationMessage {
+  oneof payload {
+    SnapshotBegin snapshot_begin = 1;
+    ReplicationEntry entry = 2;
+    BucketConfigEntry bucket_config = 3;
+    SnapshotEnd snapshot_end = 4;
+    ReplicationChange change = 5;
+  }
+}
+
+message SnapshotBegin {}
+
+message ReplicationEntry {
+  string bucket_id = 1;
+  string key_namespace = 2;
+  string key = 3;
+  string value = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  google.protobuf.Timestamp expires_at = 7;
+}
+
+message BucketConfigEntry {
+  string bucket_id = 1;
+  bool discoverable = 2;
+}
+
+message SnapshotEnd {
+  int64 entry_count = 1;
+}
+
+enum ChangeType {
+  CHANGE_TYPE_SET = 0;
+  CHANGE_TYPE_DELETE = 1;
+  CHANGE_TYPE_EXPIRED = 2;
+}
+
+message ReplicationChange {
+  ChangeType type = 1;
+  string bucket_id = 2;
+  string key_namespace = 3;
+  string key = 4;
+  string value = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+  google.protobuf.Timestamp expires_at = 8;
+}

@@ -1,0 +1,40 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../src/app/libs",
+          "files": ["**/*.csproj"],
+          "exclude": ["**/obj/**", "**/bin/**"]
+        }
+      ],
+      "dest": "../artifacts/api",
+      "properties": {
+        "TargetFramework": "net10.0"
+      }
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "src": "../artifacts",
+        "files": ["api/**.yml", "api/index.md"]
+      },
+      {
+        "files": ["**/*.md", "toc.yml"]
+      }
+    ],
+    "resource": [
+      {
+        "files": ["**/*.png", "**/*.svg", "**/*.jpg"]
+      }
+    ],
+    "dest": "../artifacts/_site",
+    "globalMetadata": {
+      "_appTitle": "Tinkwell",
+      "_appFooter": "Tinkwell &copy; 2025-2026 Adriano Repetti. MIT License.",
+      "_enableSearch": true
+    },
+    "template": ["default", "modern"]
+  }
+}

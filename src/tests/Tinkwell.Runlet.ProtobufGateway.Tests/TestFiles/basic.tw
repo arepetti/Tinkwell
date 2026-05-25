@@ -1,0 +1,4 @@
+protobuf-gateway device-fleet for "pb" match "/{service}/{method}" {
+    allow "tinkwell.measures.*";
+    allow "tinkwell.events.v1.EventBus";
+}

@@ -1,0 +1,28 @@
+mqtt warehouse {
+    broker = "broker-a.local"
+    subscribe "warehouse/+" {
+        on message {
+            bind event from "Tinkwell.Integrations" {
+                source = "mqtt"
+                verb = changed
+                name = (segment(topic, -1))
+                object = (payload)
+            }
+        }
+    }
+}
+
+mqtt factory {
+    broker = "broker-b.local"
+    port = 8883
+    subscribe "factory/+" {
+        on message {
+            bind event from "Tinkwell.Integrations" {
+                source = "mqtt"
+                verb = changed
+                name = (segment(topic, -1))
+                object = (payload)
+            }
+        }
+    }
+}

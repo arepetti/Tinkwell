@@ -1,0 +1,14 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\'))" />
+
+  <!-- Mirror the main repo's src/Directory.Build.props convention: every shippable
+       Studio project writes its output straight into <repo>\artifacts\<Configuration>\,
+       next to `tw`, the coordinator, and every runlet. Tests under extras/studio/tests/
+       deliberately don't import this file and keep their default bin/ output. -->
+  <PropertyGroup>
+    <OutDir>$(TinkwellArtifactsDir)</OutDir>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+
+</Project>

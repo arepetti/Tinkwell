@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Tinkwell.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="TestFiles\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\app\libs\Tinkwell.Configuration.Abstractions\Tinkwell.Configuration.Abstractions.csproj" />
+    <ProjectReference Include="..\..\app\Tinkwell.Runlet.Lwm2m\Tinkwell.Runlet.Lwm2m.csproj" />
+  </ItemGroup>
+
+</Project>

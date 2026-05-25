@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+    if: >-
+      (github.event_name == 'push' && !contains(github.event.head_commit.message, '[NO CI]')) ||
+      (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[NO CI]'))
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Tinkwell.slnx
+
+      - name: Build
+        run: dotnet build Tinkwell.slnx --no-restore -c Release -p:ContinuousIntegrationBuild=true
+
+      - name: Run unit tests
+        if: github.event_name == 'pull_request'
+        run: >-
+          dotnet test Tinkwell.slnx --no-build -c Release
+          --filter "Category!=Integration"
+          --collect:"XPlat Code Coverage"
+          --results-directory ../coverage
+
+      - name: Run all tests
+        if: github.event_name == 'push'
+        run: >-
+          dotnet test Tinkwell.slnx --no-build -c Release
+          --collect:"XPlat Code Coverage"
+          --results-directory ../coverage
+
+      - name: Generate coverage report
+        if: always() && hashFiles('coverage/**/coverage.cobertura.xml') != ''
+        uses: danielpalme/ReportGenerator-GitHub-Action@5
+        with:
+          reports: coverage/**/coverage.cobertura.xml
+          targetdir: coverage-report
+          reporttypes: MarkdownSummaryGithub;Cobertura
+
+      - name: Upload coverage artifact
+        if: always() && hashFiles('coverage-report/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report/
+
+      - name: Post coverage comment on PR
+        if: github.event_name == 'pull_request' && hashFiles('coverage-report/SummaryGithub.md') != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: coverage-report/SummaryGithub.md

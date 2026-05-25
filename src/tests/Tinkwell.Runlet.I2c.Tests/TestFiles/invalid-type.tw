@@ -1,0 +1,8 @@
+i2c bad {
+    device "0x48" {
+        read x {
+            register = "0"
+            type = "uint64-be"
+        }
+    }
+}

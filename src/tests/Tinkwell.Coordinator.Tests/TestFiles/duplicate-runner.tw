@@ -1,0 +1,2 @@
+runner main from "Tinkwell.Runner.Grpc.dll";
+runner main from "Tinkwell.Runner.Headless.dll";

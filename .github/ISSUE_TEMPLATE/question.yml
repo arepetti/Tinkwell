@@ -1,0 +1,54 @@
+name: Question
+description: Ask how something works or how to do something with Tinkwell.
+title: "[question] "
+labels: ["question", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing a question, please check the documentation in
+        [docs/](https://github.com/arepetti/Tinkwell/tree/main/docs) and the
+        [glossary](https://github.com/arepetti/Tinkwell/blob/main/docs/reference/glossary.md).
+        Many "how do I ..." answers already live there; pointing to the
+        page you read helps improve the docs where they are unclear.
+
+        This tracker is for Tinkwell itself. For sibling projects
+        (firmwareless, plugin registry, state machines, VS Code extension),
+        please ask on the relevant repository linked from the
+        [README](https://github.com/arepetti/Tinkwell/blob/main/README.md).
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What do you want to know or do?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What are you ultimately trying to accomplish? What does your setup look like (OS, Tinkwell version, relevant `.tw` snippet)?
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: Commands you ran, configurations you tested, error messages you hit. "Nothing yet" is a valid answer.
+  - type: textarea
+    id: docs-consulted
+    attributes:
+      label: Documentation consulted
+      description: Links to pages under [docs/](https://github.com/arepetti/Tinkwell/tree/main/docs) you already looked at, and what was missing or confusing.
+      placeholder: |
+        - docs/user-guide/configuration.md — checked `measure` block syntax
+        - docs/reference/mqtt.md — couldn't find how to set ...
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have searched existing issues and this is not a duplicate.
+          required: true
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/arepetti/Tinkwell/blob/main/CODE_OF_CONDUCT.md).
+          required: true

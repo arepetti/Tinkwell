@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>SDK</TinkwellPackageGroup>
+    <Description>Parser for the Tinkwell .tw configuration language.</Description>
+    <PackageTags>$(PackageTags);configuration parser dsl</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Configuration.Parser.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Configuration.Abstractions\Tinkwell.Configuration.Abstractions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Expressions\Tinkwell.Expressions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Telemetry\Tinkwell.Telemetry.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Parlot" />
+    <PackageReference Include="Fluid.Core" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+</Project>

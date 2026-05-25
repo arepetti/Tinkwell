@@ -1,0 +1,11 @@
+coap minimal {
+    resource "/data" {
+        on post {
+            bind event from "Tinkwell.Integrations" {
+                source = "coap"
+                verb = created
+                name = "data-received"
+            }
+        }
+    }
+}

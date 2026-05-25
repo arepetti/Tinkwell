@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package sample.keyvalue;
+
+option csharp_namespace = "Sample.GrpcKeyValue.Grpc";
+
+service KeyValueStore {
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Set(SetRequest) returns (SetResponse);
+}
+
+message GetRequest {
+  string key = 1;
+}
+
+message GetResponse {
+  string value = 1;
+  bool found = 2;
+}
+
+message SetRequest {
+  string key = 1;
+  string value = 2;
+}
+
+message SetResponse {}

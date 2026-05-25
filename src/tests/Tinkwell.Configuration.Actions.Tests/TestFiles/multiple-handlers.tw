@@ -1,0 +1,11 @@
+action alert-high-temp when high-temperature {
+    do log {
+        message = (format("Temperature alert: {Name} - {Object}"))
+    }
+    do create-event {
+        source = actions
+        verb = fired
+        name = (format("alert.{Name}"))
+        object = (format("Reacting to {Source}.{Name}"))
+    }
+}

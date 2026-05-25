@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Cli.Sdk\Tinkwell.Cli.Sdk.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Configuration.Parser\Tinkwell.Configuration.Parser.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Expressions\Tinkwell.Expressions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Coordinator\Tinkwell.Coordinator.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fluid.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Cli.Commands.Init.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="packs\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

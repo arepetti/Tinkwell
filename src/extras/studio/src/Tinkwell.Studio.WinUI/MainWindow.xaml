@@ -1,0 +1,138 @@
+<Window
+    x:Class="Tinkwell.Studio.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:vm="using:Tinkwell.Studio.ViewModels"
+    mc:Ignorable="d"
+    Title="Tinkwell Studio">
+
+    <!-- The window background is assigned by code-behind (MicaBackdrop on Win11,
+         DesktopAcrylicBackdrop as a fallback on Win10). The root Grid stays
+         transparent so the material shows through. -->
+    <Grid x:Name="RootGrid" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Custom title bar: inherits Mica, hosts the app title, the global
+             search box and the coordinator status chip. The drag region is the
+             transparent stretch between the app icon area and the status chip;
+             SetTitleBar is called from code-behind with this element's name.
+             Interactive children (search box) are excluded from the drag
+             region automatically by WinUI. -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="48" Padding="12,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- App icon + name, matches Windows 11 Settings style. -->
+            <FontIcon Grid.Column="0"
+                      Glyph="&#xE713;"
+                      FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                      FontSize="18"
+                      VerticalAlignment="Center"
+                      Margin="4,0,10,0" />
+
+            <!-- "Tinkwell Studio · {selected category}". Two TextBlocks instead of
+                 one composite string so each segment can carry its own typography
+                 weight (a thin separator dot keeps the chrome readable on Mica). -->
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        Spacing="6"
+                        Margin="0,0,12,0">
+                <TextBlock x:Name="AppTitleTextBlock"
+                           Text="Tinkwell Studio"
+                           Style="{StaticResource CaptionTextBlockStyle}" />
+                <TextBlock Text="·"
+                           Style="{StaticResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                           Visibility="{Binding SelectedCategory.Title, Converter={StaticResource StringToVisibilityConverter}}" />
+                <TextBlock Text="{Binding SelectedCategory.Title}"
+                           Style="{StaticResource CaptionTextBlockStyle}"
+                           FontWeight="SemiBold" />
+            </StackPanel>
+
+            <!-- Global search box. Visible only when the active category opts in
+                 via SupportsSearch; placeholder text and bound query are taken
+                 from the category itself, so each view keeps its own filter
+                 without owning a control in its own toolbar.
+                 HorizontalAlignment="Center" pins the box to the middle of the
+                 title bar regardless of the surrounding column widths. -->
+            <AutoSuggestBox Grid.Column="2"
+                            Width="380"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            QueryIcon="Find"
+                            PlaceholderText="{Binding SelectedCategory.SearchPlaceholder}"
+                            Text="{Binding SelectedCategory.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            Visibility="{Binding SelectedCategory.SupportsSearch, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+            <!-- Coordinator status chip: indicator dot + label only. The latency
+                 number was removed because it churned every poll without adding
+                 actionable signal; the dot already conveys reachability. -->
+            <StackPanel Grid.Column="3"
+                        Orientation="Horizontal"
+                        Spacing="6"
+                        VerticalAlignment="Center"
+                        Margin="0,0,12,0">
+                <Ellipse Width="10" Height="10"
+                         Fill="{ThemeResource SystemFillColorSuccessBrush}"
+                         Visibility="{Binding CoordinatorIsOnline, Converter={StaticResource BoolToVisibilityConverter}}"
+                         VerticalAlignment="Center" />
+                <Ellipse Width="10" Height="10"
+                         Fill="{ThemeResource SystemFillColorCriticalBrush}"
+                         Visibility="{Binding CoordinatorIsOffline, Converter={StaticResource BoolToVisibilityConverter}}"
+                         VerticalAlignment="Center" />
+                <TextBlock Text="{Binding CoordinatorBanner}"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{StaticResource CaptionTextBlockStyle}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Navigation shell: NavigationView handles the side rail, compact
+             icon-only collapse, selection indicator pill, and header area.
+             MenuItemsSource is bound to the view model's Categories collection,
+             so the same list that drives navigation also drives which VM is
+             current through SelectedItem two-way binding. -->
+        <muxc:NavigationView x:Name="NavView"
+                             Grid.Row="1"
+                             IsBackButtonVisible="Collapsed"
+                             IsSettingsVisible="False"
+                             PaneDisplayMode="LeftCompact"
+                             OpenPaneLength="240"
+                             CompactPaneLength="48"
+                             IsTitleBarAutoPaddingEnabled="False"
+                             MenuItemsSource="{Binding Categories}"
+                             SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
+            <muxc:NavigationView.MenuItemTemplate>
+                <DataTemplate x:DataType="vm:CategoryViewModelBase">
+                    <muxc:NavigationViewItem Content="{x:Bind Title}">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon Glyph="{x:Bind Icon}" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                </DataTemplate>
+            </muxc:NavigationView.MenuItemTemplate>
+
+            <!-- Content region: a single ContentControl that swaps in a view
+                 based on the selected category's VM type (wired up via the
+                 view-to-vm DataTemplates in App.xaml). -->
+            <ContentControl Content="{Binding SelectedCategory}"
+                            ContentTemplateSelector="{StaticResource CategoryViewTemplateSelector}"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch" />
+        </muxc:NavigationView>
+    </Grid>
+</Window>

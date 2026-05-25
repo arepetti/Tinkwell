@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>SDK</TinkwellPackageGroup>
+    <Description>SDK for building Tinkwell CLI command extensions. Provides base settings, output rendering, coordinator communication, and the discovery attributes needed by command DLLs.</Description>
+    <PackageTags>$(PackageTags);cli sdk command plugin</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Core\Tinkwell.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" />
+    <PackageReference Include="Spectre.Console.Cli" />
+    <PackageReference Include="Spectre.Console.Json" />
+  </ItemGroup>
+
+
+</Project>
