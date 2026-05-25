@@ -1,0 +1,124 @@
+# =============================================================================
+# Sample docker compose stack for Tinkwell
+# =============================================================================
+#
+# This is a SAMPLE, not a deployment-ready configuration. Adapt every field
+# to your own ensemble:
+#
+#   - Replace ./ensemble.tw with the path to your own ensemble file.
+#   - Comment out any published port your ensemble does not actually serve.
+#   - Enable the timescaledb and aspire-dashboard services only if you use
+#     the `measure-history` runlet or want a local OpenTelemetry UI.
+#
+# Usage (from this directory, with an `ensemble.tw` sitting beside this file):
+#
+#   docker compose up -d
+#   docker compose exec tinkwell tw status
+#   docker compose logs -f tinkwell
+#
+# See: docs/getting-started/docker.md for the full guide.
+
+services:
+
+  tinkwell:
+    # Pin to a specific release in production rather than `latest`.
+    image: ghcr.io/arepetti/tinkwell:latest
+    container_name: tinkwell
+    restart: unless-stopped
+
+    # Sample environment overrides. Tinkwell honours the ASP.NET configuration
+    # convention: keys with `__` map to `:` in appsettings (so
+    # `Telemetry__OtlpEndpoint` becomes `Telemetry:OtlpEndpoint`). Remove
+    # whatever you don't need.
+    environment:
+      # Where the entrypoint looks for the ensemble (default shown).
+      TINKWELL_CONFIG: /etc/tinkwell/ensemble.tw
+
+      # Custom plugin path (default already points at /var/lib/tinkwell/plugins).
+      # TINKWELL_PLUGIN_PATH: /var/lib/tinkwell/plugins
+
+      # Telemetry exporter (uncomment the aspire-dashboard service below to
+      # collect OTLP locally).
+      # Telemetry__OtlpEndpoint: http://aspire-dashboard:18889
+
+      # Logging verbosity.
+      # Logging__LogLevel__Default: Information
+
+    # Mounts. The ensemble is mandatory; everything else is optional.
+    volumes:
+      # REQUIRED: user-supplied ensemble.
+      - ./ensemble.tw:/etc/tinkwell/ensemble.tw:ro
+
+      # OPTIONAL: extra files referenced by `include` from ensemble.tw.
+      # - ./include:/etc/tinkwell/include:ro
+
+      # OPTIONAL: drop-in plugins (one directory per name@version).
+      # - ./plugins:/var/lib/tinkwell/plugins:ro
+
+      # Named volume for runtime state (event-persistence SQLite, etc.).
+      - tinkwell-state:/var/lib/tinkwell
+
+    # Protocol ports. Uncomment / add the ones your ensemble actually serves.
+    # The gRPC port range (4900-4999) is NOT published: gRPC services bind to
+    # the container's loopback by design (see docs/getting-started/docker.md).
+    ports:
+      # CoAP / LwM2M
+      - "5683:5683/udp"
+
+      # protobuf-gateway (only if enabled in your ensemble)
+      # - "5684:5684/udp"
+
+      # `mqtt-server` runlet (development only; prefer a real broker in prod)
+      # - "1883:1883/tcp"
+
+    # Most production deployments either use the bundled healthcheck (already
+    # defined in the image) or replace it with an external probe. Override
+    # here if you want different timings.
+    # healthcheck:
+    #   test: ["CMD", "/usr/bin/tw", "ping"]
+    #   interval: 30s
+    #   timeout: 5s
+    #   retries: 3
+
+    # Uncomment to enable when the `measure-history` runlet is in use.
+    # depends_on:
+    #   timescaledb:
+    #     condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # Optional: TimescaleDB for the measure-history runlet.
+  # See docs/reference/measure-history.md.
+  # ---------------------------------------------------------------------------
+  # timescaledb:
+  #   image: timescale/timescaledb:latest-pg16
+  #   container_name: tinkwell-timescaledb
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: tinkwell
+  #     POSTGRES_USER: tinkwell
+  #     POSTGRES_PASSWORD: change-me
+  #   volumes:
+  #     - tinkwell-timescale:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U tinkwell -d tinkwell"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 6
+
+  # ---------------------------------------------------------------------------
+  # Optional: Aspire Dashboard as a local OTLP receiver + UI.
+  # Set Telemetry__OtlpEndpoint above to enable export from Tinkwell.
+  # ---------------------------------------------------------------------------
+  # aspire-dashboard:
+  #   image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
+  #   container_name: tinkwell-aspire-dashboard
+  #   restart: unless-stopped
+  #   environment:
+  #     DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+  #   ports:
+  #     - "18888:18888"   # web UI
+  #     - "18889:18889"   # OTLP gRPC ingest
+
+volumes:
+  tinkwell-state:
+  # tinkwell-timescale:

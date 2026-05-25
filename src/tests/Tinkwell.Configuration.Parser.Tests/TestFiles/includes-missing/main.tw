@@ -1,0 +1,6 @@
+// leading comment line
+include "does-not-exist.tw"
+
+config test {
+  x = 1
+}

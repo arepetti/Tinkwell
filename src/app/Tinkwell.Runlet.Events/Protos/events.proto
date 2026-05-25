@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package tinkwell.events.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Tinkwell.Runlet.Events.Grpc.V1";
+
+service EventBus {
+  rpc Publish(PublishEventRequest) returns (PublishEventResponse);
+  rpc Subscribe(SubscribeRequest) returns (stream EventMessage);
+}
+
+// ---------------------------------------------------------------------------
+// Well-known verbs. Maps 1:1 to Tinkwell.Events.EventVerb.
+// ---------------------------------------------------------------------------
+
+enum EventVerb {
+  EVENT_VERB_CUSTOM = 0;
+  EVENT_VERB_FIRED = 1;
+  EVENT_VERB_CHANGED = 2;
+  EVENT_VERB_CREATED = 3;
+  EVENT_VERB_DELETED = 4;
+  EVENT_VERB_EXPIRED = 5;
+  EVENT_VERB_STARTED = 6;
+  EVENT_VERB_STOPPED = 7;
+  EVENT_VERB_FAILED = 8;
+}
+
+// ---------------------------------------------------------------------------
+// Publish — fire-and-forget unary RPC.
+// ---------------------------------------------------------------------------
+
+message PublishEventRequest {
+  string source = 1;
+  EventVerb verb = 2;
+  string custom_verb = 3;
+  string name = 4;
+  string object = 5;
+  google.protobuf.Timestamp timestamp = 6;
+  map<string, string> payload = 7;
+  string correlation_id = 8;
+}
+
+message PublishEventResponse {}
+
+// ---------------------------------------------------------------------------
+// Subscribe — server-streaming with optional SVO filters.
+// ---------------------------------------------------------------------------
+
+message SubscribeRequest {
+  string source = 1;
+  repeated EventVerb verbs = 2;
+  string name_prefix = 3;
+}
+
+message EventMessage {
+  string source = 1;
+  EventVerb verb = 2;
+  string custom_verb = 3;
+  string name = 4;
+  string object = 5;
+  google.protobuf.Timestamp timestamp = 6;
+  map<string, string> payload = 7;
+  string correlation_id = 8;
+}

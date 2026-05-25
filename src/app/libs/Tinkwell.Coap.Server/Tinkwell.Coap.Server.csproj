@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>Standalone</TinkwellPackageGroup>
+    <Description>Standalone CoAP server with resource routing, content-format negotiation, and RFC 7641 Observe support.</Description>
+    <PackageTags>$(PackageTags);coap constrained-application-protocol</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Coap\Tinkwell.Coap.csproj" />
+    <ProjectReference Include="..\Tinkwell.Core\Tinkwell.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Coap.Server.Tests" />
+  </ItemGroup>
+
+</Project>

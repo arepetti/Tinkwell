@@ -1,0 +1,6 @@
+include "child.tw"
+include "child.tw"
+
+config parent {
+  x = 1
+}

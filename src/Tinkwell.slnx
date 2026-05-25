@@ -1,0 +1,186 @@
+<Solution>
+  <Folder Name="/docs/">
+    <File Path="../docs/README.md" />
+    <File Path="../AGENTS.md" />
+  </Folder>
+  <Folder Name="/docs/getting-started/">
+    <File Path="../docs/getting-started/installation.md" />
+    <File Path="../docs/getting-started/quick-start.md" />
+    <File Path="../docs/getting-started/tutorial.md" />
+  </Folder>
+  <Folder Name="/docs/user-guide/">
+    <File Path="../docs/user-guide/README.md" />
+    <File Path="../docs/user-guide/configuration.md" />
+    <File Path="../docs/user-guide/cli.md" />
+    <File Path="../docs/user-guide/expressions.md" />
+    <File Path="../docs/user-guide/how-to.md" />
+    <File Path="../docs/user-guide/services.md" />
+    <File Path="../docs/user-guide/units.md" />
+    <File Path="../docs/user-guide/integrations.md" />
+    <File Path="../docs/user-guide/troubleshooting.md" />
+  </Folder>
+  <Folder Name="/docs/reference/">
+    <File Path="../docs/reference/README.md" />
+    <File Path="../docs/reference/mqtt.md" />
+    <File Path="../docs/reference/coap.md" />
+    <File Path="../docs/reference/lwm2m.md" />
+    <File Path="../docs/reference/modbus.md" />
+    <File Path="../docs/reference/i2c.md" />
+    <File Path="../docs/reference/text-query.md" />
+    <File Path="../docs/reference/protobuf-gateway.md" />
+    <File Path="../docs/reference/measures.md" />
+    <File Path="../docs/reference/signals.md" />
+    <File Path="../docs/reference/events.md" />
+    <File Path="../docs/reference/plugins.md" />
+    <File Path="../docs/reference/packages.md" />
+    <File Path="../docs/reference/https.md" />
+    <File Path="../docs/reference/telemetry.md" />
+    <File Path="../docs/reference/glossary.md" />
+    <File Path="../docs/reference/measure-history.md" />
+    <File Path="../docs/reference/init-packs.md" />
+  </Folder>
+  <Folder Name="/docs/architecture/">
+    <File Path="../docs/architecture/README.md" />
+    <File Path="../docs/architecture/coordinator-runner.md" />
+    <File Path="../docs/architecture/runner-lifecycle.md" />
+    <File Path="../docs/architecture/configuration-internals.md" />
+    <File Path="../docs/architecture/services-internals.md" />
+    <File Path="../docs/architecture/runlets.md" />
+    <File Path="../docs/architecture/libraries.md" />
+  </Folder>
+  <Folder Name="/docs/contributing/">
+    <File Path="../docs/contributing/README.md" />
+    <File Path="../docs/contributing/conventions.md" />
+    <File Path="../docs/contributing/pipelines.md" />
+    <File Path="../docs/contributing/roadmap.md" />
+    <File Path="../docs/contributing/project-readme-template.md" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/libs/standalone/">
+    <Project Path="app/libs/Tinkwell.Coap.Server/Tinkwell.Coap.Server.csproj" />
+    <Project Path="app/libs/Tinkwell.Coap/Tinkwell.Coap.csproj" />
+    <Project Path="app/libs/Tinkwell.Encoding/Tinkwell.Encoding.csproj" />
+    <Project Path="app/libs/Tinkwell.Lwm2m.Server/Tinkwell.Lwm2m.Server.csproj" />
+    <Project Path="app/libs/Tinkwell.Lwm2m/Tinkwell.Lwm2m.csproj" />
+    <Project Path="app/libs/Tinkwell.Package/Tinkwell.Package.csproj" />
+    <Project Path="app/libs/Tinkwell.Modbus/Tinkwell.Modbus.csproj" />
+  </Folder>
+  <Folder Name="/src/libs/" />
+  <Folder Name="/src/libs/sdk/">
+    <Project Path="app/libs/Tinkwell.Actions.Abstractions/Tinkwell.Actions.Abstractions.csproj" />
+    <Project Path="app/libs/Tinkwell.Configuration.Abstractions/Tinkwell.Configuration.Abstractions.csproj" />
+    <Project Path="app/libs/Tinkwell.Configuration.Parser/Tinkwell.Configuration.Parser.csproj" />
+    <Project Path="app/libs/Tinkwell.Core/Tinkwell.Core.csproj" />
+    <Project Path="app/libs/Tinkwell.Expressions/Tinkwell.Expressions.csproj" />
+    <Project Path="app/libs/Tinkwell.Events.Abstractions/Tinkwell.Events.Abstractions.csproj" />
+    <Project Path="app/libs/Tinkwell.Integration.Abstractions/Tinkwell.Integration.Abstractions.csproj" />
+    <Project Path="app/libs/Tinkwell.Runner.Abstractions/Tinkwell.Runner.Abstractions.csproj" />
+    <Project Path="app/libs/Tinkwell.Telemetry/Tinkwell.Telemetry.csproj" />
+    <Project Path="app/libs/Tinkwell.Runlet.Mqtt.Abstractions/Tinkwell.Runlet.Mqtt.Abstractions.csproj" />
+    <Project Path="app/libs/Tinkwell.Runlet.Coap.Abstractions/Tinkwell.Runlet.Coap.Abstractions.csproj" />
+    <Project Path="app/libs/Tinkwell.Runlet.ProtobufGateway.Abstractions/Tinkwell.Runlet.ProtobufGateway.Abstractions.csproj" />
+    <Project Path="app/libs/Tinkwell.Cli.Sdk/Tinkwell.Cli.Sdk.csproj" />
+  </Folder>
+  <Folder Name="/src/cli/">
+    <Project Path="app/Tinkwell.Cli/Tinkwell.Cli.csproj" />
+    <Project Path="app/Tinkwell.Cli.Commands.Mqtt/Tinkwell.Cli.Commands.Mqtt.csproj" />
+    <Project Path="app/Tinkwell.Cli.Commands.Coap/Tinkwell.Cli.Commands.Coap.csproj" />
+    <Project Path="app/Tinkwell.Cli.Commands.Identity/Tinkwell.Cli.Commands.Identity.csproj" />
+    <Project Path="app/Tinkwell.Cli.Commands.Lwm2m/Tinkwell.Cli.Commands.Lwm2m.csproj" />
+    <Project Path="app/Tinkwell.Cli.Commands.Package/Tinkwell.Cli.Commands.Package.csproj" />
+    <Project Path="app/Tinkwell.Cli.Commands.Plugins/Tinkwell.Cli.Commands.Plugins.csproj" />
+    <Project Path="app/Tinkwell.Cli.Commands.Modbus/Tinkwell.Cli.Commands.Modbus.csproj" />
+    <Project Path="app/Tinkwell.Cli.Commands.Init/Tinkwell.Cli.Commands.Init.csproj" />
+  </Folder>
+  <Folder Name="/src/coordinator/">
+    <Project Path="app/Tinkwell.Coordinator/Tinkwell.Coordinator.csproj" />
+  </Folder>
+  <Folder Name="/src/integrations/">
+    <Project Path="app/Tinkwell.Integrations/Tinkwell.Integrations.csproj" />
+    <Project Path="app/Tinkwell.Runlet.Coap/Tinkwell.Runlet.Coap.csproj" />
+    <Project Path="app/Tinkwell.Runlet.Lwm2m/Tinkwell.Runlet.Lwm2m.csproj" />
+    <Project Path="app/Tinkwell.Runlet.Mqtt/Tinkwell.Runlet.Mqtt.csproj" />
+    <Project Path="app/Tinkwell.Runlet.ProtobufGateway/Tinkwell.Runlet.ProtobufGateway.csproj" />
+    <Project Path="app/Tinkwell.Runlet.Modbus/Tinkwell.Runlet.Modbus.csproj" />
+    <Project Path="app/Tinkwell.Runlet.TextQuery/Tinkwell.Runlet.TextQuery.csproj" />
+    <Project Path="app/Tinkwell.Runlet.I2c/Tinkwell.Runlet.I2c.csproj" />
+  </Folder>
+  <Folder Name="/src/measures/">
+    <Project Path="app/Tinkwell.Measures/Tinkwell.Measures.csproj" />
+    <Project Path="app/Tinkwell.Runlet.MeasureEvents/Tinkwell.Runlet.MeasureEvents.csproj" />
+    <Project Path="app/Tinkwell.Runlet.Measures/Tinkwell.Runlet.Measures.csproj" />
+    <Project Path="app/Tinkwell.Runlet.Signals/Tinkwell.Runlet.Signals.csproj" />
+    <Project Path="app/libs/Tinkwell.Measures.History/Tinkwell.Measures.History.csproj" />
+    <Project Path="app/Tinkwell.Measures.History.TimescaleDb/Tinkwell.Measures.History.TimescaleDb.csproj" />
+    <Project Path="app/Tinkwell.Runlet.MeasureHistory/Tinkwell.Runlet.MeasureHistory.csproj" />
+  </Folder>
+  <Folder Name="/src/runlets/">
+    <Project Path="app/Tinkwell.Runlet.MqttServer/Tinkwell.Runlet.MqttServer.csproj" />
+    <Project Path="app/Tinkwell.Runlet.Wallclock/Tinkwell.Runlet.Wallclock.csproj" />
+  </Folder>
+  <Folder Name="/src/actions/">
+    <Project Path="app/Tinkwell.Actions/Tinkwell.Actions.csproj" />
+    <Project Path="app/Tinkwell.Configuration.Actions/Tinkwell.Configuration.Actions.csproj" />
+    <Project Path="app/Tinkwell.Runlet.Actions/Tinkwell.Runlet.Actions.csproj" />
+  </Folder>
+  <Folder Name="/src/events/">
+    <Project Path="app/Tinkwell.Events/Tinkwell.Events.csproj" />
+    <Project Path="app/Tinkwell.Runlet.EventPersistence/Tinkwell.Runlet.EventPersistence.csproj" />
+    <Project Path="app/Tinkwell.Runlet.Events/Tinkwell.Runlet.Events.csproj" />
+  </Folder>
+  <Folder Name="/src/hosts/">
+    <Project Path="app/Tinkwell.Runner.Grpc/Tinkwell.Runner.Grpc.csproj" />
+    <Project Path="app/Tinkwell.Runner.Headless/Tinkwell.Runner.Headless.csproj" />
+    <Project Path="app/Tinkwell.Runner.Hosting/Tinkwell.Runner.Hosting.csproj" />
+  </Folder>
+  <Folder Name="/src/store/">
+    <Project Path="app/Tinkwell.Runlet.Store/Tinkwell.Runlet.Store.csproj" />
+    <Project Path="app/Tinkwell.Runlet.Store.Replication/Tinkwell.Runlet.Store.Replication.csproj" />
+  </Folder>
+  <Folder Name="/src/health/">
+    <Project Path="app/Tinkwell.Health/Tinkwell.Health.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Tinkwell.Coap.Server.Tests/Tinkwell.Coap.Server.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Coap.Tests/Tinkwell.Coap.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Configuration.Actions.Tests/Tinkwell.Configuration.Actions.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Configuration.Parser.Tests/Tinkwell.Configuration.Parser.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Coordinator.Tests/Tinkwell.Coordinator.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Core.Tests/Tinkwell.Core.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Encoding.Tests/Tinkwell.Encoding.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Expressions.Tests/Tinkwell.Expressions.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Health.Tests/Tinkwell.Health.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Integration.Tests/Tinkwell.Integration.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Integrations.Tests/Tinkwell.Integrations.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Lwm2m.Server.Tests/Tinkwell.Lwm2m.Server.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Lwm2m.Tests/Tinkwell.Lwm2m.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Measures.Registry.Tests/Tinkwell.Measures.Registry.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Measures.Tests/Tinkwell.Measures.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Modbus.Tests/Tinkwell.Modbus.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Package.Tests/Tinkwell.Package.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runner.Abstractions.Tests/Tinkwell.Runner.Abstractions.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runner.Grpc.Tests/Tinkwell.Runner.Grpc.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runner.Hosting.Tests/Tinkwell.Runner.Hosting.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.Actions.Tests/Tinkwell.Runlet.Actions.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.Coap.Tests/Tinkwell.Runlet.Coap.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.Events.Tests/Tinkwell.Runlet.Events.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.EventPersistence.Tests/Tinkwell.Runlet.EventPersistence.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.I2c.Tests/Tinkwell.Runlet.I2c.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.Lwm2m.Tests/Tinkwell.Runlet.Lwm2m.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.MeasureEvents.Tests/Tinkwell.Runlet.MeasureEvents.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.Measures.Tests/Tinkwell.Runlet.Measures.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.Modbus.Tests/Tinkwell.Runlet.Modbus.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.Mqtt.Tests/Tinkwell.Runlet.Mqtt.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.MqttServer.Tests/Tinkwell.Runlet.MqttServer.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.ProtobufGateway.Tests/Tinkwell.Runlet.ProtobufGateway.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.Signals.Tests/Tinkwell.Runlet.Signals.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.Store.Tests/Tinkwell.Runlet.Store.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.Test/Tinkwell.Runlet.Test.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.TextQuery.Tests/Tinkwell.Runlet.TextQuery.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Telemetry.Tests/Tinkwell.Telemetry.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Measures.History.Tests/Tinkwell.Measures.History.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Measures.History.TimescaleDb.Tests/Tinkwell.Measures.History.TimescaleDb.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Runlet.MeasureHistory.Tests/Tinkwell.Runlet.MeasureHistory.Tests.csproj" />
+    <Project Path="tests/Tinkwell.Cli.Commands.Init.Tests/Tinkwell.Cli.Commands.Init.Tests.csproj" />
+  </Folder>
+</Solution>

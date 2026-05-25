@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>SDK</TinkwellPackageGroup>
+    <Description>Abstractions for Tinkwell integration bindings: IIntegrationBinding, binding parameters, and integration context.</Description>
+    <PackageTags>$(PackageTags);sdk abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Coap\Tinkwell.Coap.csproj" />
+    <ProjectReference Include="..\Tinkwell.Expressions\Tinkwell.Expressions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Configuration.Abstractions\Tinkwell.Configuration.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

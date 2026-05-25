@@ -1,0 +1,27 @@
+mqtt sensors {
+    broker = "localhost"
+    subscribe "sensor/+" {
+        on message {
+            bind event from "Tinkwell.Integrations" {
+                source = "mqtt"
+                verb = changed
+                name = (segment(topic, -1))
+                object = (payload)
+            }
+        }
+    }
+}
+
+mqtt sensors {
+    broker = "other-host"
+    subscribe "data/+" {
+        on message {
+            bind event from "Tinkwell.Integrations" {
+                source = "mqtt"
+                verb = changed
+                name = (segment(topic, -1))
+                object = (payload)
+            }
+        }
+    }
+}

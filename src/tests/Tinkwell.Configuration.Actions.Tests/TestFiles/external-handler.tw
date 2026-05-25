@@ -1,0 +1,8 @@
+action record-voltage when voltage {
+    verb = changed
+    do update-entry from "Tinkwell.Actions" {
+        bucket = history
+        key = (format("voltage.{CorrelationId}"))
+        value = (Object)
+    }
+}

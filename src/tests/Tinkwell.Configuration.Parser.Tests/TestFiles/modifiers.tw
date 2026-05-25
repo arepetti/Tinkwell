@@ -1,0 +1,7 @@
+set env = dev
+
+firmlet my-service from "path/to/dll" if (env == 'dev') {
+  retries = 3
+}
+
+trigger alert when (value > 10);

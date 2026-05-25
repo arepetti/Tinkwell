@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="MQTTnet" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Actions.Abstractions\Tinkwell.Actions.Abstractions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Runner.Abstractions\Tinkwell.Runner.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\Tinkwell.Runlet.Store\Protos\state_store.proto"
+              GrpcServices="Client" Link="Protos\state_store.proto" />
+    <Protobuf Include="..\Tinkwell.Runlet.Measures\Protos\measures.proto"
+              GrpcServices="Client" Link="Protos\measures.proto" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,341 @@
+questions tinkwell-ensemble {
+
+    # ── Topology ─────────────────────────────────────────────────────
+
+    question topology {
+        type = choice
+        prompt = "How should runners be organized?"
+        default = balanced
+
+        option reliable {
+            label = "Reliability: each core service in its own runner"
+        }
+
+        option balanced {
+            label = "Balanced: gRPC services grouped, headless tasks separate"
+        }
+
+        option compact {
+            label = "Compact: everything in as few runners as possible"
+        }
+    }
+
+    # ── Core services ────────────────────────────────────────────────
+
+    question store_storage {
+        type = choice
+        prompt = "State store backend?"
+        default = memory
+
+        option memory {
+            label = "In-memory (fast, non-persistent)"
+        }
+
+        option sqlite {
+            label = "SQLite (persistent across restarts)"
+        }
+    }
+
+    question events {
+        type = confirm
+        prompt = "Include the event bus?"
+        default = true
+    }
+
+    question event_persistence when (events) {
+        type = confirm
+        prompt = "Persist events to SQLite?"
+        default = false
+    }
+
+    question event_persistence_path when (event_persistence) {
+        type = text
+        prompt = "Event database file path"
+        default = "events.db"
+    }
+
+    question measures {
+        type = confirm
+        prompt = "Include the measures system?"
+        default = true
+    }
+
+    # ── Signals & actions ────────────────────────────────────────────
+
+    question signals when (measures) {
+        type = confirm
+        prompt = "Include signals (condition-based alerting on measures)?"
+        default = true
+    }
+
+    question actions when (events) {
+        type = confirm
+        prompt = "Include actions (event-driven handlers)?"
+        default = false
+    }
+
+    # ── Measure extensions ───────────────────────────────────────────
+
+    question measure_events when (measures && events) {
+        type = confirm
+        prompt = "Bridge every measure change to the event bus?"
+        default = false
+    }
+
+    question measure_history when (measures) {
+        type = confirm
+        prompt = "Include measure history (time-series persistence)?"
+        default = false
+    }
+
+    question measure_history_backend when (measure_history) {
+        type = text
+        prompt = "History backend assembly name"
+        default = "Tinkwell.Measures.History.TimescaleDb"
+    }
+
+    question measure_history_connection when (measure_history) {
+        type = text
+        prompt = "Connection string for the history backend"
+        default = "Host=localhost;Database=tinkwell"
+    }
+
+    question wallclock when (measures && !statemachines) {
+        type = confirm
+        prompt = "Include wallclock (periodic timestamp/time-of-day measures)?"
+        default = false
+    }
+
+    # ── Protocols: CoAP ──────────────────────────────────────────────
+
+    question coap {
+        type = confirm
+        prompt = "Include a CoAP server?"
+        default = false
+    }
+
+    question coap_port when (coap) {
+        type = integer
+        prompt = "CoAP UDP port"
+        default = 5683
+    }
+
+    repeat coap_resources when (coap) {
+        item-name = resource
+        item-label = "CoAP resource"
+
+        count resources {
+            prompt = "How many CoAP resources?"
+            default = 1
+            minimum = 1
+        }
+
+        question path {
+            type = text
+            prompt = "Resource {index} path pattern"
+            default = "/sensor/+"
+        }
+
+        question binding {
+            type = choice
+            prompt = "Primary binding for resource {index}"
+            default = measure
+
+            option measure {
+                label = "Read/write a measure"
+            }
+
+            option event {
+                label = "Publish an event"
+            }
+
+            option store {
+                label = "State store CRUD"
+            }
+        }
+    }
+
+    # ── Protocols: MQTT ──────────────────────────────────────────────
+
+    question mqtt {
+        type = confirm
+        prompt = "Include MQTT support?"
+        default = false
+    }
+
+    question mqtt_embedded_broker when (mqtt) {
+        type = confirm
+        prompt = "Include embedded MQTT broker for local development?"
+        default = false
+    }
+
+    question mqtt_broker when (mqtt) {
+        type = text
+        prompt = "MQTT broker hostname"
+        default = "localhost"
+    }
+
+    question mqtt_port when (mqtt) {
+        type = integer
+        prompt = "MQTT broker port"
+        default = 1883
+    }
+
+    question mqtt_topic when (mqtt) {
+        type = text
+        prompt = "Topic filter to subscribe"
+        default = "sensor/+"
+    }
+
+    question mqtt_binding when (mqtt) {
+        type = choice
+        prompt = "Default binding for MQTT messages"
+        default = event
+
+        option event {
+            label = "Publish as events"
+        }
+
+        option measure {
+            label = "Write as measure values"
+        }
+    }
+
+    # ── Protocols: Modbus ────────────────────────────────────────────
+
+    question modbus {
+        type = confirm
+        prompt = "Include Modbus polling?"
+        default = false
+    }
+
+    question modbus_transport when (modbus) {
+        type = choice
+        prompt = "Modbus transport"
+        default = tcp
+
+        option tcp {
+            label = "TCP/IP"
+        }
+
+        option rtu {
+            label = "RTU (serial / RS-485)"
+        }
+    }
+
+    question modbus_host when (modbus && modbus_transport == 'tcp') {
+        type = text
+        prompt = "Modbus TCP host"
+        default = "192.168.1.100"
+    }
+
+    question modbus_tcp_port when (modbus && modbus_transport == 'tcp') {
+        type = integer
+        prompt = "Modbus TCP port"
+        default = 502
+    }
+
+    question modbus_serial_port when (modbus && modbus_transport == 'rtu') {
+        type = text
+        prompt = "Serial port"
+        default = "/dev/ttyUSB0"
+    }
+
+    question modbus_baudrate when (modbus && modbus_transport == 'rtu') {
+        type = integer
+        prompt = "Baud rate"
+        default = 9600
+    }
+
+    # ── Protocols: TextQuery ─────────────────────────────────────────
+
+    question text_query {
+        type = confirm
+        prompt = "Include TextQuery (generic text-based data acquisition)?"
+        default = false
+    }
+
+    question text_query_transport when (text_query) {
+        type = choice
+        prompt = "TextQuery transport"
+        default = tcp
+
+        option tcp {
+            label = "TCP (SCPI instruments, NMEA)"
+        }
+
+        option serial {
+            label = "Serial port"
+        }
+
+        option file {
+            label = "File (sysfs, /proc)"
+        }
+
+        option command {
+            label = "Shell command"
+        }
+    }
+
+    # ── Protocols: I2C ───────────────────────────────────────────────
+
+    question i2c {
+        type = confirm
+        prompt = "Include I2C polling (Linux only)?"
+        default = false
+    }
+
+    # ── Protocols: Protobuf Gateway ──────────────────────────────────
+
+    question protobuf_gateway {
+        type = confirm
+        prompt = "Include protobuf gateway (CoAP-to-gRPC tunneling)?"
+        default = false
+    }
+
+    question protobuf_gateway_port when (protobuf_gateway) {
+        type = integer
+        prompt = "Protobuf gateway CoAP port"
+        default = 5684
+    }
+
+    # ── State machines ───────────────────────────────────────────────
+
+    question statemachines when (measures) {
+        type = confirm
+        prompt = "Include state machines?"
+        default = false
+    }
+
+    # ── Data routing (cross-protocol glue) ───────────────────────────
+
+    question route_measures_to_coap when (coap && measures && (modbus || text_query || i2c || mqtt)) {
+        type = confirm
+        prompt = "Add a generic CoAP resource to read any measure by name (GET /measures/+)?"
+        default = true
+    }
+
+    question route_measures_to_mqtt when (mqtt && measures && (modbus || text_query || i2c || coap)) {
+        type = confirm
+        prompt = "Forward measure changes to MQTT?"
+        default = false
+    }
+
+    question route_measures_mqtt_topic when (route_measures_to_mqtt) {
+        type = text
+        prompt = "MQTT topic pattern for measure updates"
+        default = "tinkwell/measures/{name}"
+    }
+
+    question route_events_to_mqtt when (mqtt && events && (coap || signals || statemachines)) {
+        type = confirm
+        prompt = "Forward events to MQTT?"
+        default = false
+    }
+
+    question route_events_mqtt_topic when (route_events_to_mqtt) {
+        type = text
+        prompt = "MQTT topic pattern for events"
+        default = "tinkwell/events/{name}"
+    }
+}

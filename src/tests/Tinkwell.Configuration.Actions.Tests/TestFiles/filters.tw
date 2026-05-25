@@ -1,0 +1,7 @@
+action only-fires when voltage {
+    source = measures
+    verb = fired
+    do log {
+        message = (format("Signal {Name} fired from {Source}"))
+    }
+}

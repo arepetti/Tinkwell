@@ -1,0 +1,123 @@
+name: Release platform packages
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package (${{ matrix.rid }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            artifact: zip
+          - rid: win-arm64
+            artifact: zip
+          - rid: linux-x64
+            artifact: deb
+            deb_arch: amd64
+          - rid: linux-arm64
+            artifact: deb
+            deb_arch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Parse version from tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish self-contained
+        working-directory: src
+        run: >-
+          dotnet publish Tinkwell.slnx
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained
+          -p:PublishSingleFile=false
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:VersionPrefix=${{ steps.version.outputs.version }}
+
+      - name: Create ZIP (Windows)
+        if: matrix.artifact == 'zip'
+        working-directory: artifacts/Release
+        run: |
+          ARCHIVE="tinkwell-${{ steps.version.outputs.version }}-${{ matrix.rid }}.zip"
+          zip -r "../../${ARCHIVE}" .
+          echo "ASSET_PATH=${ARCHIVE}" >> "$GITHUB_ENV"
+          echo "ASSET_NAME=${ARCHIVE}" >> "$GITHUB_ENV"
+
+      - name: Create tarball (Linux)
+        if: matrix.artifact == 'deb'
+        working-directory: artifacts/Release
+        run: |
+          TARBALL="tinkwell-${{ steps.version.outputs.version }}-${{ matrix.rid }}.tar.gz"
+          tar czf "../../${TARBALL}" .
+          echo "TARBALL_PATH=${TARBALL}" >> "$GITHUB_ENV"
+          echo "TARBALL_NAME=${TARBALL}" >> "$GITHUB_ENV"
+
+      - name: Install pandoc (Linux)
+        if: matrix.artifact == 'deb'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pandoc
+
+      - name: Build .deb package (Linux)
+        if: matrix.artifact == 'deb'
+        run: |
+          chmod +x packaging/deb/build-deb.sh
+          packaging/deb/build-deb.sh artifacts/Release ${{ steps.version.outputs.version }} ${{ matrix.deb_arch }}
+          DEB="tinkwell_${{ steps.version.outputs.version }}_${{ matrix.deb_arch }}.deb"
+          echo "DEB_PATH=${DEB}" >> "$GITHUB_ENV"
+          echo "DEB_NAME=${DEB}" >> "$GITHUB_ENV"
+
+      - name: Upload ZIP to release
+        if: matrix.artifact == 'zip'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release upload "${{ github.event.release.tag_name }}"
+          "${{ env.ASSET_PATH }}#${{ env.ASSET_NAME }}"
+          --clobber
+
+      - name: Upload tarball to release
+        if: matrix.artifact == 'deb'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release upload "${{ github.event.release.tag_name }}"
+          "${{ env.TARBALL_PATH }}#${{ env.TARBALL_NAME }}"
+          --clobber
+
+      - name: Upload .deb to release
+        if: matrix.artifact == 'deb'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release upload "${{ github.event.release.tag_name }}"
+          "${{ env.DEB_PATH }}#${{ env.DEB_NAME }}"
+          --clobber
+
+      - name: Compute SHA256 (Windows ZIP)
+        if: matrix.artifact == 'zip'
+        run: |
+          SHA=$(sha256sum "${{ env.ASSET_PATH }}" | awk '{print $1}')
+          echo "### ${{ matrix.rid }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**File:** \`${{ env.ASSET_NAME }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**SHA256:** \`${SHA}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Update \`packaging/winget/AdrianoRepetti.Tinkwell.yaml\` with this hash for the winget-pkgs PR." >> "$GITHUB_STEP_SUMMARY"

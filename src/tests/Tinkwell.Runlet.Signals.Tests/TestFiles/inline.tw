@@ -1,0 +1,7 @@
+measure temperature {
+    quantity = Temperature
+    unit = DegreeCelsius
+
+    signal overheat when (value > 80);
+    signal critical when (value > 100) for 5;
+}

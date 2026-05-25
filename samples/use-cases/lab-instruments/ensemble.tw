@@ -1,0 +1,155 @@
+# Lab instrument monitoring — benchtop DMM + power supply via SCPI over TCP
+
+# ─── Runners ───────────────────────────────────────────────────────────
+
+runner grpc-store from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+}
+
+runner grpc-events from "Tinkwell.Runner.Grpc.dll" {
+    runlet events from "Tinkwell.Runlet.Events.dll";
+    runlet event-persistence from "Tinkwell.Runlet.EventPersistence.dll" {
+        db-path = "events.db"
+    }
+}
+
+runner grpc-measures from "Tinkwell.Runner.Grpc.dll" {
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+    runlet signals  from "Tinkwell.Runlet.Signals.dll";
+}
+
+runner background from "Tinkwell.Runner.Headless.dll" {
+    runlet actions    from "Tinkwell.Runlet.Actions.dll";
+    runlet text-query from "Tinkwell.Runlet.TextQuery.dll";
+}
+
+# ─── Measures ──────────────────────────────────────────────────────────
+
+measure board-voltage {
+    quantity = Voltage
+    unit = Volt
+    description = "DC voltage measured by Keysight 34461A"
+}
+
+measure board-current-mA {
+    quantity = ElectricCurrent
+    unit = Milliampere
+    description = "DC current measured by Keysight 34461A"
+}
+
+measure psu-voltage {
+    quantity = Voltage
+    unit = Volt
+    description = "Power supply output voltage"
+}
+
+measure psu-current-mA {
+    quantity = ElectricCurrent
+    unit = Milliampere
+    description = "Power supply output current"
+}
+
+measure cpu-temp {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "Host CPU temperature (Linux sysfs)"
+}
+
+# ─── Signals ───────────────────────────────────────────────────────────
+
+signal voltage-out-of-range when ([board-voltage] > 5.5 || [board-voltage] < 4.5) until ([board-voltage] >= 4.5 && [board-voltage] <= 5.5) {
+    severity = critical
+    description = "Board voltage outside 4.5–5.5 V tolerance"
+}
+
+signal high-current when ([board-current-mA] > 500) until ([board-current-mA] <= 500) {
+    severity = warning
+    description = "Board current exceeds 500 mA"
+}
+
+signal cpu-hot when ([cpu-temp] > 80) until ([cpu-temp] <= 75) {
+    severity = warning
+    description = "Host CPU above 80 °C"
+}
+
+# ─── Text Query — SCPI instruments ────────────────────────────────────
+
+# Keysight 34461A digital multimeter on LAN
+query dmm {
+    transport = tcp
+    host = "192.168.1.50"
+    port = 5025
+    poll-interval = "500 ms"
+    read-timeout = 3000
+
+    read dc-voltage {
+        send = "MEAS:VOLT:DC?"
+        pattern = "([+-]?[0-9.Ee+-]+)"
+        measure = board-voltage
+    }
+
+    read dc-current {
+        send = "MEAS:CURR:DC?"
+        pattern = "([+-]?[0-9.Ee+-]+)"
+        scale = 1000
+        measure = board-current-mA
+    }
+}
+
+# Rigol DP832 power supply on LAN
+query psu {
+    transport = tcp
+    host = "192.168.1.51"
+    port = 5555
+    poll-interval = "1 second"
+
+    read voltage {
+        send = "MEAS:VOLT? CH1"
+        pattern = "([+-]?[0-9.Ee+-]+)"
+        measure = psu-voltage
+    }
+
+    read current {
+        send = "MEAS:CURR? CH1"
+        pattern = "([+-]?[0-9.Ee+-]+)"
+        scale = 1000
+        measure = psu-current-mA
+    }
+}
+
+# Host CPU temperature from Linux sysfs (works on any Linux)
+query host-sensors {
+    transport = file
+    path = "/sys/class/thermal/thermal_zone0/temp"
+    poll-interval = "5 seconds"
+
+    read temperature {
+        pattern = "(\\d+)"
+        scale = 0.001
+        measure = cpu-temp
+    }
+}
+
+# ─── Actions ───────────────────────────────────────────────────────────
+
+action log-signals {
+    source = signals
+    verb = fired
+
+    do log {
+        message = (format("[ALERT] {Name}: {description} (value={Object})"))
+    }
+}
+
+action webhook-alert {
+    source = signals
+    verb = fired
+
+    do http-post {
+        url = "https://hooks.example.com/lab-alerts"
+        body = (make_json("signal", Name, "severity", severity, "value", Object, "timestamp", Timestamp))
+        content-type = "application/json"
+    }
+}

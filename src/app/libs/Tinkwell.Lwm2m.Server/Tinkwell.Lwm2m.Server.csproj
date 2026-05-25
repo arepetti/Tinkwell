@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>Standalone</TinkwellPackageGroup>
+    <Description>Standalone LwM2M server with client registration, IPSO resource handlers, and automatic payload decoding (TLV, SenML, text).</Description>
+    <PackageTags>$(PackageTags);lwm2m lightweight-m2m oma</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Core\Tinkwell.Core.csproj" />
+    <ProjectReference Include="..\Tinkwell.Lwm2m\Tinkwell.Lwm2m.csproj" />
+    <ProjectReference Include="..\Tinkwell.Coap.Server\Tinkwell.Coap.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+  </ItemGroup>
+
+
+</Project>

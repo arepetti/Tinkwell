@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>ExcludeFromRelease</TinkwellPackageGroup>
+    <OutputType>Exe</OutputType>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>tinkwell-ci-package</ToolCommandName>
+    <RollForward>LatestMajor</RollForward>
+    <Description>CI tool for packaging Tinkwell plugins and extensions.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Package\Tinkwell.Package.csproj" />
+  </ItemGroup>
+
+</Project>

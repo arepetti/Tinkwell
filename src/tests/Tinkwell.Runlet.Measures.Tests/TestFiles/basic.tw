@@ -1,0 +1,11 @@
+measure temperature {
+    quantity = "Temperature"
+    unit = "DegreeCelsius"
+    minimum = -40
+    maximum = 85
+    precision = 2
+    ttl = 300
+    description = "Room temperature sensor"
+    category = "environment"
+    tags = "indoor, hvac, sensor"
+}

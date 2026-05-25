@@ -1,0 +1,12 @@
+runner main from "Tinkwell.Runner.Grpc.dll" {
+    grpc-port = 5000
+
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+}
+
+runner background from "Tinkwell.Runner.Headless.dll" {
+    runlet actions from "Tinkwell.Runlet.Actions.dll";
+}

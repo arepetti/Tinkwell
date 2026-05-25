@@ -1,0 +1,12 @@
+Package: tinkwell
+Version: {VERSION}
+Architecture: {ARCH}
+Maintainer: Adriano Repetti <arepetti@users.noreply.github.com>
+Depends: libicu74 | libicu72 | libicu70
+Section: devel
+Priority: optional
+Homepage: https://github.com/arepetti/Tinkwell
+Description: Tinkwell automation platform
+ Declarative configuration-driven automation for hardware polling,
+ signal monitoring, MQTT/CoAP bridging, and more. Includes the tw
+ CLI, coordinator, and built-in runner hosts.

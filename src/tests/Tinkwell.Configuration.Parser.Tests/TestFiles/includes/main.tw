@@ -1,0 +1,6 @@
+include "defaults.tw"
+
+config app {
+  name = my-app
+  debug = false
+}

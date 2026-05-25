@@ -1,0 +1,4 @@
+signal overheat when (temp > 80) until (temp < 70) for "5 seconds" {
+    severity = critical
+    channel = ops
+}

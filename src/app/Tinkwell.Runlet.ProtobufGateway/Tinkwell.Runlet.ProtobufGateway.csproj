@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Runlet.ProtobufGateway.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.Net.Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Coap\Tinkwell.Coap.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Coap.Server\Tinkwell.Coap.Server.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Runlet.ProtobufGateway.Abstractions\Tinkwell.Runlet.ProtobufGateway.Abstractions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Runner.Abstractions\Tinkwell.Runner.Abstractions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Configuration.Parser\Tinkwell.Configuration.Parser.csproj" />
+    <ProjectReference Include="..\Tinkwell.Runner.Hosting\Tinkwell.Runner.Hosting.csproj" />
+    <ProjectReference Include="..\Tinkwell.Health\Tinkwell.Health.csproj" />
+  </ItemGroup>
+
+</Project>

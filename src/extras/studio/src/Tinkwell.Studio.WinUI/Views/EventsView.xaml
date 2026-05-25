@@ -1,0 +1,195 @@
+<UserControl
+    x:Class="Tinkwell.Studio.Views.EventsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:tv="using:WinUI.TableView"
+    xmlns:svc="using:Tinkwell.Studio.Services"
+    xmlns:vm="using:Tinkwell.Studio.ViewModels"
+    xmlns:controls="using:Tinkwell.Studio.Controls">
+
+    <Grid>
+        <muxc:SplitView IsPaneOpen="{Binding IsDrawerOpen}"
+                        PanePlacement="Right"
+                        DisplayMode="Inline"
+                        OpenPaneLength="460"
+                        CompactPaneLength="0">
+            <muxc:SplitView.Pane>
+                <Border Style="{StaticResource DrawerPanelStyle}">
+                    <Grid RowSpacing="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="Event details"
+                                       Style="{StaticResource SubtitleTextBlockStyle}" />
+                            <Button Grid.Column="1"
+                                    Style="{StaticResource IconButtonStyle}"
+                                    Command="{Binding CloseDrawerCommand}"
+                                    ToolTipService.ToolTip="Close">
+                                <FontIcon Glyph="&#xE711;" FontSize="14" />
+                            </Button>
+                        </Grid>
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl ItemsSource="{Binding SelectedEvent.Details}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="svc:Detail">
+                                        <Grid Margin="0,3" ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="160" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Label}"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Value}"
+                                                       Foreground="{Binding ., Converter={StaticResource DetailForegroundConverter}}"
+                                                       FontFamily="{Binding ., Converter={StaticResource DetailFontFamilyConverter}}"
+                                                       TextWrapping="Wrap" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </muxc:SplitView.Pane>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Padding="12"
+                        BorderThickness="0,0,0,1"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Command="{Binding OpenPublishDialogCommand}"
+                                ToolTipService.ToolTip="Publish event">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE724;" FontSize="14" />
+                                <TextBlock Text="Publish" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <!-- Two pause buttons switched by the paused flag: a
+                             ternary icon would need a separate converter. -->
+                        <Button Command="{Binding TogglePauseCommand}"
+                                ToolTipService.ToolTip="Pause"
+                                Visibility="{Binding IsPaused, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE769;" FontSize="14" />
+                                <TextBlock Text="Pause" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding TogglePauseCommand}"
+                                ToolTipService.ToolTip="Resume"
+                                Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE768;" FontSize="14" />
+                                <TextBlock Text="Resume" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding ClearCommand}" ToolTipService.ToolTip="Clear">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                <TextBlock Text="Clear" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBox Width="180" PlaceholderText="verb filter" Text="{Binding VerbFilter, Mode=TwoWay}" />
+                        <TextBox Width="200" PlaceholderText="source filter" Text="{Binding SourceFilter, Mode=TwoWay}" />
+                        <TextBlock VerticalAlignment="Center" Text="{Binding Events.Count}" />
+                        <TextBlock VerticalAlignment="Center" Text="event(s)"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <!-- Live indicator: dot + label visible while the watch
+                             stream is connected. The watch is always-on for
+                             the lifetime of the app, so when IsStreaming is
+                             false it means we lost the bus connection and
+                             are in retry/backoff. -->
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
+                                    Visibility="{Binding IsStreaming, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Ellipse Width="8" Height="8"
+                                     Fill="{ThemeResource SystemFillColorSuccessBrush}"
+                                     VerticalAlignment="Center" />
+                            <TextBlock Text="LIVE"
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
+                                    Visibility="{Binding IsStreaming, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                            <Ellipse Width="8" Height="8"
+                                     Fill="{ThemeResource SystemFillColorCautionBrush}"
+                                     VerticalAlignment="Center" />
+                            <TextBlock Text="RECONNECTING"
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <tv:TableView Grid.Row="1"
+                               ItemsSource="{Binding Events}"
+                               SelectedItem="{Binding SelectedEvent, Mode=TwoWay}"
+                               SelectionUnit="Row"
+                               AutoGenerateColumns="False"
+                               IsReadOnly="True"
+                               GridLinesVisibility="Horizontal">
+                    <tv:TableView.Columns>
+                        <!-- Default leading chip: events don't carry their own
+                             classification so every row gets the same neutral
+                             indicator. The chip is here for visual consistency
+                             with Runners / Measures / Services / Store. -->
+                        <tv:TableViewTemplateColumn Header="" Width="44">
+                            <tv:TableViewTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="vm:EventRow">
+                                    <controls:Indicator Margin="12,0"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center" />
+                                </DataTemplate>
+                            </tv:TableViewTemplateColumn.CellTemplate>
+                        </tv:TableViewTemplateColumn>
+                        <tv:TableViewTextColumn Header="Time" Binding="{Binding TimestampText}" Width="110" />
+                        <tv:TableViewTextColumn Header="Verb" Binding="{Binding Verb}" Width="120" />
+                        <tv:TableViewTextColumn Header="Source" Binding="{Binding Source}" Width="180" />
+                        <tv:TableViewTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                    </tv:TableView.Columns>
+                </tv:TableView>
+            </Grid>
+        </muxc:SplitView>
+
+        <Border Visibility="{Binding IsPublishDialogOpen, Converter={StaticResource BoolToVisibilityConverter}}"
+                Background="#99000000">
+            <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                    MinWidth="640" MaxWidth="720" Padding="24"
+                    Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{ThemeResource OverlayCornerRadius}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Publish event" Style="{StaticResource SubtitleTextBlockStyle}" />
+                    <TextBox PlaceholderText="name" Text="{Binding PublishName, Mode=TwoWay}" MinHeight="36" />
+                    <TextBox PlaceholderText="verb (created, updated, deleted, started, ...)" Text="{Binding PublishVerb, Mode=TwoWay}" MinHeight="36" />
+                    <TextBox PlaceholderText="source (optional)" Text="{Binding PublishSource, Mode=TwoWay}" MinHeight="36" />
+                    <TextBox PlaceholderText="object (optional)" Text="{Binding PublishObject, Mode=TwoWay}" MinHeight="36" />
+                    <TextBox PlaceholderText="payload k=v, comma-separated (optional)" Text="{Binding PublishPayload, Mode=TwoWay}" MinHeight="36" />
+                    <TextBlock Text="{Binding PublishError}"
+                               Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding PublishError, Converter={StaticResource StringToVisibilityConverter}}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <Button Content="Cancel" Command="{Binding ClosePublishDialogCommand}" />
+                        <Button Content="Publish" Style="{ThemeResource AccentButtonStyle}" Command="{Binding SubmitPublishCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

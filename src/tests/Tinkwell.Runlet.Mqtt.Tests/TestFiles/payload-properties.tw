@@ -1,0 +1,16 @@
+mqtt devices {
+    broker = "localhost"
+
+    subscribe "device/+/telemetry" {
+        on message {
+            bind event from "Tinkwell.Integrations" {
+                name = (segment(topic, 1))
+                object = (json_value(payload, 'value'))
+                with payload {
+                    unit = (json_value(payload, 'unit'))
+                    device = (segment(topic, 1))
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,4 @@
+firmlet main from "main.dll" {
+  firmlet helper from "helper.dll";
+  option = "value"
+}

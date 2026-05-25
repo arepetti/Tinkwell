@@ -1,0 +1,15 @@
+measure temp-indoor {
+    quantity = "Temperature"
+    unit = "DegreeCelsius"
+    category = "environment"
+}
+
+measure temp-outdoor {
+    quantity = "Temperature"
+    unit = "DegreeCelsius"
+    category = "environment"
+}
+
+measure uptime {
+    value = 0
+}

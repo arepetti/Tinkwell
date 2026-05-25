@@ -1,0 +1,5 @@
+runner main from "Tinkwell.Runner.Grpc.dll";
+
+measure temperature {
+    quantity = "Temperature"
+}

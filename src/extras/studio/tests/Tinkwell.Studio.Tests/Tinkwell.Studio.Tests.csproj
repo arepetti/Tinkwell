@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Tests target the UI-agnostic Core library so they run on any OS and
+         don't drag the WinUI toolchain into CI test runs. The WinUI project
+         is a thin view layer and doesn't add testable logic. -->
+    <ProjectReference Include="..\..\src\Tinkwell.Studio.Core\Tinkwell.Studio.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="GoldenSamples\**\*.jsonl" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

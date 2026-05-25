@@ -1,0 +1,17 @@
+lwm2m server-a {
+    port = 5683
+    object "3303" {
+        resource "5700" {
+            measure = "temp-a"
+        }
+    }
+}
+
+lwm2m server-b {
+    port = 5684
+    object "3304" {
+        resource "5700" {
+            measure = "hum-b"
+        }
+    }
+}

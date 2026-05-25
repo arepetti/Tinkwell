@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <!-- UI-framework-agnostic core: services, view models, DI hookup. -->
+    <Project Path="src/Tinkwell.Studio.Core/Tinkwell.Studio.Core.csproj" />
+    <!-- Windows-only view layer (WinUI 3 + Fluent/Mica). Produces the shipped
+         Tinkwell.Studio.exe. -->
+    <Project Path="src/Tinkwell.Studio.WinUI/Tinkwell.Studio.WinUI.csproj" />
+    <!-- Referenced by Tinkwell.Studio.Core for client-side parsing of the
+         ensemble file in the Ensemble category. Included so the slnx builds
+         standalone. -->
+    <Project Path="../../app/libs/Tinkwell.Configuration.Parser/Tinkwell.Configuration.Parser.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Tinkwell.Studio.Tests/Tinkwell.Studio.Tests.csproj" />
+  </Folder>
+</Solution>

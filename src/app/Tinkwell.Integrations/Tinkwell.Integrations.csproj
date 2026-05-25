@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Integrations.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MQTTnet" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Tinkwell.Configuration.Abstractions\Tinkwell.Configuration.Abstractions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Configuration.Parser\Tinkwell.Configuration.Parser.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Integration.Abstractions\Tinkwell.Integration.Abstractions.csproj" />
+    <ProjectReference Include="..\libs\Tinkwell.Runner.Abstractions\Tinkwell.Runner.Abstractions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Events\Tinkwell.Events.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Tinkwell.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\Tinkwell.Runlet.Store\Protos\state_store.proto"
+              GrpcServices="Client" Link="Protos\state_store.proto" />
+    <Protobuf Include="..\Tinkwell.Runlet.Measures\Protos\measures.proto"
+              GrpcServices="Client" Link="Protos\measures.proto" />
+    <Protobuf Include="..\Tinkwell.Runlet.Events\Protos\events.proto"
+              GrpcServices="Client" Link="Protos\events.proto" />
+  </ItemGroup>
+
+</Project>

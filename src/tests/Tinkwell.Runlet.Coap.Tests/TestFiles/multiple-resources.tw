@@ -1,0 +1,18 @@
+coap multi {
+    resource "/sensor/+" {
+        on get {
+            bind measure from "Tinkwell.Integrations" {
+                name = (segment(path, -1))
+            }
+        }
+    }
+
+    resource "/store/+" {
+        on get {
+            bind store from "Tinkwell.Integrations" {
+                bucket = "default"
+                key = (segment(path, -1))
+            }
+        }
+    }
+}

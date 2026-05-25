@@ -1,0 +1,4 @@
+measure bad-unit {
+    quantity = "Temperature"
+    unit = "NotARealUnit"
+}

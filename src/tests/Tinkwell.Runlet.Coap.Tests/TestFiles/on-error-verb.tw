@@ -1,0 +1,13 @@
+coap sensors {
+    port = 5683
+
+    resource "/sensor/+" {
+        on post {
+            on error resume next retry 2 delay 500;
+
+            bind measure from "Tinkwell.Integrations" {
+                name = (segment(path, -1))
+            }
+        }
+    }
+}

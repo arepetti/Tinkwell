@@ -1,0 +1,18 @@
+measure cpu-load {
+    quantity = "Ratio"
+    unit = "Percent"
+    value = (get_sensor('cpu.load'))
+    minimum = 0
+    maximum = 100
+    precision = 1
+}
+
+measure avg-temp {
+    quantity = "Temperature"
+    unit = "DegreeCelsius"
+    value = @"(temperature_indoor + temperature_outdoor) / 2"
+}
+
+measure label {
+    value = "fixed-label"
+}

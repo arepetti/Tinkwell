@@ -1,0 +1,195 @@
+# =============================================================================
+# Factory Floor Monitoring
+#
+# A comprehensive example showing measures, derived measures, signals,
+# actions, CoAP ingestion, MQTT integration, error handling with retry,
+# and protocol bridging — all in one configuration.
+# =============================================================================
+
+# --- Shared settings ---
+set mqtt_broker = "mqtt-broker.local"
+set plc_gateway = "plc-gateway.local"
+set coap_port = 5683
+
+# --- Infrastructure ---
+runner main from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+    runlet events from "Tinkwell.Runlet.Events.dll";
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+    runlet signals from "Tinkwell.Runlet.Signals.dll";
+    runlet measure-events from "Tinkwell.Runlet.MeasureEvents.dll";
+}
+
+runner background from "Tinkwell.Runner.Headless.dll" {
+    runlet actions from "Tinkwell.Runlet.Actions.dll";
+    runlet coap from "Tinkwell.Runlet.Coap.dll";
+    runlet mqtt from "Tinkwell.Runlet.Mqtt.dll";
+}
+
+# =============================================================================
+# Measures
+# =============================================================================
+
+measure voltage {
+    quantity = "Electric Potential"
+    unit = Volt
+    minimum = 0
+    maximum = 500
+    precision = 2
+    category = electrical
+}
+
+measure current {
+    quantity = "Electric Current"
+    unit = Ampere
+    minimum = 0
+    maximum = 100
+    precision = 2
+    category = electrical
+}
+
+# Derived: recalculated automatically when voltage or current changes.
+measure power {
+    quantity = Power
+    unit = Watt
+    value = (voltage * current)
+    precision = 1
+    category = electrical
+    on error resume next retry 2 delay 500;
+}
+
+measure ambient-temp {
+    quantity = Temperature
+    unit = DegreeCelsius
+    minimum = -40
+    maximum = 85
+    precision = 1
+    category = environment
+
+    # Inline signal: "value" refers to ambient-temp.
+    signal hot when (value > 50);
+}
+
+# =============================================================================
+# Signals
+# =============================================================================
+
+# Fires after power stays above 5 kW for 5 seconds.
+signal high-power when (power > 5000) for "5 seconds" {
+    severity = warning
+    channel = ops
+}
+
+# Fires when temperature exceeds 70°C, stays active until it drops below 60°C.
+signal overheat when ([ambient-temp] > 70) until ([ambient-temp] < 60) {
+    severity = critical
+}
+
+# =============================================================================
+# CoAP — sensor ingestion + CoAP-to-MQTT bridge
+# =============================================================================
+
+coap sensors {
+    port = $"{{coap_port}}"
+
+    resource "/measures/+" {
+        on get {
+            bind measure {
+                name = (segment(path, -1))
+            }
+        }
+        on post {
+            on error resume next retry 2 delay 500;
+
+            bind measure {
+                name = (segment(path, -1))
+            }
+            # Also publish to MQTT so cloud subscribers see it.
+            bind mqtt {
+                topic = (format("sensors/{0}", segment(path, -1)))
+                broker = $"{{mqtt_broker}}"
+                qos = 1
+            }
+        }
+    }
+}
+
+# =============================================================================
+# MQTT — telemetry ingestion + MQTT-to-CoAP bridge
+# =============================================================================
+
+mqtt factory {
+    broker = $"{{mqtt_broker}}"
+
+    subscribe "sensor/+" {
+        on message {
+            on error resume next retry 3 delay 1000 backoff 2;
+
+            bind measure {
+                name = (segment(topic, -1))
+            }
+            bind event {
+                source = mqtt
+                verb = changed
+                name = (segment(topic, -1))
+                object = (payload)
+            }
+        }
+    }
+
+    # Forward device commands to the PLC gateway over CoAP.
+    subscribe "device/+/command" {
+        on message {
+            bind coap {
+                path = (format("/device/{0}", segment(topic, 1)))
+                method = post
+                host = $"{{plc_gateway}}"
+            }
+        }
+    }
+}
+
+# =============================================================================
+# Actions
+# =============================================================================
+
+action log-signals {
+    source = signals
+    verb = fired
+
+    do log {
+        message = (format("[{severity}] Signal {Name} fired"))
+        level = warning
+    }
+}
+
+action alert-high-power when high-power {
+    on error resume next;
+
+    do mqtt-publish {
+        topic = (format("alerts/{Name}"))
+        payload = (format("Power alert: {Object}W at {Timestamp}"))
+        broker = $"{{mqtt_broker}}"
+        on error stop this retry 3 delay 2000 backoff 1.5;
+    }
+
+    do coap-request {
+        path = "/device/power-limit"
+        method = post
+        payload = "reduce"
+        host = $"{{plc_gateway}}"
+    }
+}
+
+action record-changes {
+    verb = changed
+
+    do update-entry {
+        bucket = history
+        key = (format("{Name}.{CorrelationId}"))
+        value = (Object)
+        ttl = 86400
+    }
+}

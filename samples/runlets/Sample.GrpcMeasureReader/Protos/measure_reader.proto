@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package sample.measurereader;
+
+option csharp_namespace = "Sample.GrpcMeasureReader.Grpc";
+
+service MeasureReader {
+  rpc Read(ReadRequest) returns (ReadResponse);
+}
+
+message ReadRequest {}
+
+message ReadResponse {
+  string name = 1;
+  double value = 2;
+  string display = 3;
+  bool found = 4;
+}

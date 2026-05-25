@@ -1,0 +1,25 @@
+coap sensors {
+    port = 5684
+
+    resource "/sensor/+" {
+        on get {
+            bind measure from "Tinkwell.Integrations" {
+                name = (segment(path, -1))
+            }
+        }
+
+        on post {
+            bind measure from "Tinkwell.Integrations" {
+                name = (segment(path, -1))
+            }
+            bind event from "Tinkwell.Integrations" {
+                source = "coap"
+                verb = changed
+                name = (segment(path, -1))
+                with payload {
+                    device = (segment(path, 1))
+                }
+            }
+        }
+    }
+}

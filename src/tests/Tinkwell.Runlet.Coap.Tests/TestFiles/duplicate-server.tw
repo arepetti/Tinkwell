@@ -1,0 +1,19 @@
+coap my-server {
+    resource "/a" {
+        on get {
+            bind measure from "M.dll" {
+                name = "x"
+            }
+        }
+    }
+}
+
+coap my-server {
+    resource "/b" {
+        on get {
+            bind measure from "M.dll" {
+                name = "y"
+            }
+        }
+    }
+}

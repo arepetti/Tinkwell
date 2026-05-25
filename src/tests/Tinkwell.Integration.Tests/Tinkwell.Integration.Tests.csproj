@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Grpc.Net.Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\app\Tinkwell.Runlet.Measures\Tinkwell.Runlet.Measures.csproj" />
+  </ItemGroup>
+
+  <!-- Embed the artifacts path so tests can locate coordinator/runner DLLs at runtime -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ArtifactsDir</_Parameter1>
+      <_Parameter2>$(TinkwellArtifactsDir)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <!-- Ensure all required projects are built before these tests -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\app\Tinkwell.Coordinator\Tinkwell.Coordinator.csproj"
+                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\app\Tinkwell.Runner.Headless\Tinkwell.Runner.Headless.csproj"
+                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\app\Tinkwell.Runner.Grpc\Tinkwell.Runner.Grpc.csproj"
+                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\app\Tinkwell.Runlet.Store\Tinkwell.Runlet.Store.csproj"
+                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Tinkwell.Runlet.Test\Tinkwell.Runlet.Test.csproj"
+                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\app\Tinkwell.Cli\Tinkwell.Cli.csproj"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

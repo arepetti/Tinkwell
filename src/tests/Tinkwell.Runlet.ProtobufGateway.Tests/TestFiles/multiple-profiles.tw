@@ -1,0 +1,7 @@
+protobuf-gateway fleet for "pb" match "/device/{service}/{method}" {
+    allow "tinkwell.measures.*";
+}
+
+protobuf-gateway admin for "pb" match "/admin/{service}/{method}" {
+    allow "tinkwell.*";
+}

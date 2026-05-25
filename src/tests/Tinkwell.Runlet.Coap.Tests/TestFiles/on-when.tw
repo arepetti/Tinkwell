@@ -1,0 +1,11 @@
+coap alerts {
+    resource "/sensor/+" {
+        on post when (json_value(payload, "$.severity") == "critical") {
+            bind event from "Tinkwell.Integrations" {
+                source = "coap"
+                verb = alert
+                name = (segment(path, -1))
+            }
+        }
+    }
+}

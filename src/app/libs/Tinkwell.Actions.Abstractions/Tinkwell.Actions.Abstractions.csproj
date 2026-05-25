@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>SDK</TinkwellPackageGroup>
+    <Description>Contracts and helpers for configurable action handlers (<c>do</c> blocks).</Description>
+    <PackageTags>$(PackageTags);actions handlers automation</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Configuration.Parser\Tinkwell.Configuration.Parser.csproj" />
+    <ProjectReference Include="..\Tinkwell.Events.Abstractions\Tinkwell.Events.Abstractions.csproj" />
+    <ProjectReference Include="..\Tinkwell.Core\Tinkwell.Core.csproj" />
+    <ProjectReference Include="..\Tinkwell.Expressions\Tinkwell.Expressions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+</Project>

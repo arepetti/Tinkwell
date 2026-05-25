@@ -1,0 +1,11 @@
+<Project>
+  <!-- Chain to the repo-root Directory.Build.props so Studio inherits TargetFramework,
+       ImplicitUsings, Nullable, analyzers, TreatWarningsAsErrors under CI and the
+       TinkwellArtifactsDir property. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\'))" />
+
+  <PropertyGroup>
+    <VersionPrefix>0.1.0</VersionPrefix>
+  </PropertyGroup>
+
+</Project>

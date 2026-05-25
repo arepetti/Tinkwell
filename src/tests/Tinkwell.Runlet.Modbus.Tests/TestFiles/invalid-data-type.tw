@@ -1,0 +1,8 @@
+modbus bad {
+    device "1" {
+        register x {
+            address = "0"
+            type = "int99-be"
+        }
+    }
+}

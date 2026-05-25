@@ -1,0 +1,1 @@
+signal alert when (pressure > 100) for (cycle_time / 10);

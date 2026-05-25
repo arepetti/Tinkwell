@@ -1,0 +1,3 @@
+protobuf-gateway bad match "/rpc/{service}" {
+    allow "*";
+}

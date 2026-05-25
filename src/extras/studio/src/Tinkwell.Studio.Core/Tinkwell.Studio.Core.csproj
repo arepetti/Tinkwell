@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Tinkwell.Studio</RootNamespace>
+    <AssemblyName>Tinkwell.Studio.Core</AssemblyName>
+    <Description>UI-framework-agnostic core for Tinkwell Studio: services, view models, and CLI adapters.</Description>
+    <!-- Core is a pure library: no WinUI, no Avalonia, no UI framework references.
+         Any UI project (WinUI 3, potentially others) layers on top of this. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="MQTTnet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Client-side parsing of the ensemble file for the Ensemble category. The
+         parser already provides a fully preprocessed ConfigDocument, which Studio
+         uses as-is. -->
+    <ProjectReference Include="..\..\..\..\app\libs\Tinkwell.Configuration.Parser\Tinkwell.Configuration.Parser.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Studio.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,15 @@
+lwm2m dupe {
+    object "3303" {
+        resource "5700" {
+            measure = "temp"
+        }
+    }
+}
+
+lwm2m dupe {
+    object "3304" {
+        resource "5700" {
+            measure = "hum"
+        }
+    }
+}

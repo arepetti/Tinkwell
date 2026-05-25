@@ -1,0 +1,3 @@
+modbus bad {
+    transport = "zigbee"
+}

@@ -1,0 +1,7 @@
+set env = production
+set port = 8080
+
+config server {
+  environment = $"{{env}}"
+  listen-port = $"{{port}}"
+}

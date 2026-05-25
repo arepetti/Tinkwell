@@ -1,0 +1,16 @@
+modbus devices {
+    device "1" {
+        register r-int16    { address = "0"   type = "int16" }
+        register r-uint16   { address = "1"   type = "uint16" }
+        register r-int32    { address = "2"   type = "int32" }
+        register r-int32be  { address = "4"   type = "int32-be" }
+        register r-int32le  { address = "6"   type = "int32-le" }
+        register r-uint32   { address = "8"   type = "uint32" }
+        register r-uint32le { address = "10"  type = "uint32-le" }
+        register r-float    { address = "12"  type = "float" }
+        register r-float32  { address = "14"  type = "float32" }
+        register r-float32be{ address = "16"  type = "float32-be" }
+        register r-float32le{ address = "18"  type = "float32-le" }
+        register r-float32ws{ address = "20"  type = "float32-ws" }
+    }
+}

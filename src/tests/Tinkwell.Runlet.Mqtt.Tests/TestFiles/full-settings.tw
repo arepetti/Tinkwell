@@ -1,0 +1,20 @@
+mqtt factory-floor {
+    broker = "192.168.1.100"
+    port = 8883
+    client-id = "tinkwell-factory"
+    username = "admin"
+    password = "secret"
+    retry-count = 5
+    retry-delay = 5000
+
+    subscribe "sensor/+" {
+        on message {
+            bind event from "Tinkwell.Integrations" {
+                source = mqtt
+                verb = changed
+                name = (segment(topic, -1))
+                object = (payload)
+            }
+        }
+    }
+}

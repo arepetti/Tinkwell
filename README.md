@@ -1,105 +1,156 @@
-# Tinkwell: Orchestrating Modular Systems at the Edge
+# Tinkwell
 
-In today's distributed environments, from industrial IoT to lab automation, building resilient and adaptable systems presents unique challenges. Tinkwell emerges as a lightweight, configuration-driven framework designed to simplify the orchestration of modular components, particularly at the edge.
+**Firmware-less IoT, lab automation, and industrial edge monitoring — driven entirely by configuration.**
 
-Tinkwell offers a compelling alternative for building resilient, modular applications at the edge. Its focus on configuration-driven deployment, lightweight footprint, and robust inter-process communication makes it ideal for scenarios where traditional solutions are too heavy or inflexible.
+## Installation
 
-For more insights into the vision behind Tinkwell, read [Tinkwell: Firmware-less IoT and Lab Automation](https://dev.to/adriano-repetti/tinkwell-firmware-less-iot-and-lab-automation-2gef).
+```bash
+# Windows
+winget install AdrianoRepetti.Tinkwell
 
-This repository is the foundation of the Tinkwell ecosystem. It provides essential building blocks and abstractions that power other components. Additional features will be released over time as separate repositories. Be sure to check out:
-- [Tinkwell DX](https://github.com/arepetti/Tinkwell-DX): Developer tools, utilities, and resources to enhance your workflow.
-- [Tinkwell Pulse](https://github.com/arepetti/Tinkwell-Pulse): Web application to monitor a Tinkwell installation.
-- [Tinkwell Firmwareless](https://github.com/arepetti/Tinkwell-Firmwareless): Firmwareless IoT built on top of Tinkwell (with examples).
+# Linux (Debian / Ubuntu)
+sudo dpkg -i tinkwell_<version>_amd64.deb
 
-## The Distributed Challenge
-
-Traditional monolithic applications often struggle with the dynamic nature of edge deployments, where connectivity can be intermittent and resources constrained. The complexities of managing diverse processes, ensuring data integrity, and reacting to real-time events demand a different approach. For a deeper dive into these architectural pressures, explore [IoT Architectures Under Pressure](https://dev.to/adriano-repetti/iot-architectures-under-pressure-why-implementation-isnt-as-simple-as-it-seems-part-1-3inn).
-
-## Tinkwell's Approach: Composable Modularity
-
-At its core, Tinkwell empowers you to define your system's behavior through declarative configuration files. A central **Supervisor** orchestrates a network of independent processes, or **runners**, each dedicated to a specific task. Communication flows seamlessly via gRPC, enabling robust inter-process coordination and service discovery.
-
-This modularity fosters resilience and adaptability, allowing you to evolve your system by simply updating configuration, without complex redeployments.
-
-## Key Capabilities
-
-*   **Flexible Composition**: Define your application's structure using intuitive Ensamble files (`.tw`). Easily compose services and agents, or leverage the advanced `runner` block for fine-grained control over process lifecycle and resource allocation.
-*   **Data-Driven Insights**: Transform raw data into actionable intelligence. Define **measures** to track real-time data points, create **derived measures** to calculate new insights from existing data, and configure **signals** to trigger events when specific conditions are met.
-*   **Event-Driven Automation**: Build reactive systems with powerful action configurations (`.twa`). Listen for system events and define automated responses, from logging to triggering external HTTP requests.
-*   **Extensibility**: Integrate custom logic and external protocols with ease. Tinkwell's architecture is designed to be extended, allowing you to connect to diverse data sources and external systems.
-
-## A Glimpse into Real-time Automation
-
-Imagine a scenario where sensor data streams in via MQTT, needs to be stored, analyzed, and potentially trigger alerts. Tinkwell simplifies this.
-
-First, we compose our MQTT client bridge in `ensamble.tw`:
-
-```tinkwell
-compose service mqtt_bridge "Tinkwell.Bridge.MqttClient.dll" {
-    topic_filter: "sensor/+"
-}
+# Docker (Linux amd64 / arm64)
+docker run --rm ghcr.io/arepetti/tinkwell:latest
 ```
 
-Next, we define our measures and a signal in `measures.twm`. The MQTT bridge will automatically update `temperature_sensor_1` when data arrives on `sensor/temperature_sensor_1`.
+ARM64 builds are available for all platforms.  
+See the full [installation guide](docs/getting-started/installation.md) for manual downloads and other options, and [Running under Docker](docs/getting-started/docker.md) for the full container walkthrough.
 
-```tinkwell
-measure temperature_sensor_1 {
-    type: "Temperature"
-    unit: "DegreeCelsius"
+## Design philosophy
 
-    signal high_temperature {
-        when: "value > 30"
-    }
-}
+Tinkwell is built around a few core principles:
+
+- **Configuration first** — If something can be expressed declaratively, it should be.
+Polling intervals, signal thresholds, routing, actions — all live in `.tw` configuration files, not in code you have to compile and redeploy.
+- **Batteries included** — Built-in support for Modbus, I2C, SCPI, MQTT, CoAP, and LwM2M covers the majority of real-world automation scenarios out of the box.
+- **Easy to extend** — When the built-in runlets aren't enough, the plugin system lets you add new protocols, CLI commands, and integrations as isolated packages without forking the core.
+- **Simplicity over ceremony** — A few readable `.tw` files replace the usual tangle of bridge scripts, protocol adapters, and configuration scattered across a dozen services.
+Simple setups fit in one file; larger systems use `include` to split concerns so that each tool or subsystem owns its own configuration independently.
+
+Tinkwell provides the building blocks — process supervision, crash recovery, service discovery, measures, signals, events, and actions — so you can focus on *what* the system should do rather than *how* to wire it together.
+
+## What is Tinkwell
+
+Tinkwell is a coordinator-based runtime that turns a Raspberry Pi, a lab PC, or any edge device into a full-featured automation hub — **without writing a single line of firmware or glue code**.
+You declare what to poll, what to watch, and how to react in `.tw` configuration files, and Tinkwell handles the rest: sensor ingestion, signal monitoring, event persistence, and outbound actions.
+
+It speaks **Modbus RTU/TCP**, **I2C**, **SCPI over TCP** (TextQuery), **MQTT**, **CoAP**, and **LwM2M** out of the box.
+A plugin system lets you add new protocols, commands, and integrations without touching the core.
+The `tw` CLI provides runtime inspection, package management, and plugin administration from any terminal.
+
+Tinkwell grew out of the ideas described in [this introductory blog post](https://dev.to/adriano-repetti/tinkwell-firmware-less-iot-and-lab-automation-2gef). The current repository is a **ground-up rewrite** that differs significantly from the original design — rethought architecture, a new configuration language, and a fully pluggable runtime.
+
+## Quick example
+
+A vibration sensor on Modbus, a signal with an ISO threshold, and an alert action:
+
 ```
+measure spindle-vibration {
+    quantity = Speed
+    unit = "MillimeterPerSecond"
+}
 
-Finally, we define an action in `actions.twa` to log the alert:
+signal vibration-warning when (spindle-vibration > 4.5) for "10 seconds" {
+    severity = warning
+}
 
-```tinkwell
-when event high_temperature {
-    then {
-        mqtt_send {
-            topic: "home/ac/living_room/set"
-            payload: "make_json('power', 'ON')"
+modbus cnc-sensors {
+    transport = rtu
+    port = "/dev/ttyUSB0"
+    device 1 {
+        register spindle-vibration {
+            address = 0x0000
+            type = float32-be
         }
     }
 }
+
+action log-alerts {
+    source = signals
+    verb = fired
+    do log {
+        message = (format("[{severity}] {Name} fired"))
+    }
+}
 ```
 
-This simple setup demonstrates how Tinkwell seamlessly integrates data ingestion, processing, and reactive automation, all driven by clear, declarative configurations. How does it work?
+## Key features
 
-```mermaid
-graph LR
-    classDef green color:#008b00,fill:#f2fde4;
-    classDef orange color:#e54304,fill:#fff2df;
-    classDef amber color:#FF6F00,fill:#FFECB3;
-    Device1(Device 1):::amber --> MQTT(MQTT Broker):::orange
-    MQTT --> Device1
-    MQTT -- message --> MQTT_client[MQTT client]
-    Store -- notification --> Reducer
-    Store -- update --> Storage(Storage):::orange
-    Reducer -- update --> Store
-    Store -- notification --> Reactor
-    Reactor -- event --> EventsGateway[Events Gateway]
-    EventsGateway -- notification --> Executor
-    MQTT_client -- update --> Store
-    Executor -- message --> MQTT
-    Runner(Your runner):::green -- update --> Store
-    Runner -- event --> EventsGateway
-    Store -- notification --> Runner
-    EventsGateway -- notifies --> Runner
-    Device2(Device 2):::amber --> Runner
-    Runner --> Device2
-```
+- **Coordinator-runner architecture** — A parent process manages child runner processes, handling startup sequencing, crash recovery, and service discovery via named pipes.
+- **Runlet system** — Pluggable components for MQTT ingestion, CoAP servers, LwM2M device management, Modbus polling, I2C reads, SCPI queries, measures, signals, events, actions, and state storage.
+- **Plugin system** — Load third-party runlets, bindings, and action handlers from versioned plugin directories with assembly isolation and automatic dependency resolution.
+- `**.tw` configuration** — A purpose-built grammar for declaring system topology, routing, and behavior.
+Supports `include` for splitting configuration across files so each subsystem can own its settings independently.
+- **Secure packages** — Pack, sign, verify, and distribute plugin packages with SHA-512 integrity chains and ECDSA P-384 digital signatures.
+- **CLI tooling** — `tw` commands for runtime management, MQTT/CoAP/LwM2M testing, package operations, and plugin management.
 
-## Getting Started
+## Plugins
 
-Dive into the details and set up your first Tinkwell instance: [Getting-Started.md](./Documentation/Getting-Started.md)
+Tinkwell is designed for extensibility.
+The plugin system lets you distribute and install additional runlets, CLI commands, and integration bindings as versioned packages — without modifying the core installation.
+Plugins are loaded with full assembly isolation so they can carry their own dependencies without conflicting with the host.
+See the [plugins guide](docs/reference/plugins.md) for authoring and distribution details.
 
-## Further Exploration
+## Published libraries
 
-*   [Glossary](./Documentation/Glossary.md): Understand core concepts.
-*   [CLI Reference](./Documentation/CLI.md): Master the command-line tools.
-*   [Derived Measures](./Documentation/Derived-measures.md): Learn advanced data processing.
-*   [Actions](./Documentation/Actions.md): Configure event-driven automation.
-*   [Ensamble](./Documentation/Ensamble.md): Deep dive into system composition.
+Several Tinkwell components are published to NuGet as standalone libraries that can be used independently without installing Tinkwell — including the LwM2M, CoAP, and Modbus clients, the package format, and the `.tw` configuration parser.
+SDK packages for building Tinkwell extensions are also available.
+A lightweight global tool (`[tinkwell-ci-package](src/app/libs/Tinkwell.Build.Ci/README.md)`) is published separately for creating `.twpkg` plugin packages in CI pipelines without the full Tinkwell installation.
+See the [full library list](docs/architecture/libraries.md) for details.
+
+## Examples
+
+The `[samples/use-cases/](samples/use-cases)` directory contains full working configurations:
+
+- **[CNC machine health monitoring](samples/use-cases/cnc-monitoring)** — Modbus RTU vibration and temperature sensors with ISO 10816 signal thresholds.
+- **[Stability chamber monitoring](samples/use-cases/chamber-monitoring)** — LwM2M temperature/humidity tracking for ICH-compliant pharma environments.
+- **[Lab instrument monitoring](samples/use-cases/lab-instruments)** — SCPI over TCP to a Keysight DMM and Rigol PSU with drift and overcurrent signals.
+- **[DUT thermal protection](samples/use-cases/dut-protection)** — Closed-loop: thermocouple reads trigger PSU shutdown on overtemp, auto-restores on cooldown.
+- **[Water quality analysis](samples/use-cases/water-quality)** — I2C reads from Atlas Scientific pH, DO, and conductivity sensors on Raspberry Pi.
+
+## Documentation
+
+- [Quick start](docs/getting-started/quick-start.md) — Get running in minutes (installed users and build-from-source)
+- [User guide](docs/user-guide/README.md) — Configuration, CLI, expressions, services, and how-to recipes
+- [Development documentation](docs/README.md) — Architecture, conventions, runlet catalog, protocol details, and internals
+
+Key pages:
+
+- [Installation](docs/getting-started/installation.md) — Windows, Linux, and manual setup
+- [Published libraries](docs/architecture/libraries.md) — NuGet packages: standalone and SDK
+- [Architecture](docs/architecture/coordinator-runner.md) — Coordinator-runner model, IPC, service discovery
+- [Plugins](docs/reference/plugins.md) — Plugin system: loading, resolution, authoring
+- [Runlets catalog](docs/architecture/runlets.md) — Built-in runlets and their settings
+- [Glossary](docs/reference/glossary.md) — Alphabetical reference of Tinkwell terminology
+
+## Related repositories
+
+Tinkwell is part of a family of projects.
+The core runtime lives here; these sibling repositories cover developer tooling, the firmware-less IoT platform, state machines, and plugin infrastructure.
+
+**[Tinkwell DX](https://github.com/arepetti/tinkwell-dx)** — Developer experience: syntax colorization for various editors, plugins for external tools, additional debugging scripts, and more complex cross-domain samples.
+
+**[Tinkwell Firmwareless](https://github.com/arepetti/tinkwell-firmwareless)** — The [firmware-less IoT paradigm](https://dev.to/adriano-repetti/iot-architectures-under-pressure-why-implementation-isnt-as-simple-as-it-seems-part-1-3inn) built on top of Tinkwell.
+The umbrella repository contains documentation and links to the child repos:
+
+- [tinkwell-firmwareless-device](https://github.com/arepetti/tinkwell-firmwareless-device) — Device SDK
+- [tinkwell-firmwareless-hub](https://github.com/arepetti/tinkwell-firmwareless-hub) — Edge hub
+- [tinkwell-firmwareless-repository](https://github.com/arepetti/tinkwell-firmwareless-repository) — Firmlet repository
+- [tinkwell-firmwareless-statemachines-compiler](https://github.com/arepetti/tinkwell-firmwareless-statemachines-compiler) — Compiles state machines to device applets or firmlets
+
+**[Tinkwell State Machines](https://github.com/arepetti/tinkwell-statemachines)** — Declarative state machine engine that integrates with Tinkwell measures and events.
+
+**Plugin infrastructure:**
+
+- [tinkwell-plugins-repository](https://github.com/arepetti/tinkwell-plugins-repository) — Plugin registry implementation
+- [tinkwell-static-plugins-registry](https://github.com/arepetti/tinkwell-static-plugins-registry) — Static plugin registry (GitHub Releases-based distribution)
+
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines and [SECURITY.md](SECURITY.md) for the vulnerability reporting policy.
+
+## License
+
+[MIT](LICENSE)

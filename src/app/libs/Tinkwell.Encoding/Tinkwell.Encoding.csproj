@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>Standalone</TinkwellPackageGroup>
+    <Description>Encoders and decoders for IoT payload formats: LwM2M TLV (OMA-TS), SenML JSON (RFC 8428), and CoAP text/plain. Standalone library, usable in any .NET application.</Description>
+    <PackageTags>$(PackageTags);encoding;tlv;senml;lwm2m;coap;iot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Encoding.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Coap\Tinkwell.Coap.csproj" />
+  </ItemGroup>
+
+
+</Project>

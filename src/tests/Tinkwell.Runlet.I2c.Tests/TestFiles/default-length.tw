@@ -1,0 +1,7 @@
+i2c sensors {
+    device "0x50" {
+        read byte-read   { register = "0" type = "uint8" }
+        read word-read   { register = "1" type = "uint16-le" }
+        read float-read  { register = "2" type = "float32-be" }
+    }
+}

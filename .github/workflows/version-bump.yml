@@ -1,0 +1,69 @@
+name: Bump version after publish
+
+on:
+  workflow_run:
+    workflows: ["Publish NuGet packages"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    name: Bump VersionPrefix
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Parse released version and compute next
+        id: next
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }} --jq '.head_branch // empty')
+          if [ -z "$TAG" ]; then
+            TAG=$(gh api repos/${{ github.repository }}/releases/latest --jq '.tag_name')
+          fi
+          VERSION="${TAG#v}"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          NEXT_PATCH=$((PATCH + 1))
+          NEXT="${MAJOR}.${MINOR}.${NEXT_PATCH}"
+
+          echo "released=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+
+      - name: Update VersionPrefix
+        run: |
+          for FILE in src/app/Directory.Build.props src/app/libs/Directory.Build.props; do
+            sed -i "s|<VersionPrefix>.*</VersionPrefix>|<VersionPrefix>${{ steps.next.outputs.next }}</VersionPrefix>|" "$FILE"
+            echo "--- $FILE ---"
+            cat "$FILE"
+          done
+
+      - name: Create branch, commit, and PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="chore/bump-version-${{ steps.next.outputs.next }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add src/app/Directory.Build.props src/app/libs/Directory.Build.props
+          git commit -m "chore: Update libs versions [NO CI]"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "chore: Update libs version to ${{ steps.next.outputs.next }} [NO CI]" \
+            --body "Automated version bump after publishing v${{ steps.next.outputs.released }}." \
+            --base main \
+            --head "$BRANCH"
+
+          gh pr merge "$BRANCH" --auto --squash

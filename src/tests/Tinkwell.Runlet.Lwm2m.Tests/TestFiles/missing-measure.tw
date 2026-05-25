@@ -1,0 +1,7 @@
+lwm2m bad {
+    object "3303" {
+        resource "5700" {
+            observable = true
+        }
+    }
+}

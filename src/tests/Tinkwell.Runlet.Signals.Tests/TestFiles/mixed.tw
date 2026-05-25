@@ -1,0 +1,9 @@
+measure temperature {
+    quantity = Temperature
+    unit = DegreeCelsius
+    signal hot when (value > 50);
+}
+
+signal combined when (temperature > 80 or pressure > 200) {
+    severity = warning
+}

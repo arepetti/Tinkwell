@@ -1,0 +1,179 @@
+<UserControl
+    x:Class="Tinkwell.Studio.Views.CommandLogView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tv="using:WinUI.TableView"
+    xmlns:svc="using:Tinkwell.Studio.Services"
+    xmlns:vm="using:Tinkwell.Studio.ViewModels"
+    xmlns:controls="using:Tinkwell.Studio.Controls"
+    mc:Ignorable="d">
+
+    <controls:WorkspacePage IsDrawerOpen="{Binding IsDrawerOpen}"
+                            DrawerWidth="520"
+                            CloseDrawerCommand="{Binding CloseDrawerCommand}">
+
+        <!-- Header: status + close. The status word doubles as the drawer
+             subtitle because every row in the table is "a command", so what
+             really differentiates them is whether they ran. -->
+        <controls:WorkspacePage.DrawerHeader>
+            <StackPanel Spacing="2">
+                <TextBlock Text="Command details"
+                           Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock Text="{Binding Selected.StatusText}"
+                           Foreground="{Binding Selected.StatusColorHex, Converter={StaticResource HexToBrushConverter}}"
+                           FontWeight="SemiBold" />
+            </StackPanel>
+        </controls:WorkspacePage.DrawerHeader>
+
+        <controls:WorkspacePage.Detail>
+            <Grid RowSpacing="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Full command line in a read-only TextBox so it can be selected
+                     and copied — typical "I want to rerun this in a terminal" use case. -->
+                <TextBlock Grid.Row="0"
+                           Text="Command"
+                           FontWeight="SemiBold"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBox Grid.Row="1"
+                         Text="{Binding Selected.CommandLine, Mode=OneWay}"
+                         IsReadOnly="True"
+                         AcceptsReturn="False"
+                         TextWrapping="Wrap"
+                         FontFamily="Cascadia Code, Consolas, Menlo, monospace" />
+
+                <!-- Started / duration / exit code summary row. -->
+                <Grid Grid.Row="2" ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Started"
+                                   FontWeight="SemiBold"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{Binding Selected.StartedAtText}"
+                                   FontFamily="Cascadia Code, Consolas, Menlo, monospace" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Duration"
+                                   FontWeight="SemiBold"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{Binding Selected.DurationText}"
+                                   FontFamily="Cascadia Code, Consolas, Menlo, monospace" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Exit code"
+                                   FontWeight="SemiBold"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{Binding Selected.ExitCode}"
+                                   FontFamily="Cascadia Code, Consolas, Menlo, monospace" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- stdout: shown only when present. Streaming commands leave
+                     this null because their output is consumed elsewhere. -->
+                <Grid Grid.Row="3" RowSpacing="4"
+                      Visibility="{Binding Selected.Stdout, Converter={StaticResource StringToVisibilityConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0"
+                               Text="stdout"
+                               FontWeight="SemiBold"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBox Grid.Row="1"
+                             Text="{Binding Selected.Stdout, Mode=OneWay}"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             FontFamily="Cascadia Code, Consolas, Menlo, monospace"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+                </Grid>
+
+                <TextBlock Grid.Row="4"
+                           Text="stderr"
+                           FontWeight="SemiBold"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Visibility="{Binding Selected.Stderr, Converter={StaticResource StringToVisibilityConverter}}" />
+                <TextBox Grid.Row="5"
+                         Text="{Binding Selected.Stderr, Mode=OneWay}"
+                         IsReadOnly="True"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         MinHeight="80" MaxHeight="160"
+                         FontFamily="Cascadia Code, Consolas, Menlo, monospace"
+                         Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                         Visibility="{Binding Selected.Stderr, Converter={StaticResource StringToVisibilityConverter}}" />
+            </Grid>
+        </controls:WorkspacePage.Detail>
+
+        <controls:WorkspacePage.Toolbar>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Command="{Binding ClearCommand}" ToolTipService.ToolTip="Clear log">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                        <TextBlock Text="Clear" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <TextBlock Text="{Binding Log.Entries.Count}"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="command(s)"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </controls:WorkspacePage.Toolbar>
+
+        <controls:WorkspacePage.List>
+            <tv:TableView ItemsSource="{Binding Log.Entries}"
+                          SelectedItem="{Binding Selected, Mode=TwoWay}"
+                          SelectionUnit="Row"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          GridLinesVisibility="Horizontal">
+                <tv:TableView.Columns>
+                    <!-- Status column: spinner while running, glyph once finished.
+                         Both children share the cell; visibility flips them based
+                         on IsRunning so the UI stays animated mid-flight and shows
+                         a static icon once we know the outcome. -->
+                    <tv:TableViewTemplateColumn Header="" Width="44">
+                        <tv:TableViewTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="svc:CommandLogEntry">
+                                <Grid Margin="12,0" HorizontalAlignment="Center">
+                                    <ProgressRing Width="14" Height="14"
+                                                  IsActive="True"
+                                                  VerticalAlignment="Center"
+                                                  HorizontalAlignment="Center"
+                                                  Foreground="{ThemeResource AccentFillColorDefaultBrush}"
+                                                  Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    <FontIcon Glyph="{Binding StatusGlyph}"
+                                              Foreground="{Binding StatusColorHex, Converter={StaticResource HexToBrushConverter}}"
+                                              FontSize="14"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Center"
+                                              Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                                </Grid>
+                            </DataTemplate>
+                        </tv:TableViewTemplateColumn.CellTemplate>
+                    </tv:TableViewTemplateColumn>
+                    <tv:TableViewTextColumn Header="Started" Binding="{Binding StartedAtText}" Width="100" />
+                    <tv:TableViewTextColumn Header="Command" Binding="{Binding CommandLine}" Width="*" />
+                    <tv:TableViewTextColumn Header="Duration" Binding="{Binding DurationText}" Width="100" />
+                    <tv:TableViewTextColumn Header="Exit" Binding="{Binding ExitCode}" Width="60" />
+                </tv:TableView.Columns>
+            </tv:TableView>
+        </controls:WorkspacePage.List>
+    </controls:WorkspacePage>
+</UserControl>

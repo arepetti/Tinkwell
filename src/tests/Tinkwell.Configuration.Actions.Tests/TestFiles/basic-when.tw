@@ -1,0 +1,5 @@
+action alert-temp when high-temperature {
+    do log {
+        message = (format("Temperature alert: {Name}"))
+    }
+}

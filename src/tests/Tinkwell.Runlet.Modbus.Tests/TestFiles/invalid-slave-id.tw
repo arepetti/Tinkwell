@@ -1,0 +1,7 @@
+modbus bad {
+    device not-a-number {
+        register x {
+            address = "0"
+        }
+    }
+}

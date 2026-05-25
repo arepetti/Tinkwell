@@ -1,0 +1,50 @@
+# =============================================================================
+# MQTT-to-MQTT Bridge
+#
+# Subscribes to topics on one MQTT broker and republishes them to another.
+# Useful for replicating data between sites or remapping topic hierarchies.
+# =============================================================================
+
+set source_broker = "broker-a.local"
+set target_broker = "broker-b.local"
+
+# --- Infrastructure (minimal: store + events + mqtt) ---
+runner main from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+    runlet events from "Tinkwell.Runlet.Events.dll";
+}
+
+runner mqtt-host from "Tinkwell.Runner.Headless.dll" {
+    runlet mqtt from "Tinkwell.Runlet.Mqtt.dll";
+}
+
+# --- Bridge ---
+# Messages arriving on factory/* at broker-a are republished
+# as replicated/* at broker-b (topic prefix is remapped).
+mqtt source {
+    broker = $"{{source_broker}}"
+
+    subscribe "factory/+" {
+        on message {
+            bind mqtt {
+                topic = (format("replicated/{0}", segment(topic, -1)))
+                broker = $"{{target_broker}}"
+                qos = 1
+            }
+        }
+    }
+
+    # You can bridge multiple topic trees in the same connection.
+    subscribe "alerts/#" {
+        on message {
+            bind mqtt {
+                topic = (topic)
+                broker = $"{{target_broker}}"
+                qos = 2
+                retain = true
+            }
+        }
+    }
+}

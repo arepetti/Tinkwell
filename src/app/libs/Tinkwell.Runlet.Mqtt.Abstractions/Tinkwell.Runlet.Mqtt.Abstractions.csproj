@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>SDK</TinkwellPackageGroup>
+    <Description>Middleware abstractions for the Tinkwell MQTT runlet. External runlets implement IMqttMiddleware against this library without depending on the MQTT runlet itself.</Description>
+    <PackageTags>$(PackageTags);sdk abstractions mqtt</PackageTags>
+  </PropertyGroup>
+
+
+</Project>

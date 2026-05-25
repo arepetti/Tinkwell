@@ -1,0 +1,47 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!-- Windows App SDK (WinUI 3). Pinned to the 1.7 servicing channel because it
+       is the first Windows App SDK release that supports .NET 10 target frameworks
+       cleanly and ships Mica/Acrylic as first-class SystemBackdrop types. -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.7.250606001" />
+    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
+  </ItemGroup>
+
+  <!-- WinUI.TableView: a maintained DataGrid-equivalent for WinUI 3 / Windows
+       App SDK. The Community Toolkit's DataGrid was archived in the 8.x line,
+       so this is the idiomatic replacement. Column API mirrors DataGrid
+       (TableViewTextColumn / TableViewTemplateColumn), which kept porting
+       the existing grids mechanical. -->
+  <ItemGroup>
+    <PackageVersion Include="WinUI.TableView" Version="1.4.1" />
+  </ItemGroup>
+
+  <!-- MVVM -->
+  <ItemGroup>
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.4" />
+  </ItemGroup>
+
+  <!-- MQTT (kept independent from the main runtime version to shield Studio from runtime bumps) -->
+  <ItemGroup>
+    <PackageVersion Include="MQTTnet" Version="5.1.0.1559" />
+  </ItemGroup>
+
+  <!-- Test -->
+  <ItemGroup>
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,4 @@
+mqtt sensors {
+    broker = "localhost"
+    subscribe "sensor/+";
+}

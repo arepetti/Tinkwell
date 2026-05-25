@@ -1,0 +1,86 @@
+<UserControl
+    x:Class="Tinkwell.Studio.Controls.WorkspacePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
+
+    <!-- Reusable shell for the recurring "list / drawer / toolbar" page used
+         throughout the Studio shell. The right-docked SplitView mirrors the
+         layout that every category view (Runners, Services, Measures,
+         CommandLog, ...) used to inline by hand. -->
+    <muxc:SplitView IsPaneOpen="{x:Bind IsDrawerOpen, Mode=OneWay}"
+                    PanePlacement="Right"
+                    DisplayMode="Inline"
+                    OpenPaneLength="{x:Bind DrawerWidth, Mode=OneWay}"
+                    CompactPaneLength="0">
+        <muxc:SplitView.Pane>
+            <Border Style="{StaticResource DrawerPanelStyle}">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Drawer header: a custom DrawerHeader slot wins over the
+                         simple DrawerTitle string, and the close affordance is
+                         always docked to the right unless the consumer opts out. -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ContentPresenter Grid.Column="0"
+                                          Content="{x:Bind DrawerHeader, Mode=OneWay}"
+                                          VerticalAlignment="Center"
+                                          Visibility="{x:Bind DrawerHeader, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}" />
+                        <TextBlock Grid.Column="0"
+                                   Text="{x:Bind DrawerTitle, Mode=OneWay}"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"
+                                   VerticalAlignment="Center"
+                                   Visibility="{x:Bind DrawerHeader, Mode=OneWay, Converter={StaticResource InverseNullToVisibilityConverter}}" />
+                        <Button Grid.Column="1"
+                                Style="{StaticResource IconButtonStyle}"
+                                Command="{x:Bind CloseDrawerCommand, Mode=OneWay}"
+                                Visibility="{x:Bind ShowDrawerCloseButton, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                ToolTipService.ToolTip="Close">
+                            <FontIcon Glyph="&#xE711;" FontSize="14" />
+                        </Button>
+                    </Grid>
+
+                    <ContentPresenter Grid.Row="1"
+                                      Content="{x:Bind Detail, Mode=OneWay}" />
+                </Grid>
+            </Border>
+        </muxc:SplitView.Pane>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Toolbar strip: left slot is the typical actions/counters area,
+                 right slot is reserved for filters that should hug the edge.
+                 Both are optional so a view with only one side still aligns. -->
+            <Border Grid.Row="0" Padding="12"
+                    BorderThickness="0,0,0,1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ContentPresenter Grid.Column="0"
+                                      Content="{x:Bind Toolbar, Mode=OneWay}"
+                                      VerticalAlignment="Center" />
+                    <ContentPresenter Grid.Column="1"
+                                      Content="{x:Bind ToolbarRight, Mode=OneWay}"
+                                      VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <ContentPresenter Grid.Row="1"
+                              Content="{x:Bind List, Mode=OneWay}" />
+        </Grid>
+    </muxc:SplitView>
+</UserControl>

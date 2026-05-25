@@ -1,0 +1,11 @@
+block test-values {
+  string-quoted = "hello world"
+  string-unquoted = simple
+  number-int = 42
+  number-negative = -10
+  number-double = 3.14
+  bool-true = true
+  bool-false = false
+  expr-at = @"x + 1"
+  expr-paren = (x > 0)
+}

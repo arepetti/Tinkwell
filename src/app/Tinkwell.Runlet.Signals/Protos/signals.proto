@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package tinkwell.signals.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Tinkwell.Runlet.Signals.Grpc.V1";
+
+service Signals {
+  rpc Create(CreateSignalRequest) returns (CreateSignalResponse);
+  rpc List(ListSignalsRequest) returns (ListSignalsResponse);
+  rpc Watch(WatchSignalsRequest) returns (stream SignalEvent);
+}
+
+// ---------------------------------------------------------------------------
+// Create — register a new signal definition at runtime.
+// ---------------------------------------------------------------------------
+
+message CreateSignalRequest {
+  string name = 1;
+  string when_expression = 2;
+  string until_expression = 3;
+  string for_duration = 4;
+  map<string, string> properties = 5;
+}
+
+message CreateSignalResponse {}
+
+// ---------------------------------------------------------------------------
+// List — retrieve all registered signal definitions.
+// ---------------------------------------------------------------------------
+
+message ListSignalsRequest {}
+
+message ListSignalsResponse {
+  repeated SignalDefinitionProto signals = 1;
+}
+
+message SignalDefinitionProto {
+  string name = 1;
+  string when_expression = 2;
+  string until_expression = 3;
+  string for_duration = 4;
+  string parent_measure = 5;
+  map<string, string> properties = 6;
+}
+
+// ---------------------------------------------------------------------------
+// Watch — server-streaming signal fire notifications.
+// ---------------------------------------------------------------------------
+
+message WatchSignalsRequest {}
+
+message SignalEvent {
+  string name = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  map<string, string> properties = 3;
+}

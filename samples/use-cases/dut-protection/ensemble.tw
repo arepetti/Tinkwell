@@ -1,0 +1,143 @@
+# DUT thermal protection — closed-loop: read temp from DMM, shut down PSU on overheat
+
+# ─── Runners ───────────────────────────────────────────────────────────
+
+runner grpc-store from "Tinkwell.Runner.Grpc.dll" {
+    runlet store from "Tinkwell.Runlet.Store.dll" {
+        storage = "memory"
+    }
+}
+
+runner grpc-events from "Tinkwell.Runner.Grpc.dll" {
+    runlet events from "Tinkwell.Runlet.Events.dll";
+    runlet event-persistence from "Tinkwell.Runlet.EventPersistence.dll" {
+        db-path = "events.db"
+    }
+}
+
+runner grpc-measures from "Tinkwell.Runner.Grpc.dll" {
+    runlet measures from "Tinkwell.Runlet.Measures.dll";
+    runlet signals  from "Tinkwell.Runlet.Signals.dll";
+}
+
+runner background from "Tinkwell.Runner.Headless.dll" {
+    runlet actions    from "Tinkwell.Runlet.Actions.dll";
+    runlet text-query from "Tinkwell.Runlet.TextQuery.dll";
+}
+
+# ─── Measures ──────────────────────────────────────────────────────────
+
+measure dut-temp {
+    quantity = Temperature
+    unit = DegreeCelsius
+    description = "DUT surface temperature via thermocouple on DMM"
+}
+
+measure psu-voltage {
+    quantity = Voltage
+    unit = Volt
+    description = "PSU channel 1 output voltage"
+}
+
+measure psu-current-mA {
+    quantity = ElectricCurrent
+    unit = Milliampere
+    description = "PSU channel 1 output current"
+}
+
+# ─── Signals ───────────────────────────────────────────────────────────
+
+signal overtemp when ([dut-temp] > 85) until ([dut-temp] <= 75) {
+    severity = critical
+    description = "DUT surface temperature exceeds 85 °C — shutdown threshold"
+}
+
+signal warm when ([dut-temp] > 70) until ([dut-temp] <= 65) {
+    severity = warning
+    description = "DUT approaching thermal limit"
+}
+
+# ─── Text Query — read from instruments ────────────────────────────────
+
+# Keysight 34461A DMM with type-K thermocouple
+query dmm {
+    transport = tcp
+    host = "192.168.1.50"
+    port = 5025
+    poll-interval = "500 ms"
+
+    read temperature {
+        send = "MEAS:TEMP:TCO? K"
+        pattern = "([+-]?[0-9.Ee+-]+)"
+        measure = dut-temp
+    }
+}
+
+# Rigol DP832 power supply — monitor actual output
+query psu-monitor {
+    transport = tcp
+    host = "192.168.1.51"
+    port = 5555
+    poll-interval = "1 second"
+
+    read voltage {
+        send = "MEAS:VOLT? CH1"
+        pattern = "([+-]?[0-9.Ee+-]+)"
+        measure = psu-voltage
+    }
+
+    read current {
+        send = "MEAS:CURR? CH1"
+        pattern = "([+-]?[0-9.Ee+-]+)"
+        scale = 1000
+        measure = psu-current-mA
+    }
+}
+
+# ─── Actions — write to instruments ────────────────────────────────────
+
+# When overtemp fires, turn off PSU channel 1
+action shutdown-psu {
+    source = signals
+    filter = "Name == 'overtemp'"
+    verb = fired
+
+    do text-send {
+        transport = tcp
+        host = "192.168.1.51"
+        port = 5555
+        send = "OUTP CH1,OFF"
+    }
+
+    do log {
+        message = (format("[PROTECTION] DUT overtemp at {dut-temp} °C — PSU CH1 OFF"))
+    }
+}
+
+# When overtemp clears (temp back to safe range), re-enable PSU
+action restore-psu {
+    source = signals
+    filter = "Name == 'overtemp'"
+    verb = cleared
+
+    do text-send {
+        transport = tcp
+        host = "192.168.1.51"
+        port = 5555
+        send = "OUTP CH1,ON"
+    }
+
+    do log {
+        message = (format("[PROTECTION] DUT temp restored to {dut-temp} °C — PSU CH1 ON"))
+    }
+}
+
+# Log all signal activity
+action log-signals {
+    source = signals
+    verb = fired
+
+    do log {
+        message = (format("[SIGNAL] {Name}: {description} (value={Object})"))
+    }
+}

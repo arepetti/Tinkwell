@@ -1,0 +1,7 @@
+action alert when high-temp {
+    on error resume next;
+
+    do log {
+        message = "temperature alert"
+    }
+}

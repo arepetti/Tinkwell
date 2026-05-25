@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Tinkwell.Cli": {
-      "commandName": "Project",
-      "commandLineArgs": "supervisor list"
-    }
-  }
-}

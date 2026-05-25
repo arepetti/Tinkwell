@@ -1,0 +1,4 @@
+query bad {
+    transport = "tcp"
+    line-terminator = "bogus"
+}

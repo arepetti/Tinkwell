@@ -1,0 +1,6 @@
+template health {
+  firmlet health-check from "health.dll";
+}
+runner main from "runner.dll" using $"health" {
+  option1 = "value1"
+}

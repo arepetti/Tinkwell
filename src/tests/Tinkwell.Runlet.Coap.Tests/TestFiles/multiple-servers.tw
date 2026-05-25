@@ -1,0 +1,24 @@
+coap sensors {
+    port = 5683
+
+    resource "/sensor/+" {
+        on post {
+            bind measure from "Tinkwell.Integrations" {
+                name = (segment(path, -1))
+            }
+        }
+    }
+}
+
+coap admin {
+    port = 5684
+
+    resource "/store/+" {
+        on get {
+            bind store from "Tinkwell.Integrations" {
+                bucket = "admin"
+                key = (segment(path, -1))
+            }
+        }
+    }
+}

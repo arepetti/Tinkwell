@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Tinkwell.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.Core.Api" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\app\libs\Tinkwell.Configuration.Abstractions\Tinkwell.Configuration.Abstractions.csproj" />
+    <ProjectReference Include="..\..\app\Tinkwell.Runlet.Actions\Tinkwell.Runlet.Actions.csproj" />
+    <ProjectReference Include="..\..\app\Tinkwell.Events\Tinkwell.Events.csproj" />
+    <ProjectReference Include="..\..\app\libs\Tinkwell.Expressions\Tinkwell.Expressions.csproj" />
+    <ProjectReference Include="..\..\app\libs\Tinkwell.Configuration.Parser\Tinkwell.Configuration.Parser.csproj" />
+    <ProjectReference Include="..\..\app\Tinkwell.Configuration.Actions\Tinkwell.Configuration.Actions.csproj" />
+    <ProjectReference Include="..\..\app\libs\Tinkwell.Runner.Abstractions\Tinkwell.Runner.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,4 +1,0 @@
-measure power {
-    type: "Power"
-    unit: "Watt"
-}

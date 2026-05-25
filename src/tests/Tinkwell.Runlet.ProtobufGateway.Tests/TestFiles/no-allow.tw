@@ -1,0 +1,2 @@
+protobuf-gateway locked-down for "pb" match "/{service}/{method}" {
+}

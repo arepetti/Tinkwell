@@ -1,0 +1,3 @@
+protobuf-gateway open-access {
+    allow "*";
+}

@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- Override the repo-root TargetFramework=net10.0. WinUI 3 needs a Windows
+         target framework moniker; 10.0.19041.0 = Windows 10 May 2020 Update,
+         which is the minimum the Windows App SDK targets. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RootNamespace>Tinkwell.Studio</RootNamespace>
+    <AssemblyName>Tinkwell.Studio</AssemblyName>
+    <Description>Windows desktop UI for Tinkwell Studio (WinUI 3 + Fluent/Mica design).</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <UseWinUI>true</UseWinUI>
+    <!-- Unpackaged app: the binaries go straight into the artifacts/ folder and
+         are run directly, the same way the rest of Tinkwell is distributed.
+         MSIX packaging is intentionally skipped. -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <!-- Required so `dotnet build` (without Visual Studio's AppxPackage MSBuild
+         tasks installed) can run the WinUI 3 PRI pipeline. With
+         EnableMsixTooling=true the Windows App SDK loads .NET-compatible
+         versions of the packaging tasks from the NuGet package instead of
+         looking them up under the VS install directory.
+         See https://github.com/microsoft/WindowsAppSDK/issues/3548. -->
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <!-- Self-contained publishes (included app-local Windows App Runtime) are
+         opt-in at publish time (-p:WindowsAppSDKSelfContained=true): the SDK
+         rejects AnyCPU builds with that flag, which would break IDE/F5 builds.
+         The README publish commands enable it. -->
+    <Platforms>AnyCPU;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <!-- We write our own Main in Program.cs; disable the XAML-generated entry
+         point so there is exactly one. -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <!-- WinUI reflection-based XAML loading trips IL2026/IL2050 when trimming;
+         Studio does not trim so these warnings should not appear, but suppress
+         the noisy Windows App SDK analyzer warning that fires on every build. -->
+    <NoWarn>$(NoWarn);WMC1006</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
+    <PackageReference Include="WinUI.TableView" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Studio.Core\Tinkwell.Studio.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+action alert when high-temp {
+    on error resume next;
+
+    do mqtt-publish {
+        topic = "alerts"
+        on error stop this retry 3 delay 500 backoff 2;
+    }
+}

@@ -1,0 +1,11 @@
+coap my-server {
+    port = 5683
+
+    resource "/sensor/+" {
+        on get {
+            bind measure from "Tinkwell.Integrations" {
+                name = (segment(path, -1))
+            }
+        }
+    }
+}

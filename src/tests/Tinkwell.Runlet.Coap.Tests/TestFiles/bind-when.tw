@@ -1,0 +1,14 @@
+coap devices {
+    resource "/device/+" {
+        on post {
+            bind measure from "Tinkwell.Integrations" {
+                name = (segment(path, -1))
+            }
+            bind event from "Tinkwell.Integrations" when (json_value(payload, "$.alert") == "true") {
+                source = "coap"
+                verb = alert
+                name = (segment(path, -1))
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+config app {
+    feature logging if (true) {
+        level = "debug"
+    }
+
+    feature experimental if (false) {
+        enabled = true
+    }
+
+    feature metrics {
+        endpoint = "/metrics"
+
+        sink console if (true) {
+            format = "json"
+        }
+
+        sink remote if (false) {
+            url = "http://example.com"
+        }
+    }
+}

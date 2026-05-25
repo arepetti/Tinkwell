@@ -1,0 +1,8 @@
+query bad {
+    transport = "tcp"
+    host = "localhost"
+
+    read voltage {
+        send = "MEAS:VOLT?"
+    }
+}

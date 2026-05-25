@@ -1,0 +1,67 @@
+name: Publish NuGet packages
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Pack & Push
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Parse version from tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Detect libraries to pack
+        id: changes
+        env:
+          GIT_PATH_PREFIX: src/
+        run: |
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v?[0-9]' | sed -n '2p' || true)
+          chmod +x ../.github/scripts/detect-libs.sh
+          ../.github/scripts/detect-libs.sh "$PREV_TAG"
+
+      - name: Restore
+        run: dotnet restore Tinkwell.slnx
+
+      - name: Build
+        run: dotnet build Tinkwell.slnx --no-restore -c Release
+
+      - name: Pack libraries
+        if: steps.changes.outputs.sdk_projects != '' || steps.changes.outputs.standalone_projects != ''
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p ./packages
+          for PROJ in ${{ steps.changes.outputs.sdk_projects }} ${{ steps.changes.outputs.standalone_projects }}; do
+            echo "Packing $PROJ"
+            dotnet pack "$PROJ" -c Release --no-build \
+              -p:PackageVersion="$VERSION" -o ./packages
+          done
+
+      - name: Push to NuGet
+        if: steps.changes.outputs.sdk_projects != '' || steps.changes.outputs.standalone_projects != ''
+        run: >-
+          dotnet nuget push "./packages/*.nupkg"
+          --api-key ${{ secrets.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate

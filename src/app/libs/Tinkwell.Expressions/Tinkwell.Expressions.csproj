@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TinkwellPackageGroup>Standalone</TinkwellPackageGroup>
+    <Description>NCalc-based expression engine extended with Tinkwell functions for strings, JSON, dates, and unit conversion.</Description>
+    <PackageTags>$(PackageTags);expression ncalc formula</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tinkwell.Expressions.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tinkwell.Core\Tinkwell.Core.csproj" />
+    <ProjectReference Include="..\Tinkwell.Telemetry\Tinkwell.Telemetry.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NCalcSync" />
+  </ItemGroup>
+
+</Project>

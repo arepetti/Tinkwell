@@ -1,0 +1,32 @@
+coap store-server {
+    resource "/store/+" {
+        on get {
+            bind store from "Tinkwell.Integrations" {
+                bucket = "default"
+                key = (segment(path, -1))
+            }
+        }
+
+        on post {
+            bind store from "Tinkwell.Integrations" {
+                bucket = "default"
+                key = (segment(path, -1))
+                ttl = 3600
+            }
+        }
+
+        on put {
+            bind store from "Tinkwell.Integrations" {
+                bucket = "default"
+                key = (segment(path, -1))
+            }
+        }
+
+        on delete {
+            bind store from "Tinkwell.Integrations" {
+                bucket = "default"
+                key = (segment(path, -1))
+            }
+        }
+    }
+}

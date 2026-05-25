@@ -1,0 +1,100 @@
+- name: Home
+  href: index.md
+
+- name: Getting Started
+  items:
+    - name: Installation
+      href: getting-started/installation.md
+    - name: Quick Start
+      href: getting-started/quick-start.md
+    - name: Tutorial
+      href: getting-started/tutorial.md
+    - name: Running under systemd
+      href: getting-started/systemd.md
+    - name: Running under Docker
+      href: getting-started/docker.md
+
+- name: User Guide
+  items:
+    - name: Configuration
+      href: user-guide/configuration.md
+    - name: CLI Reference
+      href: user-guide/cli.md
+    - name: Expressions
+      href: user-guide/expressions.md
+    - name: Units
+      href: user-guide/units.md
+    - name: Services
+      href: user-guide/services.md
+    - name: Integrations
+      href: user-guide/integrations.md
+    - name: How-to Recipes
+      href: user-guide/how-to.md
+    - name: Troubleshooting
+      href: user-guide/troubleshooting.md
+
+- name: Reference
+  items:
+    - name: MQTT
+      href: reference/mqtt.md
+    - name: CoAP
+      href: reference/coap.md
+    - name: LwM2M
+      href: reference/lwm2m.md
+    - name: Modbus
+      href: reference/modbus.md
+    - name: I2C
+      href: reference/i2c.md
+    - name: TextQuery / SCPI
+      href: reference/text-query.md
+    - name: Protobuf Gateway
+      href: reference/protobuf-gateway.md
+    - name: Measures
+      href: reference/measures.md
+    - name: Signals
+      href: reference/signals.md
+    - name: Events
+      href: reference/events.md
+    - name: Plugins
+      href: reference/plugins.md
+    - name: Packages
+      href: reference/packages.md
+    - name: HTTPS / TLS
+      href: reference/https.md
+    - name: Telemetry
+      href: reference/telemetry.md
+    - name: Glossary
+      href: reference/glossary.md
+    - name: Actions
+      href: reference/actions.md
+
+- name: Architecture
+  items:
+    - name: Overview
+      href: architecture/README.md
+    - name: Coordinator-Runner Model
+      href: architecture/coordinator-runner.md
+    - name: Runner Lifecycle
+      href: architecture/runner-lifecycle.md
+    - name: Configuration Internals
+      href: architecture/configuration-internals.md
+    - name: Services Internals
+      href: architecture/services-internals.md
+    - name: Runlets Catalog
+      href: architecture/runlets.md
+    - name: Published Libraries
+      href: architecture/libraries.md
+    - name: Named-Pipe Security
+      href: architecture/pipe-security.md
+
+- name: Contributing
+  items:
+    - name: Code Conventions
+      href: contributing/conventions.md
+    - name: CI/CD Pipelines
+      href: contributing/pipelines.md
+    - name: Roadmap
+      href: contributing/roadmap.md
+
+- name: API Reference
+  href: ../api/

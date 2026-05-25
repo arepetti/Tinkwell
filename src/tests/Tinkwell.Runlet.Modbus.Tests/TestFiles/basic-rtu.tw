@@ -1,0 +1,22 @@
+modbus plc1 {
+    transport = "rtu"
+    port = "/dev/ttyUSB0"
+    baudrate = 19200
+
+    device "1" {
+        poll-interval = "500 ms"
+
+        register temperature {
+            address = "0x0010"
+            type = "int16"
+            kind = "input"
+            scale = 0.1
+            measure = "reactor-temp"
+        }
+
+        register voltage {
+            address = "32"
+            type = "float32-be"
+        }
+    }
+}

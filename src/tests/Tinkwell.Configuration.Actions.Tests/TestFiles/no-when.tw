@@ -1,0 +1,5 @@
+action log-all {
+    do log {
+        message = (format("{Source}.{Name} {Verb}: {Object}"))
+    }
+}

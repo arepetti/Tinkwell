@@ -1,0 +1,44 @@
+name: Publish CI Tool
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version (e.g. 1.0.0)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Pack & Push (tinkwell-ci-package)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore app/libs/Tinkwell.Build.Ci/Tinkwell.Build.Ci.csproj
+
+      - name: Pack
+        run: >-
+          dotnet pack app/libs/Tinkwell.Build.Ci/Tinkwell.Build.Ci.csproj
+          -c Release
+          -p:PackageVersion=${{ inputs.version }}
+          -o ./packages
+
+      - name: Push to NuGet
+        run: >-
+          dotnet nuget push "./packages/*.nupkg"
+          --api-key ${{ secrets.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
